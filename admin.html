@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>LIBRE TECH | Panel de Administración</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="LOGO_LIBRETECH.png">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- SheetJS for Excel parsing -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <div class="admin-layout" id="adminLayout">
+
+    <!-- ==================== ADMIN HEADER ==================== -->
+    <header class="admin-header">
+      <div class="admin-header-left">
+        <a href="index.html" class="admin-logo-link">
+          <img src="LOGO_LIBRETECH.png" alt="LIBRE TECH" class="logo-img" width="36" height="36">
+          <span class="admin-title">LIBRE TECH</span>
+        </a>
+        <span class="admin-badge">Admin</span>
+      </div>
+      <div class="header-actions">
+        <a href="index.html" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Ver tienda
+        </a>
+        <button class="btn btn-danger" id="btnAdminLogout">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </header>
+
+    <!-- ==================== LOGIN (se muestra si no autenticado) ==================== -->
+    <div class="admin-login-wrapper" id="adminLoginWrapper">
+      <div class="admin-login-card">
+        <img src="LOGO_LIBRETECH.png" alt="LIBRE TECH" class="logo-img" width="64" height="64">
+        <h2>Panel de Administración</h2>
+        <p>Ingresa la contraseña de administrador para continuar.</p>
+        <form id="adminLoginForm" autocomplete="off">
+          <div class="form-group">
+            <label class="form-label" for="adminPassword">Contraseña</label>
+            <input type="password" class="form-input" id="adminPassword" placeholder="Contraseña" required autofocus>
+            <p class="form-error" id="loginError" style="display:none">Contraseña incorrecta</p>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full btn-lg">Ingresar</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ==================== DASHBOARD (se muestra si autenticado) ==================== -->
+    <div class="admin-main" id="adminDashboard" style="display:none">
+
+      <!-- Stats -->
+      <div class="admin-stats">
+        <div class="stat-card stat-card--blue">
+          <div class="stat-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          </div>
+          <div class="stat-card-info">
+            <div class="stat-card-value" id="statProducts">0</div>
+            <div class="stat-card-label">Productos</div>
+          </div>
+        </div>
+        <div class="stat-card stat-card--orange">
+          <div class="stat-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </div>
+          <div class="stat-card-info">
+            <div class="stat-card-value" id="statCategories">0</div>
+            <div class="stat-card-label">Categorías</div>
+          </div>
+        </div>
+        <div class="stat-card stat-card--green">
+          <div class="stat-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="stat-card-info">
+            <div class="stat-card-value" id="statActive">0</div>
+            <div class="stat-card-label">Activos</div>
+          </div>
+        </div>
+        <div class="stat-card stat-card--purple">
+          <div class="stat-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          </div>
+          <div class="stat-card-info">
+            <div class="stat-card-value" id="statOrders">0</div>
+            <div class="stat-card-label">Pedidos</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <nav class="admin-tabs">
+        <button class="admin-tab active" data-tab="products">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          <span>Productos</span>
+        </button>
+        <button class="admin-tab" data-tab="orders">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          <span>Pedidos</span>
+        </button>
+        <button class="admin-tab" data-tab="stats">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Estadísticas</span>
+        </button>
+        <button class="admin-tab" data-tab="banners">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span>Banners</span>
+        </button>
+        <button class="admin-tab" data-tab="pqrs">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span>PQRs</span>
+        </button>
+        <button class="admin-tab" data-tab="pages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Páginas</span>
+        </button>
+        <button class="admin-tab" data-tab="social">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>Redes</span>
+        </button>
+        <button class="admin-tab" data-tab="csv">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Excel</span>
+        </button>
+      </nav>
+
+      <!-- ===== TAB: PRODUCTOS ===== -->
+      <div class="admin-tab-content" id="tabProducts">
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <h3>Gestión de Productos</h3>
+            <button class="btn btn-primary" id="btnAddProduct">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Agregar producto
+            </button>
+          </div>
+          <div class="admin-panel-body">
+            <div class="table-responsive">
+              <table class="products-table" id="productsTable">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                    <th>Categoría</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="productsTableBody">
+                  <!-- Se renderiza desde JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: EXCEL ===== -->
+      <div class="admin-tab-content" id="tabCsv" style="display:none">
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <h3>Importar productos desde Excel</h3>
+          </div>
+          <div class="admin-panel-body">
+            <div class="csv-upload-zone" id="csvDropZone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p>Arrastra tu archivo Excel aquí o <span class="browse-link">selecciona un archivo</span></p>
+              <small>Formatos: .xlsx, .xls (Excel)</small>
+              <input type="file" id="csvFileInput" accept=".xlsx,.xls" style="display:none">
+            </div>
+
+            <div class="admin-panel" style="margin-bottom:var(--spacing-lg);">
+              <div class="admin-panel-header">
+                <h3>Formato esperado del archivo</h3>
+              </div>
+              <div class="admin-panel-body">
+                <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--spacing-md);">
+                  El archivo Excel debe tener las siguientes columnas con sus títulos en la primera fila:
+                </p>
+                <code style="display:block;background:var(--bg-secondary);padding:var(--spacing-md);border-radius:var(--radius-sm);font-size:0.8rem;overflow-x:auto;white-space:pre;color:var(--text-primary);">| nombre               | precio | descripcion                     | categoria   | stock |
+| Audífonos Bluetooth  | 189900 | Audífonos con cancelación ruido | Audio       | 25    |
+| Cargador USB-C 65W   | 79900  | Cargador rápido GaN             | Accesorios  | 50    |</code>
+                <p style="font-size:0.8rem;color:var(--text-tertiary);margin-top:var(--spacing-sm);">
+                  La primera fila debe contener los encabezados. Las imágenes se pueden cargar después desde la tabla de productos.
+                </p>
+              </div>
+            </div>
+
+            <!-- Preview de CSV -->
+            <div id="csvPreview" style="display:none">
+              <div class="admin-panel">
+                <div class="admin-panel-header">
+                  <h3>Vista previa (<span id="csvPreviewCount">0</span> productos)</h3>
+                  <div style="display:flex;gap:var(--spacing-sm)">
+                    <button class="btn btn-secondary" id="btnCsvCancel">Cancelar</button>
+                    <button class="btn btn-success" id="btnCsvImport">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                      Importar productos
+                    </button>
+                  </div>
+                </div>
+                <div class="admin-panel-body">
+                  <div class="table-responsive">
+                    <table class="products-table">
+                      <thead>
+                        <tr>
+                          <th>Nombre</th>
+                          <th>Precio</th>
+                          <th>Descripción</th>
+                          <th>Categoría</th>
+                          <th>Stock</th>
+                        </tr>
+                      </thead>
+                      <tbody id="csvPreviewBody">
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      <!-- ===== TAB: PEDIDOS ===== -->
+      <div class="admin-tab-content" id="tabOrders" style="display:none">
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <h3>Gestión de Pedidos</h3>
+            <div style="display:flex;gap:var(--spacing-sm);align-items:center">
+              <select class="form-select" id="orderStatusFilter" style="width:auto;font-size:0.85rem;">
+                <option value="all">Todos los estados</option>
+                <option value="pending">Pendientes</option>
+                <option value="processing">En proceso</option>
+                <option value="shipped">Enviados</option>
+                <option value="delivered">Entregados</option>
+                <option value="cancelled">Cancelados</option>
+              </select>
+            </div>
+          </div>
+          <div class="admin-panel-body">
+            <div class="table-responsive">
+              <table class="products-table" id="ordersTable">
+                <thead>
+                  <tr>
+                    <th>ID Pedido</th>
+                    <th>Fecha</th>
+                    <th>Productos</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: PÁGINAS CMS ===== -->
+      <div class="admin-tab-content" id="tabPages" style="display:none">
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <h3>Gestión de Páginas</h3>
+          </div>
+          <div class="admin-panel-body">
+            <div class="table-responsive">
+              <table class="products-table" id="pagesTable">
+                <thead>
+                  <tr>
+                    <th>Página</th>
+                    <th>Slug</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="pagesTableBody">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: ESTADÍSTICAS ===== -->
+      <div class="admin-tab-content" id="tabStats" style="display:none">
+        <div class="admin-stats" style="margin-bottom:var(--spacing-xl)">
+          <div class="stat-card" style="border-left:4px solid var(--primary-blue)">
+            <div class="stat-card-value" id="statTotalRevenue">$0</div>
+            <div class="stat-card-label">Ingresos totales</div>
+          </div>
+          <div class="stat-card" style="border-left:4px solid var(--success)">
+            <div class="stat-card-value" id="statTotalSales">0</div>
+            <div class="stat-card-label">Ventas realizadas</div>
+          </div>
+          <div class="stat-card" style="border-left:4px solid var(--primary-orange)">
+            <div class="stat-card-value" id="statAvgOrder">$0</div>
+            <div class="stat-card-label">Ticket promedio</div>
+          </div>
+          <div class="stat-card" style="border-left:4px solid var(--info)">
+            <div class="stat-card-value" id="statTotalViews">0</div>
+            <div class="stat-card-label">Vistas totales</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-lg)">
+          <div class="admin-panel">
+            <div class="admin-panel-header"><h3>Productos más vistos</h3></div>
+            <div class="admin-panel-body">
+              <div id="mostViewedList"><p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos aún</p></div>
+            </div>
+          </div>
+          <div class="admin-panel">
+            <div class="admin-panel-header"><h3>Productos más vendidos</h3></div>
+            <div class="admin-panel-body">
+              <div id="topSellingList"><p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos aún</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-panel" style="margin-top:var(--spacing-lg)">
+          <div class="admin-panel-header"><h3>Ventas por categoría</h3></div>
+          <div class="admin-panel-body">
+            <div id="salesByCategoryList"><p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos aún</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: BANNERS ===== -->
+      <div class="admin-tab-content" id="tabBanners" style="display:none">
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <h3>Banners Promocionales</h3>
+            <button class="btn btn-primary" id="btnAddBanner">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Agregar banner
+            </button>
+          </div>
+          <div class="admin-panel-body">
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--spacing-md);">Gestiona los banners del carrusel principal. Puedes programarlos por fechas especiales.</p>
+            <div id="bannersContainer">
+              <p style="color:var(--text-tertiary);text-align:center;padding:1rem;">No hay banners personalizados.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Promo Photo Banners -->
+        <div class="admin-panel" style="margin-top:var(--spacing-lg)">
+          <div class="admin-panel-header">
+            <h3>Banners Foto Promocional</h3>
+            <button class="btn btn-primary" id="btnAddPromoPhoto">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Agregar banner foto
+            </button>
+          </div>
+          <div class="admin-panel-body">
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--spacing-md);">Banners de imagen completa que se muestran en la página principal. Ideal para promociones especiales. No se muestran dentro del detalle de producto.</p>
+            <div id="promoPhotosContainer">
+              <p style="color:var(--text-tertiary);text-align:center;padding:1rem;">No hay banners de foto promocional.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: PQRs ===== -->
+      <div class="admin-tab-content" id="tabPqrs" style="display:none">
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <h3>Peticiones, Quejas y Reclamos</h3>
+            <div style="display:flex;gap:var(--spacing-sm);align-items:center">
+              <select class="form-select" id="pqrStatusFilter" style="width:auto;font-size:0.85rem;">
+                <option value="all">Todos</option>
+                <option value="open">Abiertos</option>
+                <option value="answered">Respondidos</option>
+                <option value="closed">Cerrados</option>
+              </select>
+            </div>
+          </div>
+          <div class="admin-panel-body">
+            <div class="table-responsive">
+              <table class="products-table" id="pqrsTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Tipo</th>
+                    <th>Asunto</th>
+                    <th>Usuario</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="pqrsTableBody">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: REDES SOCIALES ===== -->
+      <div class="admin-tab-content" id="tabSocial" style="display:none">
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <h3>Redes Sociales</h3>
+          </div>
+          <div class="admin-panel-body">
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--spacing-md);">Configura los enlaces a tus redes sociales. Se mostrarán en el pie de página de la tienda. Deja vacío para ocultar.</p>
+            <form id="socialLinksForm" class="social-links-form">
+              <div class="login-field">
+                <label for="socialInstagram">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                  Instagram
+                </label>
+                <input type="url" id="socialInstagram" class="form-input" placeholder="https://instagram.com/tutienda">
+              </div>
+              <div class="login-field">
+                <label for="socialFacebook">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+                  Facebook
+                </label>
+                <input type="url" id="socialFacebook" class="form-input" placeholder="https://facebook.com/tutienda">
+              </div>
+              <div class="login-field">
+                <label for="socialTiktok">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:4px"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V9.05a8.16 8.16 0 004.76 1.52V7.12a4.84 4.84 0 01-1-.43z"/></svg>
+                  TikTok
+                </label>
+                <input type="url" id="socialTiktok" class="form-input" placeholder="https://tiktok.com/@tutienda">
+              </div>
+              <div class="login-field">
+                <label for="socialTwitter">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+                  Twitter / X
+                </label>
+                <input type="url" id="socialTwitter" class="form-input" placeholder="https://twitter.com/tutienda">
+              </div>
+              <div class="login-field">
+                <label for="socialYoutube">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29.94 29.94 0 001 11.75a30 30 0 00.46 5.33A2.78 2.78 0 003.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2c.312-1.732.466-3.49.46-5.25a29.94 29.94 0 00-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+                  YouTube
+                </label>
+                <input type="url" id="socialYoutube" class="form-input" placeholder="https://youtube.com/@tutienda">
+              </div>
+              <div class="login-field">
+                <label for="socialWhatsapp">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366" style="vertical-align:middle;margin-right:4px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.654-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  WhatsApp
+                </label>
+                <input type="url" id="socialWhatsapp" class="form-input" placeholder="https://wa.me/573001234567">
+              </div>
+              <button type="submit" class="btn btn-primary" style="margin-top:var(--spacing-md)">Guardar enlaces</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="product-form-overlay" id="orderDetailOverlay">
+    <div class="product-form-modal" style="max-width:600px">
+      <div class="modal-header">
+        <h2 id="orderDetailTitle">Pedido</h2>
+        <button class="modal-close" id="btnCloseOrderDetail" aria-label="Cerrar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="orderDetailBody">
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: EDITAR PÁGINA ==================== -->
+  <div class="product-form-overlay" id="pageFormOverlay">
+    <div class="product-form-modal" style="max-width:800px">
+      <div class="modal-header">
+        <h2 id="pageFormTitle">Editar página</h2>
+        <button class="modal-close" id="btnClosePageForm" aria-label="Cerrar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="pageForm" autocomplete="off">
+          <input type="hidden" id="pageSlug">
+          <div class="form-group">
+            <label class="form-label" for="pageTitle">Título</label>
+            <input type="text" class="form-input" id="pageTitle" required maxlength="200">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pageContent">Contenido (HTML)</label>
+            <textarea class="form-textarea" id="pageContent" style="min-height:300px;font-family:var(--font-mono);font-size:0.85rem;" maxlength="50000"></textarea>
+            <p class="form-hint">Puedes usar etiquetas HTML: &lt;h1&gt;, &lt;h3&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;a&gt;, &lt;strong&gt;, etc.</p>
+          </div>
+          <div style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;padding-top:var(--spacing-md);">
+            <button type="button" class="btn btn-secondary" id="btnCancelPage">Cancelar</button>
+            <button type="submit" class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Guardar página
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: FORMULARIO DE PRODUCTO ==================== -->
+  <div class="product-form-overlay" id="productFormOverlay">
+    <div class="product-form-modal">
+      <div class="modal-header">
+        <h2 id="productFormTitle">Agregar producto</h2>
+        <button class="modal-close" id="btnCloseProductForm" aria-label="Cerrar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="productForm" autocomplete="off">
+          <input type="hidden" id="productId">
+
+          <div class="form-group">
+            <label class="form-label" for="productName">Nombre del producto *</label>
+            <input type="text" class="form-input" id="productName" required maxlength="200" placeholder="Ej: Audífonos Bluetooth Pro">
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-md)">
+            <div class="form-group">
+              <label class="form-label" for="productPrice">Precio (COP) *</label>
+              <input type="number" class="form-input" id="productPrice" required min="0" step="100" placeholder="189900">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="productStock">Stock</label>
+              <input type="number" class="form-input" id="productStock" min="0" value="0" placeholder="25">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:var(--spacing-sm);cursor:pointer">
+              <input type="checkbox" id="productOfferActive">
+              <span class="form-label" style="margin:0">Activar oferta / descuento</span>
+            </label>
+          </div>
+
+          <div id="offerFields" style="display:none">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-md)">
+              <div class="form-group">
+                <label class="form-label" for="productOfferPrice">Precio oferta (COP)</label>
+                <input type="number" class="form-input" id="productOfferPrice" min="0" step="100" placeholder="149900">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="productOfferPercent">% Descuento (auto)</label>
+                <input type="text" class="form-input" id="productOfferPercent" readonly placeholder="—" style="background:var(--bg-secondary)">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="productCategory">Categoría</label>
+            <input type="text" class="form-input" id="productCategory" maxlength="100" placeholder="Ej: Audio, Periféricos, Accesorios" list="categoriesList">
+            <datalist id="categoriesList"></datalist>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="productBrand">Marca</label>
+            <input type="text" class="form-input" id="productBrand" maxlength="100" placeholder="Ej: Sony, Logitech, Anker" list="brandsList">
+            <datalist id="brandsList"></datalist>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="productDescription">Descripción</label>
+            <textarea class="form-textarea" id="productDescription" maxlength="500" placeholder="Descripción corta del producto..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Colores disponibles</label>
+            <div class="colors-input-wrapper">
+              <div class="colors-tags" id="colorsTags"></div>
+              <input type="text" class="form-input" id="colorsInput" placeholder="Escribir color y presionar Enter" maxlength="30">
+            </div>
+            <p class="form-hint">Presiona Enter para agregar cada color. Ej: Negro, Blanco, Azul</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Especificaciones</label>
+            <div id="specsContainer"></div>
+            <button type="button" class="btn btn-secondary" id="btnAddSpec" style="margin-top:var(--spacing-sm)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Agregar especificación
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Imágenes del producto</label>
+            <div class="image-upload-area" id="imageUploadArea">
+              <div class="upload-text" id="uploadText">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
+                </svg>
+                <span>Haz clic o arrastra imágenes aquí</span>
+              </div>
+              <input type="file" id="imageInput" accept="image/*" multiple style="display:none">
+            </div>
+            <div class="image-previews-grid" id="imagePreviewsGrid"></div>
+            <img id="imagePreview" src="" alt="Vista previa" style="display:none">
+            <p class="form-hint">JPG, PNG o WebP. Puedes subir varias imágenes. La primera será la principal.</p>
+          </div>
+
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:var(--spacing-sm);cursor:pointer">
+              <input type="checkbox" id="productFeatured">
+              <span class="form-label" style="margin:0">Producto destacado (mostrar en inicio)</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:var(--spacing-sm);cursor:pointer">
+              <input type="checkbox" id="productActive" checked>
+              <span class="form-label" style="margin:0">Producto activo (visible en la tienda)</span>
+            </label>
+          </div>
+
+          <div style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;padding-top:var(--spacing-md);">
+            <button type="button" class="btn btn-secondary" id="btnCancelProduct">Cancelar</button>
+            <button type="submit" class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Guardar producto
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: BANNER ==================== -->
+  <div class="product-form-overlay" id="bannerFormOverlay">
+    <div class="product-form-modal" style="max-width:600px">
+      <div class="modal-header">
+        <h2 id="bannerFormTitle">Agregar banner</h2>
+        <button class="modal-close" id="btnCloseBannerForm" aria-label="Cerrar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="bannerForm" autocomplete="off">
+          <input type="hidden" id="bannerId">
+          <div class="form-group">
+            <label class="form-label" for="bannerTitle">Título del banner *</label>
+            <input type="text" class="form-input" id="bannerTitle" required maxlength="200" placeholder="Ej: Ofertas de Navidad">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="bannerSubtitle">Subtítulo</label>
+            <input type="text" class="form-input" id="bannerSubtitle" maxlength="300" placeholder="Ej: Hasta 50% de descuento">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-md)">
+            <div class="form-group">
+              <label class="form-label" for="bannerStartDate">Fecha inicio</label>
+              <input type="date" class="form-input" id="bannerStartDate">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="bannerEndDate">Fecha fin</label>
+              <input type="date" class="form-input" id="bannerEndDate">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Imagen del banner</label>
+            <div class="image-upload-area" id="bannerImageArea">
+              <div class="upload-text" id="bannerUploadText">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
+                </svg>
+                <span>Haz clic o arrastra una imagen aquí</span>
+              </div>
+              <img id="bannerImagePreview" src="" alt="Vista previa" style="display:none">
+              <input type="file" id="bannerImageInput" accept="image/*" style="display:none">
+            </div>
+          </div>
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:var(--spacing-sm);cursor:pointer">
+              <input type="checkbox" id="bannerActive" checked>
+              <span class="form-label" style="margin:0">Banner activo</span>
+            </label>
+          </div>
+          <div style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;padding-top:var(--spacing-md);">
+            <button type="button" class="btn btn-secondary" id="btnCancelBanner">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar banner</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: PQR DETAIL ==================== -->
+  <div class="product-form-overlay" id="pqrDetailOverlay">
+    <div class="product-form-modal" style="max-width:600px">
+      <div class="modal-header">
+        <h2 id="pqrDetailTitle">PQR</h2>
+        <button class="modal-close" id="btnClosePqrDetail" aria-label="Cerrar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="pqrDetailBody"></div>
+      <div style="padding:0 var(--spacing-lg) var(--spacing-lg)">
+        <form id="pqrReplyForm" autocomplete="off">
+          <input type="hidden" id="pqrReplyId">
+          <div class="form-group">
+            <label class="form-label" for="pqrReplyText">Respuesta del admin</label>
+            <textarea class="form-textarea" id="pqrReplyText" placeholder="Escribe tu respuesta..." maxlength="2000" style="min-height:100px"></textarea>
+          </div>
+          <div style="display:flex;gap:var(--spacing-sm);justify-content:flex-end">
+            <button type="submit" class="btn btn-primary">Enviar respuesta</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: PROMO PHOTO BANNER ==================== -->
+  <div class="product-form-overlay" id="promoPhotoFormOverlay">
+    <div class="product-form-modal" style="max-width:600px">
+      <div class="modal-header">
+        <h2 id="promoPhotoFormTitle">Agregar banner foto</h2>
+        <button class="modal-close" id="btnClosePromoPhotoForm" aria-label="Cerrar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="promoPhotoForm" autocomplete="off">
+          <div class="form-group">
+            <label class="form-label" for="promoPhotoTitle">Título (opcional)</label>
+            <input type="text" class="form-input" id="promoPhotoTitle" maxlength="200" placeholder="Ej: Gran promoción de mayo">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="promoPhotoLink">Enlace al hacer clic (opcional)</label>
+            <input type="url" class="form-input" id="promoPhotoLink" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="promoPhotoPosition">Posición en la página</label>
+            <select class="form-select" id="promoPhotoPosition">
+              <option value="after-featured">Después de productos destacados</option>
+              <option value="after-categories">Después de top categorías</option>
+              <option value="before-footer">Antes del footer</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Imagen del banner *</label>
+            <div class="image-upload-area" id="promoPhotoImageArea" style="min-height:120px">
+              <div class="upload-text" id="promoPhotoUploadText">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
+                </svg>
+                <span>Haz clic o arrastra una imagen aquí (max 5MB)</span>
+              </div>
+              <img id="promoPhotoImagePreview" src="" alt="Vista previa" style="display:none">
+              <input type="file" id="promoPhotoImageInput" accept="image/*" style="display:none">
+            </div>
+          </div>
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:var(--spacing-sm);cursor:pointer">
+              <input type="checkbox" id="promoPhotoActive" checked>
+              <span class="form-label" style="margin:0">Banner activo</span>
+            </label>
+          </div>
+          <div style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;padding-top:var(--spacing-md);">
+            <button type="button" class="btn btn-secondary" id="btnCancelPromoPhoto">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar banner foto</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

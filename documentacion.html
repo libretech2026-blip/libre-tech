@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LIBRE TECH - Documentación del Proyecto</title>
+  <style>
+    :root {
+      --primary: #1a4b8c;
+      --orange: #e87722;
+      --bg: #f5f5f7;
+      --bg-card: #ffffff;
+      --text: #1d1d1f;
+      --text-sec: #6e6e73;
+      --border: #e8e8ed;
+      --success: #34c759;
+      --warning: #ff9500;
+      --info: #007aff;
+      --danger: #ff3b30;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    .doc-header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--orange) 100%);
+      color: #fff;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .doc-header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.5rem;
+    }
+
+    .doc-header p {
+      opacity: 0.9;
+      font-size: 1.05rem;
+    }
+
+    .doc-header .version {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 4px 12px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .doc-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .doc-nav {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .doc-nav h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: var(--primary);
+    }
+
+    .doc-nav ol {
+      padding-left: 1.2rem;
+    }
+
+    .doc-nav li {
+      margin-bottom: 0.4rem;
+    }
+
+    .doc-nav a {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .doc-nav a:hover {
+      text-decoration: underline;
+    }
+
+    .doc-section {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .doc-section h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--primary);
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .doc-section h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 1.2rem 0 0.5rem;
+      color: var(--text);
+    }
+
+    .doc-section p, .doc-section li {
+      font-size: 0.92rem;
+      color: var(--text-sec);
+    }
+
+    .doc-section ul, .doc-section ol {
+      padding-left: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .doc-section li {
+      margin-bottom: 0.3rem;
+    }
+
+    code {
+      background: #f0f0f5;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    pre {
+      background: #1d1d1f;
+      color: #e8e8ed;
+      padding: 1rem 1.2rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      margin: 0.75rem 0 1rem;
+    }
+
+    .badge-status {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-done { background: rgba(52,199,89,0.12); color: var(--success); }
+    .badge-progress { background: rgba(255,149,0,0.12); color: var(--warning); }
+    .badge-planned { background: rgba(0,122,255,0.12); color: var(--info); }
+    .badge-fix { background: rgba(255,59,48,0.12); color: var(--danger); }
+
+    .changelog-entry {
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      background: rgba(26,75,140,0.03);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .changelog-entry .date {
+      font-size: 0.8rem;
+      color: var(--text-sec);
+      font-weight: 600;
+    }
+
+    .changelog-entry h4 {
+      font-size: 0.95rem;
+      margin: 0.25rem 0;
+    }
+
+    .changelog-entry p {
+      font-size: 0.85rem;
+      color: var(--text-sec);
+    }
+
+    .file-tree {
+      background: #1d1d1f;
+      color: #e8e8ed;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.82rem;
+      line-height: 1.8;
+    }
+
+    .file-tree .folder { color: #5ac8fa; }
+    .file-tree .file { color: #e8e8ed; }
+    .file-tree .comment { color: #86868b; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+
+    th, td {
+      padding: 0.6rem 0.8rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    td { color: var(--text-sec); }
+
+    @media (max-width: 600px) {
+      .doc-header h1 { font-size: 1.6rem; }
+      .doc-container { padding: 1rem; }
+      .doc-section { padding: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="doc-header">
+    <h1>📘 LIBRE TECH - Documentación</h1>
+    <p>Documentación técnica y registro de cambios del proyecto</p>
+    <span class="version">v1.1.0 — Última actualización: 15 de abril de 2026</span>
+  </div>
+
+  <div class="doc-container">
+
+    <!-- ÍNDICE -->
+    <nav class="doc-nav">
+      <h2>📋 Índice</h2>
+      <ol>
+        <li><a href="#overview">Descripción general del proyecto</a></li>
+        <li><a href="#structure">Estructura de archivos</a></li>
+        <li><a href="#tech">Tecnologías utilizadas</a></li>
+        <li><a href="#modules">Módulos del sistema</a></li>
+        <li><a href="#changelog">Registro de cambios (Changelog)</a></li>
+        <li><a href="#features">Funcionalidades detalladas</a></li>
+        <li><a href="#pending">Tareas pendientes / Roadmap</a></li>
+      </ol>
+    </nav>
+
+    <!-- 1. DESCRIPCIÓN GENERAL -->
+    <section class="doc-section" id="overview">
+      <h2>1. Descripción general del proyecto</h2>
+      <p>
+        <strong>LIBRE TECH</strong> es una tienda en línea de productos de tecnología enfocada en el mercado colombiano.
+        Permite a los usuarios navegar productos, filtrarlos por categoría y marca, agregarlos a un carrito de compras
+        y finalizar pedidos a través de WhatsApp. El sistema incluye un panel de administración para gestionar
+        el catálogo de productos.
+      </p>
+      <h3>Características principales</h3>
+      <ul>
+        <li>Catálogo de productos con navegación por categoría y marca</li>
+        <li>Búsqueda en tiempo real con resultados desplegables</li>
+        <li>Carrito de compras con persistencia en localStorage</li>
+        <li>Finalización de pedidos vía WhatsApp</li>
+        <li>Autenticación con Google (OAuth 2.0) y login con formulario</li>
+        <li>Panel de administración protegido por contraseña</li>
+        <li>Importación masiva de productos desde archivos CSV/TXT</li>
+        <li>Historial de pedidos por usuario</li>
+        <li>Diseño responsive y moderno</li>
+      </ul>
+    </section>
+
+    <!-- 2. ESTRUCTURA -->
+    <section class="doc-section" id="structure">
+      <h2>2. Estructura de archivos</h2>
+      <div class="file-tree">
+        <span class="folder">LIBRE_TECH/</span><br>
+        ├── <span class="file">index.html</span> <span class="comment">— Tienda principal (frontend del cliente)</span><br>
+        ├── <span class="file">admin.html</span> <span class="comment">— Panel de administración</span><br>
+        ├── <span class="file">documentacion.html</span> <span class="comment">— Este archivo de documentación</span><br>
+        ├── <span class="file">LOGO_LIBRETECH.png</span> <span class="comment">— Logo del proyecto</span><br>
+        ├── <span class="folder">css/</span><br>
+        │   └── <span class="file">styles.css</span> <span class="comment">— Estilos globales (tienda + admin)</span><br>
+        ├── <span class="folder">js/</span><br>
+        │   ├── <span class="file">app.js</span> <span class="comment">— Lógica principal: productos, filtros, búsqueda</span><br>
+        │   ├── <span class="file">cart.js</span> <span class="comment">— Módulo del carrito de compras</span><br>
+        │   ├── <span class="file">auth.js</span> <span class="comment">— Autenticación (Google + formulario local)</span><br>
+        │   └── <span class="file">admin.js</span> <span class="comment">— Lógica del panel de administración</span><br>
+        ├── <span class="folder">img/</span><br>
+        │   └── <span class="folder">products/</span> <span class="comment">— Imágenes de productos</span><br>
+        └── <span class="folder">SCRAPPING/</span> <span class="comment">— Datos scrapeados (referencia)</span>
+      </div>
+    </section>
+
+    <!-- 3. TECNOLOGÍAS -->
+    <section class="doc-section" id="tech">
+      <h2>3. Tecnologías utilizadas</h2>
+      <table>
+        <thead>
+          <tr><th>Tecnología</th><th>Uso</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>HTML5</td><td>Estructura semántica de las páginas</td></tr>
+          <tr><td>CSS3 (Custom Properties)</td><td>Estilos, tema, animaciones, responsive design</td></tr>
+          <tr><td>JavaScript ES6+ (Vanilla)</td><td>Lógica de la aplicación (módulos IIFE)</td></tr>
+          <tr><td>localStorage</td><td>Persistencia de productos, carrito, usuarios y pedidos</td></tr>
+          <tr><td>Google Identity Services</td><td>Autenticación OAuth 2.0 con Google</td></tr>
+          <tr><td>WhatsApp API (wa.me)</td><td>Generación de pedidos via WhatsApp</td></tr>
+          <tr><td>Google Fonts (Inter)</td><td>Tipografía principal</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 4. MÓDULOS -->
+    <section class="doc-section" id="modules">
+      <h2>4. Módulos del sistema</h2>
+
+      <h3>4.1 Store (<code>app.js</code>)</h3>
+      <p>Módulo IIFE que maneja la lógica principal de la tienda.</p>
+      <ul>
+        <li><strong>seedProducts()</strong> — Carga productos iniciales de demostración si el localStorage está vacío</li>
+        <li><strong>getFilteredProducts()</strong> — Filtra por categoría, marca y término de búsqueda</li>
+        <li><strong>renderCategories()</strong> — Genera chips de filtro por categoría dinámicamente</li>
+        <li><strong>renderBrandSubFilters(category)</strong> — Muestra sub-filtros de marca al seleccionar una categoría</li>
+        <li><strong>renderProducts()</strong> — Renderiza las tarjetas de producto en el grid</li>
+        <li><strong>renderSearchDropdown(query)</strong> — Muestra resultados de búsqueda en tiempo real (dropdown)</li>
+        <li><strong>initHeaderScroll()</strong> — Efecto de sombra en el header al hacer scroll</li>
+      </ul>
+
+      <h3>4.2 Cart (<code>cart.js</code>)</h3>
+      <p>Módulo IIFE para el carrito de compras.</p>
+      <ul>
+        <li><strong>addItem(productId)</strong> — Agrega un producto al carrito (o incrementa cantidad)</li>
+        <li><strong>removeItem(productId)</strong> — Elimina un producto del carrito</li>
+        <li><strong>updateQuantity(productId, delta)</strong> — Ajusta la cantidad (+/-)</li>
+        <li><strong>sendToWhatsApp()</strong> — Genera mensaje formateado y abre WhatsApp</li>
+        <li><strong>showToast(message, type)</strong> — Muestra notificaciones tipo toast con auto-eliminación</li>
+        <li><strong>formatPrice(price)</strong> — Formato COP (pesos colombianos)</li>
+      </ul>
+
+      <h3>4.3 Auth (<code>auth.js</code>)</h3>
+      <p>Módulo IIFE de autenticación.</p>
+      <ul>
+        <li><strong>initGoogleSignIn()</strong> — Configura Google Identity Services</li>
+        <li><strong>handleGoogleResponse()</strong> — Procesa el JWT token de Google</li>
+        <li><strong>setUser(user) / logoutUser()</strong> — Gestiona la sesión del usuario</li>
+        <li><strong>renderOrders()</strong> — Muestra el historial de pedidos del usuario</li>
+        <li>Formulario de login local (email + contraseña) integrado en el dropdown de perfil</li>
+      </ul>
+
+      <h3>4.4 Admin (<code>admin.js</code>)</h3>
+      <p>Panel de administración protegido por contraseña.</p>
+      <ul>
+        <li>CRUD completo de productos (crear, leer, actualizar, eliminar)</li>
+        <li>Carga de imágenes de productos (base64 en localStorage)</li>
+        <li>Importación masiva desde archivos CSV/TXT</li>
+        <li>Estadísticas del catálogo (productos, categorías, activos, pedidos)</li>
+      </ul>
+    </section>
+
+    <!-- 5. CHANGELOG -->
+    <section class="doc-section" id="changelog">
+      <h2>5. Registro de cambios (Changelog)</h2>
+
+      <div class="changelog-entry">
+        <span class="date">15 de abril de 2026</span>
+        <h4>v1.1.0 — Mejoras de UX y nuevas funcionalidades</h4>
+        <p>Se realizaron las siguientes mejoras:</p>
+        <ul>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Animaciones del banner (Hero)</strong> — Se reemplazaron las burbujas circulares "bugeadas" por
+            iconos tecnológicos SVG animados (audífonos, CPU, WiFi, smartphone, monitor, Bluetooth). Se optimizaron
+            las animaciones con <code>will-change</code> y keyframes suaves tipo <code>techFloat</code>.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Notificaciones toast pegadas</strong> — Se corrigió el bug donde las notificaciones toast se
+            quedaban permanentemente en pantalla. Se añadió un fallback con <code>setTimeout</code> para garantizar
+            la eliminación del toast incluso si el evento <code>animationend</code> no se dispara.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Búsqueda en tiempo real (Live Search)</strong> — La barra de búsqueda ahora muestra un dropdown
+            con los productos que coinciden mientras el usuario escribe. Cada resultado muestra imagen, nombre,
+            categoría y precio. Al hacer clic en un resultado se agrega al carrito.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Botón de perfil con panel de login</strong> — Se movió el botón de "Iniciar sesión con Google"
+            dentro de un nuevo botón de perfil (ícono de persona) ubicado a la izquierda del carrito, en el extremo
+            derecho de la página. Al hacer clic se despliega un panel con:
+            <ul>
+              <li>Formulario de inicio de sesión (usuario/correo + contraseña)</li>
+              <li>Botón de login con Google</li>
+              <li>Enlace "¿No tienes cuenta aún? Crear una cuenta"</li>
+            </ul>
+            Cuando el usuario está logueado, el panel cambia a mostrar su nombre, email, historial de pedidos y
+            botón de cerrar sesión.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Sub-filtros de marca por categoría</strong> — Al hacer clic en una categoría (ej: "Audio"),
+            se despliega una segunda barra de filtros con las marcas disponibles en esa categoría (ej: Sony, JBL).
+            Permite un filtrado más granular de los productos. Se añadió el campo <code>brand</code> a los
+            productos de ejemplo.
+          </li>
+        </ul>
+      </div>
+
+      <div class="changelog-entry">
+        <span class="date">Anterior a abril 2026</span>
+        <h4>v1.0.0 — Versión inicial</h4>
+        <p>Lanzamiento inicial del proyecto con las siguientes funcionalidades:</p>
+        <ul>
+          <li>Tienda de productos con diseño moderno y responsive</li>
+          <li>Carrito de compras con persistencia en localStorage</li>
+          <li>Finalización de pedidos por WhatsApp</li>
+          <li>Autenticación con Google Identity Services</li>
+          <li>Panel de administración con CRUD de productos</li>
+          <li>Importación masiva desde CSV/TXT</li>
+          <li>Sistema de categorías con filtros</li>
+          <li>Historial de pedidos por usuario</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 6. FUNCIONALIDADES DETALLADAS -->
+    <section class="doc-section" id="features">
+      <h2>6. Funcionalidades detalladas</h2>
+
+      <h3>6.1 Búsqueda en tiempo real</h3>
+      <p>
+        Al escribir en la barra de búsqueda, se ejecuta una búsqueda con debounce (300ms) que filtra los productos
+        activos por nombre, descripción, categoría y marca. Los resultados aparecen en un dropdown posicionado
+        debajo de la barra. Se cierra al hacer clic fuera o al seleccionar un producto.
+      </p>
+      <pre>// Flujo de búsqueda:
+1. Usuario escribe en #searchInput
+2. Debounce de 300ms
+3. Se filtran productos con getActiveProducts()
+4. Se renderizan máximo 8 resultados en #searchDropdown
+5. Clic en resultado → Cart.addItem() y se cierra dropdown</pre>
+
+      <h3>6.2 Sistema de filtros (Categorías + Marcas)</h3>
+      <p>
+        Los filtros funcionan en dos niveles:
+      </p>
+      <ul>
+        <li><strong>Nivel 1 — Categorías:</strong> Chips generados dinámicamente desde los productos activos.
+        Al seleccionar una categoría se muestra el segundo nivel de filtros.</li>
+        <li><strong>Nivel 2 — Marcas:</strong> Sub-filtros que aparecen debajo de las categorías, mostrando
+        únicamente las marcas existentes dentro de la categoría seleccionada.</li>
+      </ul>
+
+      <h3>6.3 Panel de perfil y autenticación</h3>
+      <p>
+        El acceso al perfil se realiza mediante un botón con ícono de usuario ubicado en el header, a la izquierda
+        del botón de carrito. Ambos botones están en el extremo derecho de la barra de navegación.
+      </p>
+      <p>El dropdown de perfil tiene dos estados:</p>
+      <ul>
+        <li><strong>No autenticado:</strong> Muestra formulario con campos de correo/usuario y contraseña,
+        botón de iniciar sesión, separador visual, botón de Google, y enlace para crear cuenta.</li>
+        <li><strong>Autenticado:</strong> Muestra nombre y email del usuario, enlace a "Mis pedidos" y
+        botón de "Cerrar sesión".</li>
+      </ul>
+
+      <h3>6.4 Notificaciones Toast</h3>
+      <p>
+        Las notificaciones tipo toast aparecen en la esquina inferior derecha. Soportan tres tipos:
+        <code>success</code>, <code>error</code>, <code>info</code>. Se eliminan automáticamente después de
+        3 segundos con animación de salida. Se incluye un fallback de eliminación por <code>setTimeout</code>
+        para evitar que se queden pegadas.
+      </p>
+
+      <h3>6.5 Banner Hero con iconos tecnológicos</h3>
+      <p>
+        El banner principal utiliza 6 iconos SVG de objetos tecnológicos que flotan con animación CSS.
+        Los iconos incluyen: audífonos, chip/CPU, señal WiFi, smartphone, monitor y símbolo Bluetooth.
+        La animación usa <code>will-change: transform, opacity</code> para optimización GPU y keyframes
+        suaves con diferentes duraciones y delays para un efecto orgánico.
+      </p>
+    </section>
+
+    <!-- 7. TAREAS PENDIENTES -->
+    <section class="doc-section" id="pending">
+      <h2>7. Tareas pendientes / Roadmap</h2>
+      <table>
+        <thead>
+          <tr><th>Tarea</th><th>Estado</th><th>Prioridad</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Configurar Google Client ID para login real</td>
+            <td><span class="badge-status badge-planned">Pendiente</span></td>
+            <td>Alta</td>
+          </tr>
+          <tr>
+            <td>Implementar registro de cuentas (crear cuenta)</td>
+            <td><span class="badge-status badge-planned">Pendiente</span></td>
+            <td>Media</td>
+          </tr>
+          <tr>
+            <td>Backend para persistencia de datos (reemplazar localStorage)</td>
+            <td><span class="badge-status badge-planned">Pendiente</span></td>
+            <td>Alta</td>
+          </tr>
+          <tr>
+            <td>Cargar imágenes reales de productos</td>
+            <td><span class="badge-status badge-planned">Pendiente</span></td>
+            <td>Media</td>
+          </tr>
+          <tr>
+            <td>Optimización SEO y metadatos Open Graph</td>
+            <td><span class="badge-status badge-planned">Pendiente</span></td>
+            <td>Baja</td>
+          </tr>
+          <tr>
+            <td>PWA (Progressive Web App) con Service Worker</td>
+            <td><span class="badge-status badge-planned">Pendiente</span></td>
+            <td>Baja</td>
+          </tr>
+          <tr>
+            <td>Pasarela de pagos (PSE, tarjeta, Nequi)</td>
+            <td><span class="badge-status badge-planned">Pendiente</span></td>
+            <td>Alta</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </div>
+
+</body>
+</html>

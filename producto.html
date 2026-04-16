@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LIBRE TECH - Detalle de producto">
+  <meta name="theme-color" content="#1a4b8c">
+  <title>Producto | LIBRE TECH</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="icon" type="image/png" href="LOGO_LIBRETECH.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="site-header" id="siteHeader">
+    <div class="header-inner">
+      <a href="index.html" class="logo-link">
+        <img src="LOGO_LIBRETECH.png" alt="LIBRE TECH" class="logo-img" width="40" height="40">
+        <span class="logo-text">LIBRE TECH</span>
+      </a>
+      <div class="search-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="search" class="search-input" id="searchInput" placeholder="Buscar productos..." autocomplete="off" aria-label="Buscar productos">
+        <div class="search-dropdown" id="searchDropdown"></div>
+      </div>
+      <div style="flex:1"></div>
+      <div class="header-actions">
+        <button class="theme-toggle" id="themeToggle" title="Cambiar modo claro/oscuro" aria-label="Cambiar tema">
+          <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
+        <div class="user-menu-wrapper" id="userMenuWrapper">
+          <button class="header-btn" id="btnProfile" title="Mi perfil" aria-label="Mi perfil">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </button>
+          <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none" width="36" height="36">
+          <div class="user-dropdown" id="userDropdown">
+            <div class="login-panel" id="loginPanel">
+              <div class="login-panel-header">
+                <h3>Entrar</h3>
+                <button class="login-close" id="btnCloseLogin" aria-label="Cerrar">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <form id="loginForm" autocomplete="off" class="login-form">
+                <div class="login-field">
+                  <label for="loginEmail">Nombre de usuario o correo electrónico <span class="required">*Obligatorio</span></label>
+                  <input type="text" id="loginEmail" class="form-input" required>
+                </div>
+                <div class="login-field">
+                  <label for="loginPassword">Contraseña <span class="required">*Obligatorio</span></label>
+                  <input type="password" id="loginPassword" class="form-input" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Iniciar sesión</button>
+              </form>
+              <div class="login-divider"><span>o</span></div>
+              <button class="btn-google-login" id="btnGoogleLogin" title="Iniciar sesión con Google">
+                <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+                <span>Iniciar sesión con Google</span>
+              </button>
+              <div class="login-register">
+                <p>¿No tienes cuenta aún?</p>
+                <a href="#" id="btnCreateAccount" class="create-account-link">Crear una cuenta</a>
+              </div>
+            </div>
+            <div class="logged-panel" id="loggedPanel" style="display:none">
+              <div class="user-dropdown-header">
+                <p id="userName"></p>
+                <small id="userEmail"></small>
+              </div>
+              <a href="#" id="btnOrderHistory">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Mis pedidos
+              </a>
+              <button id="btnLogout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+        <button class="header-btn" id="btnOpenWishlist" title="Mi lista de deseos" aria-label="Ver lista de deseos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+          </svg>
+          <span class="badge wishlist-badge" id="wishlistBadge" style="display:none">0</span>
+        </button>
+        <button class="header-btn" id="btnOpenCart" title="Ver carrito" aria-label="Abrir carrito de compras">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+          </svg>
+          <span class="badge" id="cartBadge" style="display:none">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== BREADCRUMB ==================== -->
+  <nav class="breadcrumb container" id="breadcrumb" aria-label="Navegación">
+    <a href="index.html">Inicio</a>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    <span id="breadcrumbProduct">Producto</span>
+  </nav>
+
+  <!-- ==================== PRODUCT DETAIL ==================== -->
+  <main class="product-detail container" id="productDetail">
+    <div class="pd-layout">
+      <!-- Left: Image gallery -->
+      <div class="pd-gallery">
+        <div class="pd-main-image" id="pdMainImage">
+          <div class="product-no-image">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+          </div>
+        </div>
+        <!-- Thumbnail strip (rendered by JS when multiple images) -->
+        <div class="pd-thumbnails" id="pdThumbnails" style="display:none"></div>
+      </div>
+
+      <!-- Right: Product info -->
+      <div class="pd-info">
+        <span class="product-category" id="pdCategory"></span>
+        <span class="pd-brand" id="pdBrand"></span>
+        <h1 class="pd-name" id="pdName">Cargando...</h1>
+        <div class="pd-price" id="pdPrice"></div>
+
+        <div class="pd-stock" id="pdStock">
+          <span class="pd-stock-dot"></span>
+          <span id="pdStockText"></span>
+        </div>
+
+        <!-- Rating -->
+        <div id="pdRating"></div>
+
+        <!-- Color selector -->
+        <div class="pd-option-group" id="pdColorsGroup" style="display:none">
+          <label class="pd-option-label">Color</label>
+          <div class="pd-colors" id="pdColors"></div>
+        </div>
+
+        <!-- Specifications table -->
+        <div class="pd-specs" id="pdSpecsSection" style="display:none">
+          <h3 class="pd-section-title">Especificaciones</h3>
+          <table class="pd-specs-table" id="pdSpecsTable">
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- Description -->
+        <div class="pd-description" id="pdDescSection">
+          <h3 class="pd-section-title">Descripción</h3>
+          <p id="pdDescription"></p>
+        </div>
+
+        <!-- Actions -->
+        <div class="pd-actions">
+          <div class="pd-qty">
+            <button class="qty-btn" id="pdQtyMinus" aria-label="Disminuir cantidad">−</button>
+            <span class="qty-value" id="pdQtyValue">1</span>
+            <button class="qty-btn" id="pdQtyPlus" aria-label="Aumentar cantidad">+</button>
+          </div>
+          <button class="btn-add-cart-lg" id="pdAddCart">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+            </svg>
+            Agregar al carrito
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== RECOMMENDED PRODUCTS ==================== -->
+  <section class="recommended-section container" id="recommendedSection">
+    <h2 class="recommended-title">También te podría interesar</h2>
+    <div class="products-grid recommended-grid" id="recommendedGrid">
+      <!-- Rendered by JS -->
+    </div>
+  </section>
+
+  <!-- ==================== CARRITO SIDEBAR ==================== -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+  <aside class="cart-sidebar" id="cartSidebar" role="dialog" aria-label="Carrito de compras">
+    <div class="cart-header">
+      <h2>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+        Carrito
+        <span class="items-count" id="cartItemsCount"></span>
+      </h2>
+      <button class="cart-close" id="btnCloseCart" aria-label="Cerrar carrito">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <div class="cart-empty" id="cartEmpty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+        </svg>
+        <p>Tu carrito está vacío</p>
+        <small>Agrega productos para comenzar</small>
+      </div>
+    </div>
+    <div class="cart-footer" id="cartFooter" style="display:none">
+      <div class="cart-subtotal">
+        <span class="cart-subtotal-label">Total</span>
+        <span class="cart-subtotal-value" id="cartTotal">$0</span>
+      </div>
+      <button class="btn-pay-online" id="btnPayOnline">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Pagar en línea
+      </button>
+      <button class="btn-whatsapp" id="btnWhatsApp">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Realizar pedido contraentrega
+      </button>
+    </div>
+  </aside>
+
+  <!-- ==================== MODAL HISTORIAL DE PEDIDOS ==================== -->
+  <div class="modal-overlay" id="ordersModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Mis pedidos</h2>
+        <button class="modal-close" id="btnCloseOrders" aria-label="Cerrar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="ordersBody">
+        <p style="text-align:center;color:var(--text-tertiary);padding:2rem;">No tienes pedidos aún.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== WISHLIST SIDEBAR ==================== -->
+  <div class="wishlist-overlay" id="wishlistOverlay"></div>
+  <aside class="wishlist-sidebar" id="wishlistSidebar" role="dialog" aria-label="Lista de deseos">
+    <div class="cart-header">
+      <h2>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        Lista de deseos
+        <span class="items-count" id="wishlistItemsCount"></span>
+      </h2>
+      <button class="cart-close" id="btnCloseWishlist" aria-label="Cerrar lista de deseos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="wishlist-items" id="wishlistItems">
+      <div class="cart-empty" id="wishlistEmpty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+        </svg>
+        <p>Tu lista de deseos está vacía</p>
+        <small>Agrega productos que te gusten</small>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== TOAST NOTIFICATIONS ==================== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-brand">
+            <img src="LOGO_LIBRETECH.png" alt="LIBRE TECH" class="logo-img" width="32" height="32">
+            <span>LIBRE TECH</span>
+          </div>
+          <p class="footer-tagline">Tu tienda de tecnología en Colombia.</p>
+        </div>
+        <div class="footer-col">
+          <h4 class="footer-col-title">Conózcanos</h4>
+          <ul class="footer-links-list">
+            <li><a href="pagina.html?page=sobre-nosotros">Sobre nosotros</a></li>
+            <li><a href="pagina.html?page=preguntas-frecuentes">Preguntas Frecuentes</a></li>
+            <li><a href="pagina.html?page=contactanos">Contáctanos</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4 class="footer-col-title">Enlaces útiles</h4>
+          <ul class="footer-links-list">
+            <li><a href="pagina.html?page=seguimiento-pedido">Seguimiento de su pedido</a></li>
+            <li><a href="pagina.html?page=politica-privacidad">Política de Privacidad</a></li>
+            <li><a href="pagina.html?page=terminos-condiciones">Términos y Condiciones</a></li>
+            <li><a href="pagina.html?page=devoluciones-garantias">Devoluciones y Garantías</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4 class="footer-col-title">Contacto</h4>
+          <ul class="footer-links-list">
+            <li><a href="https://wa.me/573005606287" target="_blank" rel="noopener">WhatsApp</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-social" id="footerSocial">
+        <h4 class="footer-col-title">Síguenos</h4>
+        <div class="footer-social-links" id="footerSocialLinks"></div>
+      </div>
+      <p class="footer-copy">&copy; 2026 LIBRE TECH. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- WhatsApp Floating Bubble -->
+  <a href="https://wa.me/573005606287" target="_blank" rel="noopener" class="whatsapp-bubble" title="Chatea con nosotros por WhatsApp" aria-label="WhatsApp">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.654-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+
+  <!-- Dark mode script -->
+  <script>
+    (function(){
+      const saved = localStorage.getItem('libretech_theme') || 'light';
+      if(saved === 'dark') document.documentElement.setAttribute('data-theme','dark');
+      function updateIcons(){
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        document.getElementById('themeIconSun').style.display = isDark ? 'none' : 'block';
+        document.getElementById('themeIconMoon').style.display = isDark ? 'block' : 'none';
+      }
+      document.addEventListener('DOMContentLoaded', function(){
+        updateIcons();
+        document.getElementById('themeToggle')?.addEventListener('click', function(){
+          const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+          if(isDark){ document.documentElement.removeAttribute('data-theme'); localStorage.setItem('libretech_theme','light'); }
+          else { document.documentElement.setAttribute('data-theme','dark'); localStorage.setItem('libretech_theme','dark'); }
+          updateIcons();
+        });
+      });
+    })();
+  </script>
+
+  <!-- ==================== SCRIPTS ==================== -->
+  <script src="js/cart.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/product-detail.js"></script>
+</body>
+</html>
