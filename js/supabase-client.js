@@ -240,7 +240,7 @@ const SB = (() => {
     if (user.user_metadata?.is_admin === true) return true;
     if (user.app_metadata?.is_admin === true) return true;
     // Fallback: check admin email (update this list as needed)
-    const adminEmails = ['admin@libretechtienda.com'];
+    const adminEmails = ['admin@libretechtienda.com', 'libretech2026@gmail.com'];
     if (user.email && adminEmails.includes(user.email.toLowerCase())) return true;
     return false;
   }
