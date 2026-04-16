@@ -603,5 +603,3 @@ const ProductDetail = (() => {
 
   return { init };
 })();
-
-document.addEventListener('DOMContentLoaded', () => ProductDetail.init());

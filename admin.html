@@ -13,6 +13,8 @@
   <link rel="stylesheet" href="css/styles.css">
   <!-- SheetJS for Excel parsing -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <!-- Supabase JS v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -44,12 +46,16 @@
       <div class="admin-login-card">
         <img src="LOGO_LIBRETECH.png" alt="LIBRE TECH" class="logo-img" width="64" height="64">
         <h2>Panel de Administración</h2>
-        <p>Ingresa la contraseña de administrador para continuar.</p>
+        <p>Ingresa tus credenciales de administrador para continuar.</p>
         <form id="adminLoginForm" autocomplete="off">
           <div class="form-group">
+            <label class="form-label" for="adminEmail">Correo electrónico</label>
+            <input type="email" class="form-input" id="adminEmail" placeholder="admin@libretechtienda.com" required autofocus>
+          </div>
+          <div class="form-group">
             <label class="form-label" for="adminPassword">Contraseña</label>
-            <input type="password" class="form-input" id="adminPassword" placeholder="Contraseña" required autofocus>
-            <p class="form-error" id="loginError" style="display:none">Contraseña incorrecta</p>
+            <input type="password" class="form-input" id="adminPassword" placeholder="Contraseña" required>
+            <p class="form-error" id="loginError" style="display:none">Credenciales incorrectas o sin permisos de admin</p>
           </div>
           <button type="submit" class="btn btn-primary btn-full btn-lg">Ingresar</button>
         </form>
@@ -791,6 +797,13 @@
   <!-- Toast container -->
   <div class="toast-container" id="toastContainer"></div>
 
+  <script src="js/supabase-client.js"></script>
   <script src="js/admin.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try { await SB.syncProducts(); } catch (e) { console.warn('SB sync:', e); }
+      Admin.init();
+    });
+  </script>
 </body>
 </html>

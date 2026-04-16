@@ -1,6 +1,7 @@
 /* ============================================================
    LIBRE TECH - Store App (app.js)
    Renderizado de productos, búsqueda, filtros, carrusel, ratings
+   Productos cargados desde Supabase (cache en localStorage)
    ============================================================ */
 
 const Store = (() => {
@@ -11,75 +12,7 @@ const Store = (() => {
   const WISHLIST_KEY = 'libretech_wishlist';
   const SOCIAL_KEY   = 'libretech_social_links';
 
-  // Productos reales del inventario
-  const SEED_PRODUCTS = [
-    { id:'p01', name:'Cargador 25W USB-C a Lightning', price:35000, description:'Cargador rápido de 25W con cable USB-C a Lightning integrado. Compatible con iPhone 8 en adelante.', category:'Cargadores', brand:'Genérico', image:'img/products/p01.svg', stock:4, active:true, featured:true, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Potencia',value:'25W'},{key:'Entrada',value:'USB-C'},{key:'Salida',value:'Lightning'},{key:'Carga rápida',value:'Sí'}] },
-    { id:'p02', name:'Cargador 35W USB-C a USB-C', price:40000, description:'Cargador de 35W con cable USB-C a USB-C. Ideal para smartphones y tablets con puerto Type-C.', category:'Cargadores', brand:'Genérico', image:'img/products/p02.svg', stock:3, active:true, featured:true, createdAt:'2026-04-01', colors:['Blanco','Negro'], specs:[{key:'Potencia',value:'35W'},{key:'Conexión',value:'USB-C a USB-C'},{key:'Carga rápida',value:'Sí'}] },
-    { id:'p03', name:'Adaptador USB-C 20W', price:18000, description:'Adaptador de carga rápida USB-C de 20W. Compatible con iPhone y Android.', category:'Adaptadores', brand:'Genérico', image:'img/products/p03.svg', stock:5, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Potencia',value:'20W'},{key:'Puerto',value:'USB-C'},{key:'Carga rápida',value:'PD 3.0'}] },
-    { id:'p04', name:'Adaptador USB-C 20W Original', price:45000, description:'Adaptador de carga original Apple de 20W USB-C. Carga rápida para iPhone y iPad.', category:'Adaptadores', brand:'Apple', image:'img/products/p04_apple_20w.jpg', stock:1, active:true, featured:true, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Potencia',value:'20W'},{key:'Puerto',value:'USB-C'},{key:'Certificación',value:'Apple Original'},{key:'Carga rápida',value:'PD'}] },
-    { id:'p05', name:'Adaptador 5W', price:10000, description:'Adaptador de carga estándar de 5W con puerto USB-A. Compatible universal.', category:'Adaptadores', brand:'Genérico', image:'img/products/p05.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Potencia',value:'5W'},{key:'Puerto',value:'USB-A'}] },
-    { id:'p06', name:'Adaptador 30W USB-C', price:25000, description:'Adaptador de carga rápida de 30W con puerto USB-C. Ideal para dispositivos de carga rápida.', category:'Adaptadores', brand:'Genérico', image:'img/products/p06.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Potencia',value:'30W'},{key:'Puerto',value:'USB-C'},{key:'Carga rápida',value:'PD'}] },
-    { id:'p07', name:'Cable Lightning a USB (1m)', price:15000, description:'Cable Lightning a USB de 1 metro. Compatible con iPhone, iPad y iPod.', category:'Cables', brand:'Genérico', image:'img/products/p07.svg', stock:4, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Longitud',value:'1 metro'},{key:'Conector',value:'Lightning a USB-A'}] },
-    { id:'p08', name:'Cable USB-C a Lightning', price:20000, description:'Cable USB-C a Lightning para carga rápida. Compatible con iPhone 8 en adelante.', category:'Cables', brand:'Genérico', image:'img/products/p08.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Longitud',value:'1 metro'},{key:'Conector',value:'USB-C a Lightning'},{key:'Carga rápida',value:'Sí'}] },
-    { id:'p09', name:'Audífonos iPhone Lightning', price:12000, description:'Audífonos con cable y conector Lightning. Sonido nítido, micrófono integrado y control de volumen.', category:'Audio', brand:'Genérico', image:'img/products/p09.svg', stock:9, active:true, featured:true, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Conector',value:'Lightning'},{key:'Micrófono',value:'Sí'},{key:'Control',value:'Volumen y llamadas'}] },
-    { id:'p10', name:'Audífonos iPhone USB-C', price:15000, description:'Audífonos con cable y conector USB-C. Compatible con iPhone 15 y dispositivos USB-C.', category:'Audio', brand:'Genérico', image:'img/products/p10.svg', stock:5, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Conector',value:'USB-C'},{key:'Micrófono',value:'Sí'},{key:'Control',value:'Volumen y llamadas'}] },
-    { id:'p11', name:'Wallets Tarjeteros', price:25000, description:'Tarjetero magnético MagSafe para iPhone. Guarda tus tarjetas en la parte trasera del celular.', category:'Accesorios', brand:'Genérico', image:'img/products/p11.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro','Café'], specs:[{key:'Tipo',value:'Tarjetero magnético'},{key:'Capacidad',value:'Hasta 3 tarjetas'},{key:'Compatibilidad',value:'MagSafe'}] },
-    { id:'p12', name:'Audífonos Serie 4', price:85000, description:'Audífonos inalámbricos tipo AirPods Serie 4. Diseño compacto, buena calidad de sonido y estuche de carga.', category:'Audio', brand:'Genérico', image:'img/products/p12.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Tipo',value:'In-ear TWS'},{key:'Bluetooth',value:'5.3'},{key:'Batería',value:'Hasta 5 horas'}] },
-    { id:'p13', name:'Audífonos Serie 3', price:55000, description:'Audífonos inalámbricos tipo AirPods Serie 3. Diseño ergonómico con estuche de carga.', category:'Audio', brand:'Genérico', image:'img/products/p13.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Tipo',value:'In-ear TWS'},{key:'Bluetooth',value:'5.0'},{key:'Batería',value:'Hasta 4 horas'}] },
-    { id:'p14', name:'Audífonos Pro 2', price:120000, description:'Audífonos inalámbricos tipo AirPods Pro 2. Cancelación de ruido activa, sonido premium y estuche con carga.', category:'Audio', brand:'Genérico', image:'img/products/p14_pro2.jpg', stock:2, active:true, featured:true, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Tipo',value:'In-ear TWS'},{key:'ANC',value:'Cancelación activa'},{key:'Bluetooth',value:'5.3'},{key:'Batería',value:'Hasta 6 horas'},{key:'Resistencia',value:'IPX4'}] },
-    { id:'p15', name:'Audífonos Serie 1', price:35000, description:'Audífonos inalámbricos tipo AirPods Serie 1. Entrada económica al mundo TWS.', category:'Audio', brand:'Genérico', image:'img/products/p15.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Tipo',value:'In-ear TWS'},{key:'Bluetooth',value:'5.0'},{key:'Batería',value:'Hasta 3 horas'}] },
-    { id:'p16', name:'Diadema P9', price:45000, description:'Diadema inalámbrica Bluetooth P9 con almohadillas acolchadas, sonido envolvente y micrófono integrado.', category:'Audio', brand:'Genérico', image:'img/products/p16.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro','Blanco','Azul','Rosa'], specs:[{key:'Tipo',value:'Over-ear'},{key:'Bluetooth',value:'5.1'},{key:'Batería',value:'Hasta 8 horas'},{key:'Micrófono',value:'Sí'}] },
-    { id:'p17', name:'Diadema Airmax Pequeña', price:55000, description:'Diadema tipo AirPods Max tamaño compacto. Diseño premium con almohadillas suaves.', category:'Audio', brand:'Genérico', image:'img/products/p17.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro','Plateado'], specs:[{key:'Tipo',value:'Over-ear compacto'},{key:'Bluetooth',value:'5.2'},{key:'Batería',value:'Hasta 10 horas'}] },
-    { id:'p18', name:'Diadema Airmax Grande', price:75000, description:'Diadema tipo AirPods Max tamaño grande. Sonido Hi-Fi, cancelación de ruido y diseño premium.', category:'Audio', brand:'Genérico', image:'img/products/p18.svg', stock:1, active:true, featured:true, createdAt:'2026-04-01', colors:['Negro','Plateado','Azul'], specs:[{key:'Tipo',value:'Over-ear'},{key:'Bluetooth',value:'5.2'},{key:'ANC',value:'Cancelación activa'},{key:'Batería',value:'Hasta 20 horas'}] },
-    { id:'p19', name:'Reloj Möbula Mini', price:65000, description:'Reloj inteligente Möbula Mini con pantalla táctil, monitor cardíaco, notificaciones y resistencia al agua.', category:'Wearables', brand:'Möbula', image:'img/products/p19.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro','Rosa'], specs:[{key:'Pantalla',value:'Táctil AMOLED'},{key:'Sensores',value:'Ritmo cardíaco, SpO2'},{key:'Resistencia',value:'IP68'},{key:'Batería',value:'Hasta 7 días'}] },
-    { id:'p20', name:'Micrófono SX31 Tipo C', price:30000, description:'Micrófono de solapa inalámbrico SX31 con conector USB-C. Ideal para grabación y streaming.', category:'Accesorios', brand:'Genérico', image:'img/products/p20.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Tipo',value:'Lavalier inalámbrico'},{key:'Conector',value:'USB-C'},{key:'Alcance',value:'Hasta 10m'}] },
-    { id:'p21', name:'Adaptador Lightning a Jack', price:12000, description:'Adaptador de Lightning a Jack 3.5mm. Conecta tus audífonos con cable a tu iPhone.', category:'Adaptadores', brand:'Genérico', image:'img/products/p21.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Entrada',value:'Lightning'},{key:'Salida',value:'Jack 3.5mm'}] },
-    { id:'p22', name:'Audífonos M10', price:28000, description:'Audífonos inalámbricos M10 TWS con estuche de carga LED, sonido estéreo HD y diseño deportivo.', category:'Audio', brand:'Genérico', image:'img/products/p22.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Tipo',value:'In-ear TWS'},{key:'Bluetooth',value:'5.1'},{key:'Batería',value:'Hasta 4 horas'},{key:'Estuche',value:'Con pantalla LED'}] },
-    { id:'p23', name:'Power Bank 22.5W', price:55000, description:'Batería externa portátil con carga rápida de 22.5W, pantalla LED indicadora y doble puerto USB.', category:'Power Banks', brand:'Genérico', image:'img/products/p23.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro','Blanco'], specs:[{key:'Capacidad',value:'10000mAh'},{key:'Carga rápida',value:'22.5W'},{key:'Puertos',value:'USB-A + USB-C'},{key:'Pantalla',value:'LED indicadora'}] },
-    { id:'p24', name:'Power Bank 120W', price:95000, description:'Power Bank de alta potencia 120W con carga ultra rápida. Ideal para laptops y smartphones.', category:'Power Banks', brand:'Genérico', image:'img/products/p24.svg', stock:1, active:true, featured:true, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Capacidad',value:'20000mAh'},{key:'Carga rápida',value:'120W'},{key:'Puertos',value:'USB-A + USB-C PD'},{key:'Pantalla',value:'Digital'}] },
-    { id:'p25', name:'Máquina Vintage Patillera', price:50000, description:'Máquina cortadora de cabello y patillera estilo vintage. Cuchillas de precisión y diseño retro.', category:'Belleza', brand:'Genérico', image:'img/products/p25.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Dorado'], specs:[{key:'Tipo',value:'Patillera'},{key:'Alimentación',value:'Recargable'},{key:'Cuchillas',value:'Acero inoxidable'}] },
-    { id:'p26', name:'Paneles de Luz', price:35000, description:'Paneles de luz LED modulares hexagonales táctiles. Decoración gaming y ambientación RGB.', category:'Iluminación', brand:'Genérico', image:'img/products/p26.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Único'], specs:[{key:'Tipo',value:'Hexagonal modular'},{key:'Iluminación',value:'RGB 16 colores'},{key:'Control',value:'Táctil'}] },
-    { id:'p27', name:'Soporte Celular Carro', price:20000, description:'Soporte magnético para celular de carro. Montaje en rejilla de ventilación con rotación 360°.', category:'Accesorios', brand:'Genérico', image:'img/products/p27.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Tipo',value:'Magnético'},{key:'Montaje',value:'Rejilla ventilación'},{key:'Rotación',value:'360°'}] },
-    { id:'p28', name:'Audífonos Cable Bolsa', price:8000, description:'Audífonos con cable tipo bolsa con micrófono integrado. Universales con jack 3.5mm.', category:'Audio', brand:'Genérico', image:'img/products/p28.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro','Blanco'], specs:[{key:'Conector',value:'Jack 3.5mm'},{key:'Micrófono',value:'Sí'}] },
-    { id:'p29', name:'Audífonos GTA Cable', price:10000, description:'Audífonos con cable marca GTA. Sonido claro con micrófono y control en línea.', category:'Audio', brand:'GTA', image:'img/products/p29.svg', stock:3, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Conector',value:'Jack 3.5mm'},{key:'Micrófono',value:'Sí'},{key:'Control',value:'En línea'}] },
-    { id:'p30', name:'Audífonos JBL Cable', price:18000, description:'Audífonos con cable JBL. Sonido potente de graves profundos con micrófono integrado.', category:'Audio', brand:'JBL', image:'img/products/p30.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Marca',value:'JBL'},{key:'Conector',value:'Jack 3.5mm'},{key:'Micrófono',value:'Sí'},{key:'Driver',value:'8.6mm'}] },
-    { id:'p31', name:'Cable USB TV', price:12000, description:'Cable USB para Smart TV. Conexión y alimentación de dispositivos por puerto USB.', category:'Cables', brand:'Genérico', image:'img/products/p31.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Conector',value:'USB-A'},{key:'Longitud',value:'1.5m'}] },
-    { id:'p32', name:'Audífonos Inalámbricos Sport', price:35000, description:'Audífonos inalámbricos deportivos con ganchos para oreja, resistentes al sudor IPX5.', category:'Audio', brand:'Genérico', image:'img/products/p32.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro','Rojo'], specs:[{key:'Tipo',value:'In-ear deportivos'},{key:'Bluetooth',value:'5.0'},{key:'Resistencia',value:'IPX5'},{key:'Batería',value:'Hasta 6 horas'}] },
-    { id:'p33', name:'Topos de Puntilla', price:8000, description:'Topos/aretes de puntilla para mujer. Diseño elegante tipo diamante.', category:'Accesorios', brand:'Genérico', image:'img/products/p33.svg', stock:3, active:true, featured:false, createdAt:'2026-04-01', colors:['Plateado','Dorado'], specs:[{key:'Material',value:'Acero inoxidable'},{key:'Tipo',value:'Topos puntilla'}] },
-    { id:'p34', name:'Audífonos Extra Bass Cable', price:15000, description:'Audífonos con cable Extra Bass. Graves potentes con aislamiento de ruido pasivo.', category:'Audio', brand:'Genérico', image:'img/products/p34.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Conector',value:'Jack 3.5mm'},{key:'Tipo',value:'In-ear Extra Bass'},{key:'Micrófono',value:'Sí'}] },
-    { id:'p35', name:'Parlante Magnético', price:40000, description:'Parlante portátil con base magnética. Sonido 360° con graves profundos y conexión Bluetooth.', category:'Audio', brand:'Genérico', image:'img/products/p35.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Tipo',value:'Portátil magnético'},{key:'Bluetooth',value:'5.0'},{key:'Batería',value:'Hasta 6 horas'}] },
-    { id:'p36', name:'Audífonos Cable Fivemax', price:12000, description:'Audífonos con cable marca Fivemax. Sonido balanceado con micrófono integrado.', category:'Audio', brand:'Fivemax', image:'img/products/p36.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Conector',value:'Jack 3.5mm'},{key:'Micrófono',value:'Sí'}] },
-    { id:'p37', name:'Audífonos AKG Samsung', price:22000, description:'Audífonos AKG originales Samsung con cable USB-C. Sonido tuneado por AKG con graves equilibrados.', category:'Audio', brand:'Samsung', image:'img/products/p37.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Marca',value:'AKG / Samsung'},{key:'Conector',value:'USB-C'},{key:'Micrófono',value:'Sí'},{key:'Driver',value:'Dinámico de 2 vías'}] },
-    { id:'p38', name:'Cargador Moto Edge 67W', price:65000, description:'Cargador original Motorola de 67W TurboPower. Compatible con Moto Edge y dispositivos con carga rápida.', category:'Cargadores', brand:'Motorola', image:'img/products/p38.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Potencia',value:'67W'},{key:'Tecnología',value:'TurboPower'},{key:'Puerto',value:'USB-C'},{key:'Marca',value:'Motorola'}] },
-    { id:'p39', name:'Cargador Motorola 30W', price:40000, description:'Cargador Motorola TurboPower de 30W. Carga rápida para dispositivos Motorola y compatibles.', category:'Cargadores', brand:'Motorola', image:'img/products/p39.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Potencia',value:'30W'},{key:'Tecnología',value:'TurboPower'},{key:'Puerto',value:'USB-C'}] },
-    { id:'p40', name:'Cargador GTA 206', price:20000, description:'Cargador dual GTA modelo 206. Dos puertos USB para carga simultánea de dispositivos.', category:'Cargadores', brand:'GTA', image:'img/products/p40.svg', stock:3, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Modelo',value:'GTA 206'},{key:'Puertos',value:'2x USB-A'},{key:'Potencia',value:'12W'}] },
-    { id:'p41', name:'Cargador GTA 207', price:22000, description:'Cargador GTA modelo 207 con puerto USB-C. Carga estándar con diseño compacto.', category:'Cargadores', brand:'GTA', image:'img/products/p41.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Modelo',value:'GTA 207'},{key:'Puerto',value:'USB-C + USB-A'}] },
-    { id:'p42', name:'Cargador GTA 201', price:18000, description:'Cargador GTA modelo 201 básico con puerto USB. Carga estándar para cualquier dispositivo.', category:'Cargadores', brand:'GTA', image:'img/products/p42.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Modelo',value:'GTA 201'},{key:'Puerto',value:'USB-A'}] },
-    { id:'p43', name:'Cargador GTA 205', price:20000, description:'Cargador GTA modelo 205 con carga rápida. Puerto USB-A con salida optimizada.', category:'Cargadores', brand:'GTA', image:'img/products/p43.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Modelo',value:'GTA 205'},{key:'Puerto',value:'USB-A'},{key:'Carga rápida',value:'QC 3.0'}] },
-    { id:'p44', name:'Cargador Samsung 45W', price:55000, description:'Cargador original Samsung de 45W Super Fast Charging. Compatible con Galaxy S y Note series.', category:'Cargadores', brand:'Samsung', image:'img/products/p44.svg', stock:4, active:true, featured:true, createdAt:'2026-04-01', colors:['Negro','Blanco'], specs:[{key:'Potencia',value:'45W'},{key:'Tecnología',value:'Super Fast Charging 2.0'},{key:'Puerto',value:'USB-C'},{key:'Marca',value:'Samsung Original'},{key:'Compatibilidad',value:'Galaxy S23/S24/S25 series'}] },
-    { id:'p45', name:'Cargador Xiaomi 67W', price:50000, description:'Cargador original Xiaomi de 67W Turbo Charge. Carga completa en menos de 40 minutos.', category:'Cargadores', brand:'Xiaomi', image:'img/products/p45.svg', stock:3, active:true, featured:true, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Potencia',value:'67W'},{key:'Tecnología',value:'Turbo Charge'},{key:'Puerto',value:'USB-C'},{key:'Marca',value:'Xiaomi Original'}] },
-    { id:'p46', name:'Cargador Xiaomi 33W', price:35000, description:'Cargador original Xiaomi de 33W. Carga rápida compatible con la línea Redmi y Mi.', category:'Cargadores', brand:'Xiaomi', image:'img/products/p46.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Potencia',value:'33W'},{key:'Puerto',value:'USB-C'},{key:'Marca',value:'Xiaomi Original'}] },
-    { id:'p47', name:'Adaptador 25W Samsung', price:30000, description:'Adaptador de carga rápida Samsung de 25W. Super Fast Charging compatible.', category:'Adaptadores', brand:'Samsung', image:'img/products/p47.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro','Blanco'], specs:[{key:'Potencia',value:'25W'},{key:'Puerto',value:'USB-C'},{key:'Tecnología',value:'Super Fast Charging'}] },
-    { id:'p48', name:'Adaptador 45W Samsung', price:48000, description:'Adaptador de carga ultra rápida Samsung de 45W. Carga completa en tiempo récord.', category:'Adaptadores', brand:'Samsung', image:'img/products/p48.svg', stock:3, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro','Blanco'], specs:[{key:'Potencia',value:'45W'},{key:'Puerto',value:'USB-C'},{key:'Tecnología',value:'Super Fast Charging 2.0'}] },
-    { id:'p49', name:'Adaptador 203 GTA', price:15000, description:'Adaptador GTA modelo 203 con puerto USB-A. Carga básica para cualquier dispositivo.', category:'Adaptadores', brand:'GTA', image:'img/products/p49.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Modelo',value:'GTA 203'},{key:'Puerto',value:'USB-A'}] },
-    { id:'p50', name:'Cable Tipo C Samsung', price:18000, description:'Cable USB-C original Samsung. Alta calidad con transferencia de datos y carga rápida.', category:'Cables', brand:'Samsung', image:'img/products/p50.svg', stock:3, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro','Blanco'], specs:[{key:'Conector',value:'USB-C a USB-C'},{key:'Longitud',value:'1 metro'},{key:'Marca',value:'Samsung Original'}] },
-    { id:'p51', name:'Cable Tipo C a Tipo C 4Play', price:15000, description:'Cable USB-C a USB-C marca 4Play. Resistente con transferencia de datos y carga.', category:'Cables', brand:'4Play', image:'img/products/p51.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Conector',value:'USB-C a USB-C'},{key:'Longitud',value:'1 metro'}] },
-    { id:'p52', name:'Cable USB a Tipo C 4Play', price:12000, description:'Cable USB-A a USB-C marca 4Play. Compatible con cargadores y computadores USB-A.', category:'Cables', brand:'4Play', image:'img/products/p52.svg', stock:3, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Conector',value:'USB-A a USB-C'},{key:'Longitud',value:'1 metro'}] },
-    { id:'p53', name:'Cable Tipo C a Tipo C GTA 502', price:14000, description:'Cable USB-C a USB-C GTA modelo 502. Cable reforzado para carga y datos.', category:'Cables', brand:'GTA', image:'img/products/p53.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Modelo',value:'GTA 502'},{key:'Conector',value:'USB-C a USB-C'}] },
-    { id:'p54', name:'Cable USB V8 GTA 501', price:10000, description:'Cable USB a Micro USB (V8) GTA modelo 501. Compatible con dispositivos con puerto micro USB.', category:'Cables', brand:'GTA', image:'img/products/p54.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Modelo',value:'GTA 501'},{key:'Conector',value:'USB-A a Micro USB'}] },
-    { id:'p55', name:'Cable USB a Tipo C GTA 506', price:14000, description:'Cable USB-A a USB-C GTA modelo 506. Cable resistente para carga diaria.', category:'Cables', brand:'GTA', image:'img/products/p55.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Modelo',value:'GTA 506'},{key:'Conector',value:'USB-A a USB-C'}] },
-    { id:'p56', name:'Cable USB a Tipo C GTA 504', price:14000, description:'Cable USB-A a USB-C GTA modelo 504. Diseño compacto y resistente.', category:'Cables', brand:'GTA', image:'img/products/p56.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Modelo',value:'GTA 504'},{key:'Conector',value:'USB-A a USB-C'}] },
-    { id:'p57', name:'Cable HAVIT USB a Tipo C', price:16000, description:'Cable USB-A a USB-C marca HAVIT. Cable trenzado de nylon de alta durabilidad.', category:'Cables', brand:'HAVIT', image:'img/products/p57.svg', stock:6, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Marca',value:'HAVIT'},{key:'Conector',value:'USB-A a USB-C'},{key:'Material',value:'Nylon trenzado'}] },
-    { id:'p58', name:'Adaptador Puntilla a Tipo C', price:8000, description:'Adaptador de Jack 3.5mm (puntilla) a USB-C. Conecta audífonos con cable a tu teléfono USB-C.', category:'Adaptadores', brand:'Genérico', image:'img/products/p58.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Entrada',value:'Jack 3.5mm'},{key:'Salida',value:'USB-C'}] },
-    { id:'p59', name:'Adaptador USB a Micro a Tipo C', price:6000, description:'Adaptador 3 en 1: USB, Micro USB y Tipo C. Convierte entre distintos tipos de conexión.', category:'Adaptadores', brand:'Genérico', image:'img/products/p59.svg', stock:3, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Tipo',value:'Adaptador multi-conector'},{key:'Conectores',value:'USB-A, Micro USB, USB-C'}] },
-    { id:'p60', name:'Cable USB a Tipo C Motorola', price:18000, description:'Cable USB-A a USB-C original Motorola. Compatible con carga TurboPower.', category:'Cables', brand:'Motorola', image:'img/products/p60.svg', stock:2, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Marca',value:'Motorola'},{key:'Conector',value:'USB-A a USB-C'},{key:'Carga rápida',value:'TurboPower'}] },
-    { id:'p61', name:'Cable USB a Tipo C HARVIC', price:14000, description:'Cable USB-A a USB-C marca HARVIC. Cable reforzado con carga rápida.', category:'Cables', brand:'HARVIC', image:'img/products/p61.svg', stock:3, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Marca',value:'HARVIC'},{key:'Conector',value:'USB-A a USB-C'}] },
-    { id:'p62', name:'Cargador Reloj Inteligente', price:20000, description:'Cargador magnético universal para relojes inteligentes. Compatible con múltiples marcas.', category:'Accesorios', brand:'Genérico', image:'img/products/p62.svg', stock:3, active:true, featured:false, createdAt:'2026-04-01', colors:['Blanco'], specs:[{key:'Tipo',value:'Magnético'},{key:'Compatibilidad',value:'Universal smartwatch'}] },
-    { id:'p63', name:'Cable HARVIC Tipo C', price:16000, description:'Cable USB-C a USB-C marca HARVIC. Para carga rápida y transferencia de datos.', category:'Cables', brand:'HARVIC', image:'img/products/p63.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Marca',value:'HARVIC'},{key:'Conector',value:'USB-C a USB-C'}] },
-    { id:'p64', name:'Cable HARVIC USB a V8', price:12000, description:'Cable USB-A a Micro USB marca HARVIC. Compatible con dispositivos Micro USB.', category:'Cables', brand:'HARVIC', image:'img/products/p64.svg', stock:4, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Marca',value:'HARVIC'},{key:'Conector',value:'USB-A a Micro USB'}] },
-    { id:'p65', name:'Audífonos Xiaomi Buds 4 Lite', price:85000, description:'Audífonos inalámbricos Xiaomi Buds 4 Lite. Sonido Hi-Fi, cancelación de ruido y diseño ultraligero.', category:'Audio', brand:'Xiaomi', image:'img/products/p65.svg', stock:2, active:true, featured:true, createdAt:'2026-04-01', colors:['Blanco','Negro'], specs:[{key:'Marca',value:'Xiaomi'},{key:'Tipo',value:'In-ear TWS'},{key:'Bluetooth',value:'5.3'},{key:'ANC',value:'Cancelación de ruido IA'},{key:'Batería',value:'Hasta 5.5 horas'},{key:'Resistencia',value:'IP54'}] },
-    { id:'p66', name:'Micrófono K8 GT', price:35000, description:'Micrófono de solapa inalámbrico K8 GT con receptor compacto. Ideal para TikTok, YouTube y grabaciones.', category:'Accesorios', brand:'Genérico', image:'img/products/p66.svg', stock:1, active:true, featured:false, createdAt:'2026-04-01', colors:['Negro'], specs:[{key:'Tipo',value:'Lavalier inalámbrico'},{key:'Alcance',value:'Hasta 15m'},{key:'Compatibilidad',value:'USB-C / Lightning'},{key:'Batería',value:'Hasta 6 horas'}] }
-  ];
+  // Productos vienen de Supabase (cacheados en localStorage por SB.syncProducts())
 
   let currentCategory = 'all';
   let currentBrand = 'all';
@@ -90,7 +23,7 @@ const Store = (() => {
 
   // --- Inicialización ---
   function init() {
-    seedProducts();
+    // Products already synced from Supabase before init() is called
     seedReviews();
     renderCategories();
     renderFeaturedProducts();
@@ -101,8 +34,16 @@ const Store = (() => {
     initHeaderScroll();
     updateHeroStats();
     updateWishlistBadge();
+    updateWishlistVisibility();
     renderSocialLinks();
     renderPromoPhotoBanners();
+
+    // Re-render wishlist hearts when auth state changes
+    document.addEventListener('auth-changed', () => {
+      updateWishlistVisibility();
+      renderFeaturedProducts();
+      renderTopCategories();
+    });
   }
 
   function updateHeroStats() {
@@ -113,22 +54,7 @@ const Store = (() => {
     }
   }
 
-  // --- Sembrar productos iniciales ---
-  function seedProducts() {
-    try {
-      const existing = localStorage.getItem(PRODUCTS_KEY);
-      const parsed = existing ? JSON.parse(existing) : [];
-      // Replace if empty, has old prod-XXX IDs, or missing images
-      const needsReseed = !existing || parsed.length === 0
-        || (parsed[0] && parsed[0].id && parsed[0].id.startsWith('prod-'))
-        || (parsed.length > 0 && parsed.filter(p => !p.image).length > 5);
-      if (needsReseed) {
-        localStorage.setItem(PRODUCTS_KEY, JSON.stringify(SEED_PRODUCTS));
-      }
-    } catch {
-      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(SEED_PRODUCTS));
-    }
-  }
+  // --- Productos cargados desde Supabase (no más seed local) ---
 
   // --- Sembrar reseñas de ejemplo con nombres reales ---
   function seedReviews() {
@@ -456,9 +382,9 @@ const Store = (() => {
           </div>
         </div>
       </a>
-      <button class="btn-wishlist-card${inWishlist ? ' active' : ''}" data-wishlist-id="${product.id}" title="${inWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos'}" aria-label="Favoritos">
+      ${Auth.isLoggedIn() ? `<button class="btn-wishlist-card${inWishlist ? ' active' : ''}" data-wishlist-id="${product.id}" title="${inWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos'}" aria-label="Favoritos">
         <svg viewBox="0 0 24 24" fill="${inWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-      </button>
+      </button>` : ''}
       ${isOutOfStock
         ? `<button class="btn-add-cart disabled" disabled title="Agotado" aria-label="Producto agotado">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -815,6 +741,13 @@ const Store = (() => {
   }
 
   function toggleWishlist(productId) {
+    // Require login to use wishlist
+    if (!Auth.isLoggedIn()) {
+      Auth.openLoginDropdown();
+      Cart.showToast('Inicia sesión para agregar a favoritos', 'info');
+      return;
+    }
+
     let list = getWishlist();
     const idx = list.indexOf(productId);
     if (idx > -1) {
@@ -908,6 +841,15 @@ const Store = (() => {
     document.body.style.overflow = '';
   }
 
+  // --- Update wishlist button visibility based on login state ---
+  function updateWishlistVisibility() {
+    const loggedIn = Auth.isLoggedIn();
+    const headerWishBtn = document.getElementById('btnOpenWishlist');
+    if (headerWishBtn) {
+      headerWishBtn.style.display = loggedIn ? '' : 'none';
+    }
+  }
+
   // ===================== SOCIAL MEDIA (FOOTER) =====================
   const SOCIAL_ICONS = {
     instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>',
@@ -970,8 +912,5 @@ const Store = (() => {
     });
   }
 
-  return { init, renderProducts, renderCategories, getProductRating, renderStars, getActiveProducts, getProducts, isInWishlist, toggleWishlist, updateWishlistBadge, openWishlist, closeWishlist, renderWishlistSidebar, renderSocialLinks, renderPromoPhotoBanners };
+  return { init, renderProducts, renderCategories, getProductRating, renderStars, getActiveProducts, getProducts, isInWishlist, toggleWishlist, updateWishlistBadge, openWishlist, closeWishlist, renderWishlistSidebar, renderSocialLinks, renderPromoPhotoBanners, updateWishlistVisibility };
 })();
-
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => Store.init());

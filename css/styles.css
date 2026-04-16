@@ -605,32 +605,32 @@ input, select, textarea {
   pointer-events: none;
 }
 
-/* Floating electronics icons background */
-.hero::before {
-  content: '';
+/* Floating electronics icons — individual elements with unique drift */
+.hero-float-icons {
   position: absolute;
   inset: 0;
-  /* Floating device silhouettes via SVG data URIs */
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.06)' stroke-width='1.5'%3E%3Crect x='5' y='2' width='14' height='20' rx='2'/%3E%3Cline x1='12' y1='18' x2='12.01' y2='18'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.05)' stroke-width='1.5'%3E%3Crect x='2' y='3' width='20' height='14' rx='2'/%3E%3Cline x1='8' y1='21' x2='16' y2='21'/%3E%3Cline x1='12' y1='17' x2='12' y2='21'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.055)' stroke-width='1.5'%3E%3Cpath d='M3 18v-6a9 9 0 0118 0v6'/%3E%3Cpath d='M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.05)' stroke-width='1.5'%3E%3Cpolygon points='13 2 3 14 12 14 11 22 21 10 12 10'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.045)' stroke-width='1.5'%3E%3Crect x='4' y='4' width='16' height='16' rx='2'/%3E%3Cline x1='4' y1='12' x2='20' y2='12'/%3E%3Cline x1='12' y1='4' x2='12' y2='20'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.05)' stroke-width='1.5'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42'/%3E%3C/svg%3E");
-  background-position:
-    8% 15%, 85% 20%, 15% 75%, 70% 65%, 45% 35%, 92% 80%;
-  background-repeat: no-repeat;
-  background-size:
-    28px 28px, 26px 26px, 24px 24px, 22px 22px, 24px 24px, 20px 20px;
-  animation: heroIconsFloat 20s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
 }
 
-@keyframes heroIconsFloat {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-12px); }
+.hero-fi {
+  position: absolute;
+  color: rgba(255,255,255,0.07);
+  animation: heroDrift var(--dur, 26s) ease-in-out infinite;
+  --dx: 10px;
+  --dy: -10px;
+}
+
+@keyframes heroDrift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25%      { transform: translate(var(--dx), calc(var(--dy) * 0.5)) rotate(2deg); }
+  50%      { transform: translate(calc(var(--dx) * 0.6), var(--dy)) rotate(-1deg); }
+  75%      { transform: translate(calc(var(--dx) * -0.3), calc(var(--dy) * 0.3)) rotate(1.5deg); }
+}
+
+/* Remove old ::before icon background */
+.hero::before {
+  display: none;
 }
 
 /* Orbs, particles, grid lines — hidden */
@@ -804,10 +804,19 @@ input, select, textarea {
    SHOWCASE SECTION (Separated carousel)
    ============================================================ */
 .showcase-section {
-  margin-top: calc(-1 * var(--spacing-2xl));
-  margin-bottom: var(--spacing-xl);
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+  padding: var(--spacing-xl) var(--spacing-lg);
   position: relative;
   z-index: 2;
+  background: linear-gradient(135deg, rgba(26, 75, 140, 0.06) 0%, rgba(99, 102, 241, 0.04) 50%, rgba(232, 119, 34, 0.05) 100%);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(26, 75, 140, 0.08);
+}
+
+[data-theme="dark"] .showcase-section {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(26, 75, 140, 0.06) 50%, rgba(232, 119, 34, 0.06) 100%);
+  border-color: rgba(99, 102, 241, 0.12);
 }
 
 .showcase-header {
@@ -815,14 +824,13 @@ input, select, textarea {
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--spacing-md);
-  padding: 0 var(--spacing-sm);
 }
 
 .showcase-title {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.01em;

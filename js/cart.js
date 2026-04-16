@@ -318,17 +318,23 @@ const Cart = (() => {
     return orderNum;
   }
 
-  // --- Descontar stock tras orden ---
+  // --- Descontar stock tras orden (Supabase + localStorage) ---
   function decrementStock() {
     try {
       const products = getProducts();
+      const sbItems = [];
       items.forEach(item => {
         const product = products.find(p => p.id === item.productId);
         if (product) {
           product.stock = Math.max(0, (product.stock ?? 0) - item.quantity);
+          sbItems.push({ productId: item.productId, quantity: item.quantity, currentStock: product.stock });
         }
       });
       localStorage.setItem('libretech_products', JSON.stringify(products));
+      // Also update Supabase
+      if (typeof SB !== 'undefined' && SB.decrementStock) {
+        SB.decrementStock(sbItems).catch(e => console.warn('[Cart] SB stock update:', e));
+      }
     } catch { /* silent */ }
   }
 
@@ -384,32 +390,46 @@ const Cart = (() => {
     showToast(`Pedido ${orderNumber} creado — Pago en línea próximamente`, 'info');
   }
 
-  // --- Guardar orden en historial ---
+  // --- Guardar orden en historial (localStorage + Supabase) ---
   function saveOrder(orderNumber, method) {
     const products = getProducts();
+    const orderItems = items.map(item => {
+      const product = products.find(p => p.id === item.productId);
+      return {
+        productId: item.productId,
+        name: product ? product.name : 'Producto desconocido',
+        quantity: item.quantity,
+        price: product ? getEffectivePrice(product) : 0
+      };
+    });
+
     const order = {
       id: orderNumber || generateOrderNumber(),
       date: new Date().toISOString(),
       method: method || 'contraentrega',
-      items: items.map(item => {
-        const product = products.find(p => p.id === item.productId);
-        return {
-          name: product ? product.name : 'Producto desconocido',
-          quantity: item.quantity,
-          price: product ? getEffectivePrice(product) : 0
-        };
-      }),
+      items: orderItems,
       total: getTotal()
     };
 
+    // Save to localStorage (legacy)
     try {
       const orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
       orders.unshift(order);
-      // Mantener solo las últimas 50 órdenes
       if (orders.length > 50) orders.length = 50;
       localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-    } catch {
-      // Silenciar errores de storage
+    } catch { /* silent */ }
+
+    // Save to Supabase
+    if (typeof SB !== 'undefined' && SB.saveOrder) {
+      const user = (typeof Auth !== 'undefined' && Auth.getUser) ? Auth.getUser() : null;
+      SB.saveOrder({
+        id: order.id,
+        userId: user?.id || null,
+        method: order.method,
+        status: 'pending',
+        total: order.total,
+        items: orderItems
+      }).catch(e => console.warn('[Cart] SB order save:', e));
     }
   }
 
@@ -471,6 +491,3 @@ const Cart = (() => {
     escapeAttr
   };
 })();
-
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => Cart.init());

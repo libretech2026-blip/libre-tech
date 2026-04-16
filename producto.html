@@ -10,7 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Supabase JS v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="icon" type="image/png" href="LOGO_LIBRETECH.png">
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -344,8 +345,17 @@
   </script>
 
   <!-- ==================== SCRIPTS ==================== -->
+  <script src="js/supabase-client.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/product-detail.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try { await SB.syncProducts(); } catch (e) { console.warn('SB sync:', e); }
+      Cart.init();
+      Auth.init();
+      ProductDetail.init();
+    });
+  </script>
 </body>
 </html>

@@ -81,9 +81,10 @@ const Admin = (() => {
     document.getElementById('adminPassword').value = '';
   }
 
-  function showDashboard() {
+  async function showDashboard() {
     document.getElementById('adminLoginWrapper').style.display = 'none';
     document.getElementById('adminDashboard').style.display = 'block';
+    await refreshOrders();
     updateStats();
     renderProductsTable();
     renderOrdersTable();
@@ -92,6 +93,17 @@ const Admin = (() => {
     renderPqrsTable();
     renderPromoPhotosTable();
     populateCategoriesDatalist();
+  }
+
+  // Fetch orders from Supabase and cache locally
+  async function refreshOrders() {
+    if (typeof SB === 'undefined' || !SB.client) return;
+    try {
+      const orders = await SB.getAllOrders();
+      localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+    } catch (e) {
+      console.warn('[Admin] refreshOrders:', e.message);
+    }
   }
 
   // --- Productos CRUD ---
@@ -107,16 +119,22 @@ const Admin = (() => {
     localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
   }
 
-  function addProduct(product) {
-    const products = getProducts();
+  async function addProduct(product) {
     product.id = 'prod-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
     product.createdAt = new Date().toISOString().split('T')[0];
+    try {
+      if (typeof SB !== 'undefined' && SB.client) { await SB.insertProduct(product); return product; }
+    } catch (e) { console.warn('[Admin] SB insert fell back to local:', e.message); }
+    const products = getProducts();
     products.push(product);
     saveProducts(products);
     return product;
   }
 
-  function updateProduct(id, updates) {
+  async function updateProduct(id, updates) {
+    try {
+      if (typeof SB !== 'undefined' && SB.client) { await SB.updateProduct(id, updates); return getProducts().find(p => p.id === id) || null; }
+    } catch (e) { console.warn('[Admin] SB update fell back to local:', e.message); }
     const products = getProducts();
     const index = products.findIndex(p => p.id === id);
     if (index === -1) return null;
@@ -125,7 +143,10 @@ const Admin = (() => {
     return products[index];
   }
 
-  function deleteProduct(id) {
+  async function deleteProduct(id) {
+    try {
+      if (typeof SB !== 'undefined' && SB.client) { await SB.deleteProduct(id); return; }
+    } catch (e) { console.warn('[Admin] SB delete fell back to local:', e.message); }
     let products = getProducts();
     products = products.filter(p => p.id !== id);
     saveProducts(products);
@@ -285,7 +306,7 @@ const Admin = (() => {
     editingProductId = null;
   }
 
-  function saveProductForm() {
+  async function saveProductForm() {
     const name = document.getElementById('productName').value.trim();
     const price = parseInt(document.getElementById('productPrice').value) || 0;
     const stock = parseInt(document.getElementById('productStock').value) || 0;
@@ -312,10 +333,10 @@ const Admin = (() => {
     };
 
     if (editingProductId) {
-      updateProduct(editingProductId, productData);
+      await updateProduct(editingProductId, productData);
       showToast('Producto actualizado', 'success');
     } else {
-      addProduct(productData);
+      await addProduct(productData);
       showToast('Producto creado', 'success');
     }
 
@@ -325,39 +346,52 @@ const Admin = (() => {
     populateCategoriesDatalist();
   }
 
-  // --- Imagen upload ---
-  function handleImageUpload(file) {
+  // --- Imagen upload (Supabase Storage con fallback a dataURL) ---
+  async function handleImageUpload(file) {
     if (!file || !file.type.startsWith('image/')) {
       showToast('Solo se permiten archivos de imagen', 'error');
       return;
     }
-
-    // Limitar tamaño (2MB)
     if (file.size > 2 * 1024 * 1024) {
       showToast('La imagen no debe superar 2MB', 'error');
       return;
     }
 
+    // Try Supabase Storage first
+    if (typeof SB !== 'undefined' && SB.client) {
+      try {
+        const pid = editingProductId || ('new-' + Date.now());
+        const url = await SB.uploadImage(file, pid);
+        if (!currentImages.includes(url)) currentImages.push(url);
+        _updateImagePreview();
+        return;
+      } catch (e) {
+        console.warn('[Admin] SB upload failed, using dataURL:', e.message);
+      }
+    }
+
+    // Fallback: dataURL
     const reader = new FileReader();
     reader.onload = e => {
       const dataUrl = e.target.result;
-      if (!currentImages.includes(dataUrl)) {
-        currentImages.push(dataUrl);
-      }
-      // Set first image as main preview
-      const preview = document.getElementById('imagePreview');
-      if (currentImages.length === 1) {
-        preview.src = currentImages[0];
-        preview.style.display = 'block';
-        document.getElementById('uploadText').style.display = 'none';
-      }
-      renderImagePreviews();
+      if (!currentImages.includes(dataUrl)) currentImages.push(dataUrl);
+      _updateImagePreview();
     };
     reader.readAsDataURL(file);
   }
 
-  function handleMultipleImageUpload(files) {
-    Array.from(files).forEach(f => handleImageUpload(f));
+  function _updateImagePreview() {
+    const preview = document.getElementById('imagePreview');
+    if (currentImages.length >= 1) {
+      preview.src = currentImages[0];
+      preview.style.display = 'block';
+      document.getElementById('uploadText').style.display = 'none';
+    }
+    renderImagePreviews();
+  }
+
+  async function handleMultipleImageUpload(files) {
+    for (const f of Array.from(files)) await handleImageUpload(f);
   }
 
   function renderImagePreviews() {
@@ -594,8 +628,10 @@ const Admin = (() => {
     // Login
     document.getElementById('adminLoginForm')?.addEventListener('submit', async e => {
       e.preventDefault();
+      const email = document.getElementById('adminEmail').value.trim();
       const password = document.getElementById('adminPassword').value;
-      const success = await login(password);
+      if (!email || !password) { showToast('Ingresa email y contraseña', 'error'); return; }
+      const success = await login(email, password);
       if (!success) {
         document.getElementById('loginError').style.display = 'block';
         document.getElementById('adminPassword').value = '';
@@ -609,8 +645,8 @@ const Admin = (() => {
     // Agregar producto
     document.getElementById('btnAddProduct')?.addEventListener('click', () => openProductForm());
 
-    // Tabla de productos (delegaciÃ³n)
-    document.getElementById('productsTableBody')?.addEventListener('click', e => {
+    // Tabla de productos (delegación)
+    document.getElementById('productsTableBody')?.addEventListener('click', async e => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
 
@@ -618,8 +654,8 @@ const Admin = (() => {
       if (action === 'edit') {
         openProductForm(id);
       } else if (action === 'delete') {
-        if (confirm('Â¿EstÃ¡s seguro de que deseas eliminar este producto?')) {
-          deleteProduct(id);
+        if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+          await deleteProduct(id);
           renderProductsTable();
           updateStats();
           showToast('Producto eliminado', 'info');
@@ -867,6 +903,9 @@ const Admin = (() => {
     if (order) {
       order.status = status;
       saveOrders(orders);
+    }
+    if (typeof SB !== 'undefined' && SB.client) {
+      SB.updateOrderStatus(orderId, status).catch(e => console.warn('[Admin] SB status update:', e));
     }
   }
 
@@ -1400,5 +1439,3 @@ const Admin = (() => {
     _deletePromoPhoto: (i) => { if (confirm('¿Eliminar este banner foto?')) { const p = getPromoPhotos(); p.splice(i, 1); savePromoPhotos(p); renderPromoPhotosTable(); showToast('Banner foto eliminado', 'info'); } }
   };
 })();
-
-document.addEventListener('DOMContentLoaded', () => Admin.init());

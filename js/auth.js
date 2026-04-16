@@ -1,25 +1,10 @@
 /* ============================================================
    LIBRE TECH - Auth Module (auth.js)
-   Login con Google Identity Services + Historial de pedidos
+   Autenticación con Supabase Auth + Historial de pedidos
    ============================================================ */
 
 const Auth = (() => {
   'use strict';
-
-  const USER_KEY = 'libretech_user';
-  const USERS_KEY = 'libretech_users';
-  const ORDERS_KEY = 'libretech_orders';
-
-  // IMPORTANTE: Reemplaza con tu Client ID de Google Cloud Console
-  // Para obtenerlo:
-  // 1. Ve a https://console.cloud.google.com/
-  // 2. Crea un proyecto (o usa uno existente)
-  // 3. Habilita "Google Identity Services"
-  // 4. En Credenciales > Crear credencial > ID de cliente OAuth 2.0
-  // 5. Tipo: Aplicación web
-  // 6. Añade tu dominio en "Orígenes autorizados"
-  // 7. Copia el Client ID aquí
-  const GOOGLE_CLIENT_ID = 'TU_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 
   let currentUser = null;
 
@@ -27,88 +12,58 @@ const Auth = (() => {
   function init() {
     loadUser();
     updateUI();
-    initGoogleSignIn();
     bindEvents();
+    // Listen to Supabase auth state changes
+    SB.onAuthChange(user => {
+      if (user) {
+        currentUser = {
+          id: user.id,
+          name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+          email: user.email || '',
+          picture: user.user_metadata?.avatar_url || ''
+        };
+      } else {
+        currentUser = null;
+      }
+      updateUI();
+      // Notify other modules (wishlist visibility etc.)
+      document.dispatchEvent(new CustomEvent('auth-changed', { detail: { user: currentUser } }));
+    });
   }
 
-  // --- Google Sign-In ---
+  // --- Google OAuth via Supabase ---
   function initGoogleSignIn() {
-    // Si no hay Client ID configurado, mantener el botón como placeholder
-    if (GOOGLE_CLIENT_ID.includes('TU_GOOGLE_CLIENT_ID')) {
-      console.info('[Auth] Google Client ID no configurado. El login con Google está deshabilitado.');
-      // Cambiar el botón para indicar que no está configurado
-      const btn = document.getElementById('btnGoogleLogin');
-      if (btn) {
-        btn.addEventListener('click', () => {
-          showToast('Login con Google no configurado aún. Configura GOOGLE_CLIENT_ID en auth.js', 'info');
-        });
-      }
-      return;
-    }
-
-    // Esperar a que el script de Google se cargue
-    if (typeof google === 'undefined' || !google.accounts) {
-      window.addEventListener('load', () => {
-        setTimeout(() => setupGoogleSignIn(), 500);
+    // Google OAuth is now handled through Supabase — no separate GIS SDK needed
+    const btn = document.getElementById('btnGoogleLogin');
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        try {
+          const { error } = await SB.client.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: window.location.origin + window.location.pathname }
+          });
+          if (error) throw error;
+        } catch (err) {
+          showToast('Error al iniciar sesión con Google: ' + err.message, 'error');
+        }
       });
-    } else {
-      setupGoogleSignIn();
     }
   }
 
-  function setupGoogleSignIn() {
-    if (typeof google === 'undefined' || !google.accounts) {
-      console.warn('[Auth] Google Identity Services no disponible');
-      return;
-    }
-
+  // --- User Management (Supabase Auth) ---
+  async function loadUser() {
     try {
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleResponse,
-        auto_select: false,
-        cancel_on_tap_outside: true
-      });
-
-      // Vincular el botón de login
-      const btn = document.getElementById('btnGoogleLogin');
-      if (btn) {
-        btn.addEventListener('click', () => {
-          google.accounts.id.prompt();
-        });
+      const user = await SB.getUser();
+      if (user) {
+        currentUser = {
+          id: user.id,
+          name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+          email: user.email || '',
+          picture: user.user_metadata?.avatar_url || ''
+        };
+      } else {
+        currentUser = null;
       }
-    } catch (err) {
-      console.error('[Auth] Error inicializando Google Sign-In:', err);
-    }
-  }
-
-  function handleGoogleResponse(response) {
-    if (!response.credential) return;
-
-    // Decodificar el JWT token (payload está en la segunda parte)
-    try {
-      const payload = JSON.parse(atob(response.credential.split('.')[1]));
-
-      const user = {
-        id: payload.sub,
-        name: payload.name || 'Usuario',
-        email: payload.email || '',
-        picture: payload.picture || ''
-      };
-
-      setUser(user);
-      showToast(`¡Bienvenido, ${user.name}!`, 'success');
-    } catch (err) {
-      console.error('[Auth] Error procesando token de Google:', err);
-      showToast('Error al iniciar sesión', 'error');
-    }
-  }
-
-  // --- User Management ---
-  function loadUser() {
-    try {
-      const data = localStorage.getItem(USER_KEY);
-      currentUser = data ? JSON.parse(data) : null;
     } catch {
       currentUser = null;
     }
@@ -116,23 +71,12 @@ const Auth = (() => {
 
   function setUser(user) {
     currentUser = user;
-    try {
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-    } catch { /* noop */ }
     updateUI();
   }
 
-  function logoutUser() {
+  async function logoutUser() {
+    await SB.client.auth.signOut();
     currentUser = null;
-    try {
-      localStorage.removeItem(USER_KEY);
-    } catch { /* noop */ }
-
-    // Revocar sesión de Google
-    if (typeof google !== 'undefined' && google.accounts) {
-      google.accounts.id.disableAutoSelect();
-    }
-
     updateUI();
     showToast('Sesión cerrada', 'info');
   }
@@ -187,20 +131,23 @@ const Auth = (() => {
     return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   }
 
-  // --- Historial de pedidos ---
-  function getOrders() {
+  // --- Historial de pedidos (Supabase) ---
+  async function getOrders() {
+    if (!currentUser) return [];
     try {
-      return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
+      return await SB.getOrders(currentUser.id);
     } catch {
       return [];
     }
   }
 
-  function renderOrders() {
+  async function renderOrders() {
     const body = document.getElementById('ordersBody');
     if (!body) return;
 
-    const orders = getOrders();
+    body.innerHTML = '<p style="text-align:center;color:var(--text-tertiary);padding:2rem;">Cargando pedidos…</p>';
+
+    const orders = await getOrders();
 
     if (orders.length === 0) {
       body.innerHTML = '<p style="text-align:center;color:var(--text-tertiary);padding:2rem;">No tienes pedidos aún.</p>';
@@ -233,7 +180,7 @@ const Auth = (() => {
   }
 
   function openOrdersModal() {
-    renderOrders();
+    renderOrders(); // async — will populate when ready
     document.getElementById('ordersModal')?.classList.add('active');
     document.body.style.overflow = 'hidden';
   }
@@ -264,33 +211,36 @@ const Auth = (() => {
       }
     });
 
-    // Login form submit
-    document.getElementById('loginForm')?.addEventListener('submit', e => {
+    // Login form submit (Supabase Auth)
+    document.getElementById('loginForm')?.addEventListener('submit', async e => {
       e.preventDefault();
       const email = document.getElementById('loginEmail')?.value?.trim();
       const password = document.getElementById('loginPassword')?.value;
       if (!email || !password) return;
 
-      const users = getRegisteredUsers();
-      const found = users.find(u => u.email === email);
-      if (!found) {
-        showToast('No existe una cuenta con ese correo', 'error');
-        return;
+      try {
+        const { data, error } = await SB.client.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        const user = data.user;
+        setUser({
+          id: user.id,
+          name: user.user_metadata?.name || email.split('@')[0],
+          email: user.email,
+          picture: user.user_metadata?.avatar_url || ''
+        });
+        document.getElementById('userDropdown')?.classList.remove('active');
+        showToast(`¡Bienvenido, ${currentUser.name}!`, 'success');
+      } catch (err) {
+        showToast(err.message === 'Invalid login credentials'
+          ? 'Correo o contraseña incorrectos'
+          : err.message, 'error');
       }
-      if (found.password !== password) {
-        showToast('Contraseña incorrecta', 'error');
-        return;
-      }
-      const user = { id: found.id, name: found.name, email: found.email, picture: '' };
-      setUser(user);
-      document.getElementById('userDropdown')?.classList.remove('active');
-      showToast(`¡Bienvenido, ${user.name}!`, 'success');
     });
 
-    // Logout
-    document.getElementById('btnLogout')?.addEventListener('click', e => {
+    // Logout (Supabase)
+    document.getElementById('btnLogout')?.addEventListener('click', async e => {
       e.preventDefault();
-      logoutUser();
+      await logoutUser();
       document.getElementById('userDropdown')?.classList.remove('active');
     });
 
@@ -313,8 +263,8 @@ const Auth = (() => {
       showRegisterPanel();
     });
 
-    // Register form submit
-    document.getElementById('registerForm')?.addEventListener('submit', e => {
+    // Register form submit (Supabase Auth)
+    document.getElementById('registerForm')?.addEventListener('submit', async e => {
       e.preventDefault();
       const name = document.getElementById('registerName')?.value?.trim();
       const email = document.getElementById('registerEmail')?.value?.trim();
@@ -323,15 +273,26 @@ const Auth = (() => {
       if (!name || !email || !password) return;
       if (password !== password2) { showToast('Las contraseñas no coinciden', 'error'); return; }
       if (password.length < 6) { showToast('La contraseña debe tener al menos 6 caracteres', 'error'); return; }
-      const users = getRegisteredUsers();
-      if (users.find(u => u.email === email)) { showToast('Ya existe una cuenta con ese correo', 'error'); return; }
-      const newUser = { id: 'user-' + Date.now(), name, email, password };
-      users.push(newUser);
-      saveRegisteredUsers(users);
-      setUser({ id: newUser.id, name, email, picture: '' });
-      document.getElementById('userDropdown')?.classList.remove('active');
-      hideRegisterPanel();
-      showToast(`¡Cuenta creada! Bienvenido, ${name}`, 'success');
+
+      try {
+        const { data, error } = await SB.client.auth.signUp({
+          email,
+          password,
+          options: { data: { name } }
+        });
+        if (error) throw error;
+        if (data.user) {
+          setUser({ id: data.user.id, name, email, picture: '' });
+          document.getElementById('userDropdown')?.classList.remove('active');
+          hideRegisterPanel();
+          showToast(`¡Cuenta creada! Bienvenido, ${name}`, 'success');
+        } else {
+          showToast('Revisa tu correo para confirmar tu cuenta', 'info');
+          hideRegisterPanel();
+        }
+      } catch (err) {
+        showToast(err.message || 'Error al crear la cuenta', 'error');
+      }
     });
 
     // Back to login from register
@@ -346,13 +307,16 @@ const Auth = (() => {
     dropdown?.classList.toggle('active');
   }
 
-  // --- Registro ---
-  function getRegisteredUsers() {
-    try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch { return []; }
+  function openLoginDropdown() {
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown && !dropdown.classList.contains('active')) {
+      dropdown.classList.add('active');
+    }
+    // Ensure login panel is visible (not register)
+    hideRegisterPanel();
   }
-  function saveRegisteredUsers(users) {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  }
+
+  // --- Registro (UI helpers) ---
   function showRegisterPanel() {
     const lp = document.getElementById('loginPanel');
     const rp = document.getElementById('registerPanel');
@@ -406,7 +370,5 @@ const Auth = (() => {
     }, 3000);
   }
 
-  return { init, getUser, isLoggedIn };
+  return { init, getUser, isLoggedIn, openLoginDropdown };
 })();
-
-document.addEventListener('DOMContentLoaded', () => Auth.init());
