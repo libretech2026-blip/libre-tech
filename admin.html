@@ -122,9 +122,9 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           <span>Estadísticas</span>
         </button>
-        <button class="admin-tab" data-tab="banners">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          <span>Banners</span>
+        <button class="admin-tab" data-tab="visual">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span>Visualización</span>
         </button>
         <button class="admin-tab" data-tab="pqrs">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
@@ -200,10 +200,11 @@
                 <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--spacing-md);">
                   El archivo Excel debe tener las siguientes columnas con sus títulos en la primera fila:
                 </p>
-                <code style="display:block;background:var(--bg-secondary);padding:var(--spacing-md);border-radius:var(--radius-sm);font-size:0.8rem;overflow-x:auto;white-space:pre;color:var(--text-primary);">| nombre               | precio | descripcion                     | categoria   | stock |
-| Audífonos Bluetooth  | 189900 | Audífonos con cancelación ruido | Audio       | 25    |
-| Cargador USB-C 65W   | 79900  | Cargador rápido GaN             | Accesorios  | 50    |</code>
+                <code style="display:block;background:var(--bg-secondary);padding:var(--spacing-md);border-radius:var(--radius-sm);font-size:0.8rem;overflow-x:auto;white-space:pre;color:var(--text-primary);">| nombre               | precio | descripcion                     | categoria  | stock | marca    | color          | spec1              | spec2            |
+| Audífonos Bluetooth  | 189900 | Audífonos con cancelación ruido | Audio      | 25    | Sony     | Negro, Blanco  | Batería: 30 horas  | Bluetooth: 5.2   |
+| Cargador USB-C 65W   | 79900  | Cargador rápido GaN             | Accesorios | 50    | Anker    | Blanco         | Potencia: 65W      | Puertos: 2       |</code>
                 <p style="font-size:0.8rem;color:var(--text-tertiary);margin-top:var(--spacing-sm);">
+                  <strong>Columnas opcionales:</strong> marca, color (separar con comas), spec1, spec2, spec3... (formato <em>Clave: Valor</em>).<br>
                   La primera fila debe contener los encabezados. Las imágenes se pueden cargar después desde la tabla de productos.
                 </p>
               </div>
@@ -244,7 +245,6 @@
           </div>
         </div>
       </div>
-    </div>
 
       <!-- ===== TAB: PEDIDOS ===== -->
       <div class="admin-tab-content" id="tabOrders" style="display:none">
@@ -351,36 +351,110 @@
         </div>
       </div>
 
-      <!-- ===== TAB: BANNERS ===== -->
-      <div class="admin-tab-content" id="tabBanners" style="display:none">
+      <!-- ===== TAB: VISUALIZACIÓN ===== -->
+      <div class="admin-tab-content" id="tabVisual" style="display:none">
         <div class="admin-panel">
           <div class="admin-panel-header">
-            <h3>Banners Promocionales</h3>
-            <button class="btn btn-primary" id="btnAddBanner">
+            <h3>Visualización de Página</h3>
+            <p style="font-size:0.8rem;color:var(--text-tertiary);margin:0">Haz clic en cualquier zona de banner para editarla</p>
+          </div>
+          <div class="admin-panel-body" style="padding:var(--spacing-md)">
+            <!-- Page Preview Minimap -->
+            <div class="page-preview">
+              <!-- HEADER mock -->
+              <div class="pv-section pv-header">
+                <span>🏠 HEADER — Logo, búsqueda, menú</span>
+              </div>
+
+              <!-- HERO -->
+              <div class="pv-section pv-hero pv-banner-slot" data-slot="hero-carousel" title="Editar carrusel hero">
+                <div class="pv-slot-label">🎠 Hero Carrusel</div>
+                <div class="pv-slot-status" id="pvStatusHeroCarousel">Sin banners</div>
+                <button class="pv-edit-btn">Editar</button>
+              </div>
+
+              <!-- PRODUCTOS DESTACADOS con banner lateral izquierdo -->
+              <div class="pv-row">
+                <div class="pv-section pv-sidebar-banner pv-banner-slot" data-slot="side-left" title="Editar banner lateral izquierdo">
+                  <div class="pv-slot-label">📌 Banner Lateral Izq</div>
+                  <div class="pv-slot-status" id="pvStatusSideLeft">Auto</div>
+                  <button class="pv-edit-btn">Editar</button>
+                </div>
+                <div class="pv-section pv-main-area">
+                  <span>🛍️ Productos Destacados</span>
+                </div>
+              </div>
+
+              <!-- BANNER FULL-WIDTH 1 -->
+              <div class="pv-section pv-full-banner pv-banner-slot" data-slot="after-featured" title="Banner después de productos destacados">
+                <div class="pv-slot-label">🖼️ Banner Completo — Después de Destacados</div>
+                <div class="pv-slot-status" id="pvStatusAfterFeatured">Vacío</div>
+                <button class="pv-edit-btn">Editar</button>
+              </div>
+
+              <!-- TOP CATEGORÍAS con banner lateral derecho -->
+              <div class="pv-row">
+                <div class="pv-section pv-main-area">
+                  <span>⭐ Top Categorías por Valoraciones</span>
+                </div>
+                <div class="pv-section pv-sidebar-banner pv-banner-slot" data-slot="side-right" title="Editar banner lateral derecho">
+                  <div class="pv-slot-label">📌 Banner Lateral Der</div>
+                  <div class="pv-slot-status" id="pvStatusSideRight">Auto</div>
+                  <button class="pv-edit-btn">Editar</button>
+                </div>
+              </div>
+
+              <!-- BANNER FULL-WIDTH 2 -->
+              <div class="pv-section pv-full-banner pv-banner-slot" data-slot="after-categories" title="Banner después de categorías">
+                <div class="pv-slot-label">🖼️ Banner Completo — Después de Categorías</div>
+                <div class="pv-slot-status" id="pvStatusAfterCategories">Vacío</div>
+                <button class="pv-edit-btn">Editar</button>
+              </div>
+
+              <!-- BANNER FULL-WIDTH 3 -->
+              <div class="pv-section pv-full-banner pv-banner-slot" data-slot="before-footer" title="Banner antes del footer">
+                <div class="pv-slot-label">🖼️ Banner Completo — Antes del Footer</div>
+                <div class="pv-slot-status" id="pvStatusBeforeFooter">Vacío</div>
+                <button class="pv-edit-btn">Editar</button>
+              </div>
+
+              <!-- TRUST BANNER -->
+              <div class="pv-section pv-trust">
+                <span>✅ Barra de Confianza</span>
+              </div>
+
+              <!-- FOOTER -->
+              <div class="pv-section pv-footer">
+                <span>📋 FOOTER</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Banner List Table -->
+        <div class="admin-panel" style="margin-top:var(--spacing-lg)">
+          <div class="admin-panel-header">
+            <h3>Todos los Banners</h3>
+            <button class="btn btn-primary" id="btnAddVisualBanner">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Agregar banner
             </button>
           </div>
           <div class="admin-panel-body">
-            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--spacing-md);">Gestiona los banners del carrusel principal. Puedes programarlos por fechas especiales.</p>
-            <div id="bannersContainer">
-              <p style="color:var(--text-tertiary);text-align:center;padding:1rem;">No hay banners personalizados.</p>
-            </div>
-          </div>
-        </div>
-        <!-- Promo Photo Banners -->
-        <div class="admin-panel" style="margin-top:var(--spacing-lg)">
-          <div class="admin-panel-header">
-            <h3>Banners Foto Promocional</h3>
-            <button class="btn btn-primary" id="btnAddPromoPhoto">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Agregar banner foto
-            </button>
-          </div>
-          <div class="admin-panel-body">
-            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--spacing-md);">Banners de imagen completa que se muestran en la página principal. Ideal para promociones especiales. No se muestran dentro del detalle de producto.</p>
-            <div id="promoPhotosContainer">
-              <p style="color:var(--text-tertiary);text-align:center;padding:1rem;">No hay banners de foto promocional.</p>
+            <div class="table-responsive">
+              <table class="products-table" id="visualBannersTable">
+                <thead>
+                  <tr>
+                    <th>Imagen</th>
+                    <th>Nombre</th>
+                    <th>Posición</th>
+                    <th>Producto</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="visualBannersTableBody"></tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -656,39 +730,59 @@
   </div>
 
   <!-- ==================== MODAL: BANNER ==================== -->
-  <div class="product-form-overlay" id="bannerFormOverlay">
-    <div class="product-form-modal" style="max-width:600px">
+  <!-- ==================== MODAL: BANNER EDITOR (Visualización) ==================== -->
+  <div class="product-form-overlay" id="visualBannerOverlay">
+    <div class="product-form-modal" style="max-width:640px">
       <div class="modal-header">
-        <h2 id="bannerFormTitle">Agregar banner</h2>
-        <button class="modal-close" id="btnCloseBannerForm" aria-label="Cerrar">
+        <h2 id="visualBannerTitle">Editar Banner</h2>
+        <button class="modal-close" id="btnCloseVisualBanner" aria-label="Cerrar">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <div class="modal-body">
-        <form id="bannerForm" autocomplete="off">
-          <input type="hidden" id="bannerId">
+        <form id="visualBannerForm" autocomplete="off">
+          <input type="hidden" id="vbId">
           <div class="form-group">
-            <label class="form-label" for="bannerTitle">Título del banner *</label>
-            <input type="text" class="form-input" id="bannerTitle" required maxlength="200" placeholder="Ej: Ofertas de Navidad">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="bannerSubtitle">Subtítulo</label>
-            <input type="text" class="form-input" id="bannerSubtitle" maxlength="300" placeholder="Ej: Hasta 50% de descuento">
+            <label class="form-label" for="vbName">Nombre del banner *</label>
+            <input type="text" class="form-input" id="vbName" required maxlength="200" placeholder="Ej: Banner Festivo Navidad">
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-md)">
             <div class="form-group">
-              <label class="form-label" for="bannerStartDate">Fecha inicio</label>
-              <input type="date" class="form-input" id="bannerStartDate">
+              <label class="form-label" for="vbPosition">Posición en la página *</label>
+              <select class="form-select" id="vbPosition">
+                <option value="hero-carousel">Hero Carrusel</option>
+                <option value="side-left">Lateral Izquierdo (junto a destacados)</option>
+                <option value="after-featured">Completo — Después de destacados</option>
+                <option value="side-right">Lateral Derecho (junto a categorías)</option>
+                <option value="after-categories">Completo — Después de categorías</option>
+                <option value="before-footer">Completo — Antes del footer</option>
+              </select>
             </div>
             <div class="form-group">
-              <label class="form-label" for="bannerEndDate">Fecha fin</label>
-              <input type="date" class="form-input" id="bannerEndDate">
+              <label class="form-label" for="vbProduct">Producto enlazado</label>
+              <select class="form-select" id="vbProduct">
+                <option value="">— Ninguno —</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="vbSubtitle">Texto / Subtítulo (opcional)</label>
+            <input type="text" class="form-input" id="vbSubtitle" maxlength="300" placeholder="Ej: Hasta 50% de descuento">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-md)">
+            <div class="form-group">
+              <label class="form-label" for="vbStartDate">Fecha inicio (opcional)</label>
+              <input type="date" class="form-input" id="vbStartDate">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="vbEndDate">Fecha fin (opcional)</label>
+              <input type="date" class="form-input" id="vbEndDate">
             </div>
           </div>
           <div class="form-group">
             <label class="form-label">Imagen del banner</label>
-            <div class="image-upload-area" id="bannerImageArea">
-              <div class="upload-text" id="bannerUploadText">
+            <div class="image-upload-area" id="vbImageArea">
+              <div class="upload-text" id="vbUploadText">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <rect x="3" y="3" width="18" height="18" rx="2"/>
                   <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -696,18 +790,18 @@
                 </svg>
                 <span>Haz clic o arrastra una imagen aquí</span>
               </div>
-              <img id="bannerImagePreview" src="" alt="Vista previa" style="display:none">
-              <input type="file" id="bannerImageInput" accept="image/*" style="display:none">
+              <img id="vbImagePreview" src="" alt="Vista previa" style="display:none;max-height:180px;border-radius:8px">
+              <input type="file" id="vbImageInput" accept="image/*" style="display:none">
             </div>
           </div>
           <div class="form-group">
             <label style="display:flex;align-items:center;gap:var(--spacing-sm);cursor:pointer">
-              <input type="checkbox" id="bannerActive" checked>
+              <input type="checkbox" id="vbActive" checked>
               <span class="form-label" style="margin:0">Banner activo</span>
             </label>
           </div>
-          <div style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;padding-top:var(--spacing-md);">
-            <button type="button" class="btn btn-secondary" id="btnCancelBanner">Cancelar</button>
+          <div style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;padding-top:var(--spacing-md)">
+            <button type="button" class="btn btn-secondary" id="btnCancelVisualBanner">Cancelar</button>
             <button type="submit" class="btn btn-primary">Guardar banner</button>
           </div>
         </form>
@@ -734,63 +828,6 @@
           </div>
           <div style="display:flex;gap:var(--spacing-sm);justify-content:flex-end">
             <button type="submit" class="btn btn-primary">Enviar respuesta</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================== MODAL: PROMO PHOTO BANNER ==================== -->
-  <div class="product-form-overlay" id="promoPhotoFormOverlay">
-    <div class="product-form-modal" style="max-width:600px">
-      <div class="modal-header">
-        <h2 id="promoPhotoFormTitle">Agregar banner foto</h2>
-        <button class="modal-close" id="btnClosePromoPhotoForm" aria-label="Cerrar">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form id="promoPhotoForm" autocomplete="off">
-          <div class="form-group">
-            <label class="form-label" for="promoPhotoTitle">Título (opcional)</label>
-            <input type="text" class="form-input" id="promoPhotoTitle" maxlength="200" placeholder="Ej: Gran promoción de mayo">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="promoPhotoLink">Enlace al hacer clic (opcional)</label>
-            <input type="url" class="form-input" id="promoPhotoLink" placeholder="https://...">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="promoPhotoPosition">Posición en la página</label>
-            <select class="form-select" id="promoPhotoPosition">
-              <option value="after-featured">Después de productos destacados</option>
-              <option value="after-categories">Después de top categorías</option>
-              <option value="before-footer">Antes del footer</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Imagen del banner *</label>
-            <div class="image-upload-area" id="promoPhotoImageArea" style="min-height:120px">
-              <div class="upload-text" id="promoPhotoUploadText">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/>
-                  <path d="M21 15l-5-5L5 21"/>
-                </svg>
-                <span>Haz clic o arrastra una imagen aquí (max 5MB)</span>
-              </div>
-              <img id="promoPhotoImagePreview" src="" alt="Vista previa" style="display:none">
-              <input type="file" id="promoPhotoImageInput" accept="image/*" style="display:none">
-            </div>
-          </div>
-          <div class="form-group">
-            <label style="display:flex;align-items:center;gap:var(--spacing-sm);cursor:pointer">
-              <input type="checkbox" id="promoPhotoActive" checked>
-              <span class="form-label" style="margin:0">Banner activo</span>
-            </label>
-          </div>
-          <div style="display:flex;gap:var(--spacing-sm);justify-content:flex-end;padding-top:var(--spacing-md);">
-            <button type="button" class="btn btn-secondary" id="btnCancelPromoPhoto">Cancelar</button>
-            <button type="submit" class="btn btn-primary">Guardar banner foto</button>
           </div>
         </form>
       </div>

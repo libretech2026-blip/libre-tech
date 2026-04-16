@@ -497,6 +497,8 @@ input, select, textarea {
 /* Password visibility toggle */
 .password-wrapper {
   position: relative;
+  display: block;
+  width: 100%;
 }
 .password-wrapper .form-input {
   padding-right: 44px;
@@ -519,8 +521,11 @@ input, select, textarea {
   z-index: 2;
   width: 30px;
   height: 30px;
+  max-width: 30px;
+  min-width: 30px;
   border-radius: var(--radius-sm);
   flex-shrink: 0;
+  left: auto;
 }
 .password-toggle svg {
   width: 18px;
@@ -572,12 +577,16 @@ input, select, textarea {
 .login-register p {
   color: var(--text-secondary);
   margin-bottom: 4px;
+  text-align: center;
+  width: 100%;
 }
 
 .create-account-link {
   color: var(--primary-blue);
   font-weight: 600;
   font-size: 0.85rem;
+  text-align: center;
+  width: auto;
 }
 
 .create-account-link:hover {
@@ -2097,6 +2106,145 @@ input, select, textarea {
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-lg);
   margin-top: var(--spacing-lg);
+}
+
+/* ============================================================
+   VISUALIZACIÓN TAB — Page Preview Minimap
+   ============================================================ */
+.page-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-light);
+}
+
+.pv-section {
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+}
+
+.pv-header {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  justify-content: center;
+}
+
+.pv-hero {
+  background: linear-gradient(135deg, rgba(26,75,140,0.13), rgba(37,99,176,0.13));
+  border: 2px dashed var(--primary-blue);
+  min-height: 60px;
+  justify-content: space-between;
+}
+
+.pv-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 6px;
+}
+
+.pv-row:last-of-type {
+  grid-template-columns: 1fr 160px;
+}
+
+.pv-sidebar-banner {
+  background: linear-gradient(135deg, rgba(230,126,34,0.09), rgba(243,156,18,0.09));
+  border: 2px dashed var(--primary-orange);
+  flex-direction: column;
+  text-align: center;
+  min-height: 80px;
+  justify-content: center;
+}
+
+.pv-main-area {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  justify-content: center;
+}
+
+.pv-full-banner {
+  background: linear-gradient(135deg, rgba(16,185,129,0.09), rgba(5,158,104,0.09));
+  border: 2px dashed var(--success);
+  min-height: 48px;
+  justify-content: space-between;
+}
+
+.pv-trust {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  justify-content: center;
+}
+
+.pv-footer {
+  background: rgba(26,26,46,0.09);
+  border: 1px solid var(--border-light);
+  justify-content: center;
+}
+
+.pv-banner-slot {
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+
+.pv-banner-slot:hover {
+  transform: scale(1.01);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+
+.pv-banner-slot.pv-has-image {
+  background-size: cover;
+  background-position: center;
+  border-style: solid;
+}
+
+.pv-banner-slot.pv-has-image .pv-slot-label,
+.pv-banner-slot.pv-has-image .pv-slot-status {
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+}
+
+.pv-slot-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pv-slot-status {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.pv-edit-btn {
+  background: var(--primary-blue);
+  color: #fff;
+  border: none;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.pv-banner-slot:hover .pv-edit-btn {
+  opacity: 1;
 }
 
 .admin-panel-header {

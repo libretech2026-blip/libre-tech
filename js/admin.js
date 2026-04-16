@@ -85,9 +85,8 @@ const Admin = (() => {
     renderProductsTable();
     renderOrdersTable();
     renderPagesTable();
-    renderBannersTable();
+    renderVisualBannersTable();
     renderPqrsTable();
-    renderPromoPhotosTable();
     populateCategoriesDatalist();
   }
 
@@ -656,14 +655,14 @@ const Admin = (() => {
       c.style.display = 'none';
     });
 
-    const tabMap = { products: 'tabProducts', csv: 'tabCsv', orders: 'tabOrders', pages: 'tabPages', stats: 'tabStats', banners: 'tabBanners', pqrs: 'tabPqrs', social: 'tabSocial' };
+    const tabMap = { products: 'tabProducts', csv: 'tabCsv', orders: 'tabOrders', pages: 'tabPages', stats: 'tabStats', visual: 'tabVisual', pqrs: 'tabPqrs', social: 'tabSocial' };
     const tabEl = document.getElementById(tabMap[tabName]);
     if (tabEl) tabEl.style.display = 'block';
 
     if (tabName === 'orders') renderOrdersTable();
     if (tabName === 'pages') renderPagesTable();
     if (tabName === 'stats') renderStats();
-    if (tabName === 'banners') { renderBannersTable(); renderPromoPhotosTable(); }
+    if (tabName === 'visual') { renderVisualBannersTable(); updatePagePreview(); }
     if (tabName === 'pqrs') renderPqrsTable();
     if (tabName === 'social') loadSocialLinks();
   }
@@ -837,21 +836,8 @@ const Admin = (() => {
     document.getElementById('productOfferPrice')?.addEventListener('input', updateOfferPercent);
     document.getElementById('productPrice')?.addEventListener('input', updateOfferPercent);
 
-    // Banners
-    document.getElementById('btnAddBanner')?.addEventListener('click', () => openBannerForm());
-    document.getElementById('bannerForm')?.addEventListener('submit', e => { e.preventDefault(); saveBannerForm(); });
-    document.getElementById('btnCloseBannerForm')?.addEventListener('click', closeBannerForm);
-    document.getElementById('btnCancelBanner')?.addEventListener('click', closeBannerForm);
-    document.getElementById('bannerFormOverlay')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeBannerForm(); });
-    const bannerImgArea = document.getElementById('bannerImageArea');
-    const bannerImgInput = document.getElementById('bannerImageInput');
-    bannerImgArea?.addEventListener('click', () => bannerImgInput?.click());
-    bannerImgInput?.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file || !file.type.startsWith('image/')) return;
-      if (file.size > 2 * 1024 * 1024) { showToast('Imagen max 2MB', 'error'); return; }
-      const r = new FileReader(); r.onload = ev => { document.getElementById('bannerImagePreview').src = ev.target.result; document.getElementById('bannerImagePreview').style.display = 'block'; document.getElementById('bannerUploadText').style.display = 'none'; }; r.readAsDataURL(file);
-    });
+    // Visualización (banners unificados)
+    initVisualBanners();
 
     // PQRs
     document.getElementById('pqrStatusFilter')?.addEventListener('change', () => renderPqrsTable());
@@ -862,23 +848,7 @@ const Admin = (() => {
     // Social links
     document.getElementById('socialLinksForm')?.addEventListener('submit', e => { e.preventDefault(); saveSocialLinks(); });
 
-    // Promo photo banners
-    document.getElementById('btnAddPromoPhoto')?.addEventListener('click', () => openPromoPhotoForm());
-    document.getElementById('promoPhotoForm')?.addEventListener('submit', e => { e.preventDefault(); savePromoPhotoForm(); });
-    document.getElementById('btnClosePromoPhotoForm')?.addEventListener('click', closePromoPhotoForm);
-    document.getElementById('btnCancelPromoPhoto')?.addEventListener('click', closePromoPhotoForm);
-    document.getElementById('promoPhotoFormOverlay')?.addEventListener('click', e => { if (e.target === e.currentTarget) closePromoPhotoForm(); });
-    const promoPhotoImgArea = document.getElementById('promoPhotoImageArea');
-    const promoPhotoImgInput = document.getElementById('promoPhotoImageInput');
-    promoPhotoImgArea?.addEventListener('click', () => promoPhotoImgInput?.click());
-    promoPhotoImgInput?.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file || !file.type.startsWith('image/')) return;
-      if (file.size > 5 * 1024 * 1024) { showToast('Imagen max 5MB', 'error'); return; }
-      const r = new FileReader();
-      r.onload = ev => { document.getElementById('promoPhotoImagePreview').src = ev.target.result; document.getElementById('promoPhotoImagePreview').style.display = 'block'; document.getElementById('promoPhotoUploadText').style.display = 'none'; };
-      r.readAsDataURL(file);
-    });
+
   }
 
   // --- Utilidades ---
@@ -1221,86 +1191,349 @@ const Admin = (() => {
     try { return JSON.parse(localStorage.getItem(VIEWS_KEY) || '{}'); } catch { return {}; }
   }
 
-  // ===== BANNERS =====
-  function getBanners() {
-    try { return JSON.parse(localStorage.getItem(BANNERS_KEY) || '[]'); } catch { return []; }
-  }
+  // ===== VISUALIZACIÓN (unified banners) =====
+  const VB_KEY = 'libretech_visual_banners';
+  function getVisualBanners() { try { return JSON.parse(localStorage.getItem(VB_KEY) || '[]'); } catch { return []; } }
+  function saveVisualBanners(arr) { localStorage.setItem(VB_KEY, JSON.stringify(arr)); }
+  function getBanners() { try { return JSON.parse(localStorage.getItem(BANNERS_KEY) || '[]'); } catch { return []; } }
   function saveBanners(banners) { localStorage.setItem(BANNERS_KEY, JSON.stringify(banners)); }
 
-  function renderBannersTable() {
-    const container = document.getElementById('bannersContainer');
-    if (!container) return;
-    const banners = getBanners();
-    if (banners.length === 0) { container.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">No hay banners personalizados.</p>'; return; }
+  const POSITION_LABELS = {
+    'hero-carousel': 'Hero Carrusel',
+    'side-left': 'Lateral Izquierdo',
+    'after-featured': 'Completo — Después de Destacados',
+    'side-right': 'Lateral Derecho',
+    'after-categories': 'Completo — Después de Categorías',
+    'before-footer': 'Completo — Antes del Footer'
+  };
 
-    container.innerHTML = banners.map((b, i) => `
-      <div style="display:flex;align-items:center;gap:var(--spacing-md);padding:var(--spacing-md);border:1px solid var(--border-light);border-radius:var(--radius-md);margin-bottom:var(--spacing-sm);background:var(--bg-secondary)">
-        <div style="width:120px;height:60px;border-radius:var(--radius-sm);overflow:hidden;background:var(--bg-tertiary);flex-shrink:0">
-          ${b.image ? `<img src="${escapeAttr(b.image)}" style="width:100%;height:100%;object-fit:cover">` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:0.7rem">Sin imagen</div>'}
-        </div>
-        <div style="flex:1;min-width:0">
-          <strong style="font-size:0.9rem">${escapeHTML(b.title)}</strong>
-          <div style="font-size:0.8rem;color:var(--text-secondary)">${b.subtitle || ''}</div>
-          <div style="font-size:0.75rem;color:var(--text-tertiary)">${b.startDate || 'â€”'} â†’ ${b.endDate || 'â€”'} | ${b.active ? 'âœ… Activo' : 'âŒ Inactivo'}</div>
-        </div>
-        <div class="table-actions">
-          <button class="table-btn" onclick="Admin._editBanner(${i})" title="Editar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
-          <button class="table-btn delete" onclick="Admin._deleteBanner(${i})" title="Eliminar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-          </button>
-        </div>
-      </div>
-    `).join('');
+  function renderVisualBannersTable() {
+    const tbody = document.getElementById('visualBannersTableBody');
+    if (!tbody) return;
+    const banners = getVisualBanners();
+    if (banners.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-tertiary)">No hay banners configurados.</td></tr>';
+      updatePagePreview(); return;
+    }
+    const products = getProducts();
+    tbody.innerHTML = banners.map((b, i) => {
+      const prod = b.productId ? products.find(p => p.id === b.productId) : null;
+      return `<tr>
+        <td><div style="width:80px;height:40px;border-radius:4px;overflow:hidden;background:var(--bg-secondary)">${b.image ? `<img src="${escapeAttr(b.image)}" style="width:100%;height:100%;object-fit:cover">` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:0.65rem;color:var(--text-tertiary)">—</div>'}</div></td>
+        <td><strong>${escapeHTML(b.name || 'Sin nombre')}</strong>${b.subtitle ? `<div style="font-size:0.75rem;color:var(--text-tertiary)">${escapeHTML(b.subtitle)}</div>` : ''}</td>
+        <td style="font-size:0.8rem">${POSITION_LABELS[b.position] || b.position}</td>
+        <td style="font-size:0.8rem">${prod ? escapeHTML(prod.name) : '—'}</td>
+        <td><span class="table-status ${b.active ? 'active' : 'inactive'}"><span class="table-status-dot"></span>${b.active ? 'Activo' : 'Inactivo'}</span></td>
+        <td><div class="table-actions">
+          <button class="table-btn" onclick="Admin._editVB(${i})" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="table-btn delete" onclick="Admin._deleteVB(${i})" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+        </div></td>
+      </tr>`;
+    }).join('');
+    updatePagePreview();
   }
 
-  let editingBannerIndex = -1;
-  function openBannerForm(index = -1) {
-    editingBannerIndex = index;
-    const form = document.getElementById('bannerForm');
-    form.reset();
-    document.getElementById('bannerImagePreview').style.display = 'none';
-    document.getElementById('bannerUploadText').style.display = 'block';
+  function updatePagePreview() {
+    const banners = getVisualBanners();
+    const slots = ['hero-carousel','side-left','after-featured','side-right','after-categories','before-footer'];
+    slots.forEach(slot => {
+      const slotBanners = banners.filter(b => b.position === slot && b.active);
+      const camelId = 'pvStatus' + slot.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
+      const statusEl = document.getElementById(camelId);
+      const slotEl = document.querySelector(`.pv-banner-slot[data-slot="${slot}"]`);
+      if (!statusEl || !slotEl) return;
+      if (slotBanners.length > 0) {
+        statusEl.textContent = `${slotBanners.length} banner${slotBanners.length > 1 ? 's' : ''}`;
+        if (slotBanners[0].image) { slotEl.style.backgroundImage = `url(${slotBanners[0].image})`; slotEl.classList.add('pv-has-image'); }
+        else { slotEl.style.backgroundImage = ''; slotEl.classList.remove('pv-has-image'); }
+      } else {
+        statusEl.textContent = slot.startsWith('side') ? 'Auto' : 'Vacío';
+        slotEl.style.backgroundImage = ''; slotEl.classList.remove('pv-has-image');
+      }
+    });
+  }
 
-    if (index >= 0) {
-      const banners = getBanners();
-      const b = banners[index];
+  let editingVBIndex = -1;
+  let vbCurrentImage = '';
+
+  function populateVBProductSelect() {
+    const select = document.getElementById('vbProduct');
+    if (!select) return;
+    const products = getProducts();
+    select.innerHTML = '<option value="">— Ninguno —</option>' + products.map(p => `<option value="${escapeAttr(p.id)}">${escapeHTML(p.name)} ($${(p.price||0).toLocaleString('es-CO')})</option>`).join('');
+  }
+
+  function openVisualBannerForm(indexOrSlot) {
+    editingVBIndex = typeof indexOrSlot === 'number' ? indexOrSlot : -1;
+    const form = document.getElementById('visualBannerForm');
+    form.reset(); vbCurrentImage = '';
+    document.getElementById('vbImagePreview').style.display = 'none';
+    document.getElementById('vbUploadText').style.display = 'block';
+    populateVBProductSelect();
+    if (editingVBIndex >= 0) {
+      const b = getVisualBanners()[editingVBIndex];
       if (!b) return;
-      document.getElementById('bannerFormTitle').textContent = 'Editar banner';
-      document.getElementById('bannerTitle').value = b.title || '';
-      document.getElementById('bannerSubtitle').value = b.subtitle || '';
-      document.getElementById('bannerStartDate').value = b.startDate || '';
-      document.getElementById('bannerEndDate').value = b.endDate || '';
-      document.getElementById('bannerActive').checked = b.active !== false;
-      if (b.image) { document.getElementById('bannerImagePreview').src = b.image; document.getElementById('bannerImagePreview').style.display = 'block'; document.getElementById('bannerUploadText').style.display = 'none'; }
+      document.getElementById('visualBannerTitle').textContent = 'Editar Banner';
+      document.getElementById('vbName').value = b.name || '';
+      document.getElementById('vbPosition').value = b.position || 'after-featured';
+      document.getElementById('vbProduct').value = b.productId || '';
+      document.getElementById('vbSubtitle').value = b.subtitle || '';
+      document.getElementById('vbStartDate').value = b.startDate || '';
+      document.getElementById('vbEndDate').value = b.endDate || '';
+      document.getElementById('vbActive').checked = b.active !== false;
+      vbCurrentImage = b.image || '';
+      if (b.image) { document.getElementById('vbImagePreview').src = b.image; document.getElementById('vbImagePreview').style.display = 'block'; document.getElementById('vbUploadText').style.display = 'none'; }
     } else {
-      document.getElementById('bannerFormTitle').textContent = 'Agregar banner';
+      document.getElementById('visualBannerTitle').textContent = 'Agregar Banner';
+      if (typeof indexOrSlot === 'string') document.getElementById('vbPosition').value = indexOrSlot;
     }
-
-    document.getElementById('bannerFormOverlay').classList.add('active');
+    document.getElementById('visualBannerOverlay').classList.add('active');
     document.body.style.overflow = 'hidden';
   }
-  function closeBannerForm() { document.getElementById('bannerFormOverlay').classList.remove('active'); document.body.style.overflow = ''; }
 
-  function saveBannerForm() {
-    const title = document.getElementById('bannerTitle').value.trim();
-    if (!title) { showToast('TÃ­tulo requerido', 'error'); return; }
-    const preview = document.getElementById('bannerImagePreview');
+  function closeVisualBannerForm() { document.getElementById('visualBannerOverlay').classList.remove('active'); document.body.style.overflow = ''; }
+
+  function saveVisualBannerForm() {
+    const name = document.getElementById('vbName').value.trim();
+    if (!name) { showToast('Nombre requerido', 'error'); return; }
+    const preview = document.getElementById('vbImagePreview');
+    const image = preview.style.display !== 'none' ? preview.src : vbCurrentImage;
     const data = {
-      title, subtitle: document.getElementById('bannerSubtitle').value.trim(),
-      startDate: document.getElementById('bannerStartDate').value, endDate: document.getElementById('bannerEndDate').value,
-      active: document.getElementById('bannerActive').checked,
-      image: preview.style.display !== 'none' ? preview.src : ''
+      name, position: document.getElementById('vbPosition').value,
+      productId: document.getElementById('vbProduct').value || '',
+      subtitle: document.getElementById('vbSubtitle').value.trim(),
+      startDate: document.getElementById('vbStartDate').value,
+      endDate: document.getElementById('vbEndDate').value,
+      active: document.getElementById('vbActive').checked, image
     };
-    const banners = getBanners();
-    if (editingBannerIndex >= 0) { banners[editingBannerIndex] = data; } else { banners.push(data); }
-    saveBanners(banners);
-    closeBannerForm(); renderBannersTable();
+    const banners = getVisualBanners();
+    if (editingVBIndex >= 0) { banners[editingVBIndex] = data; } else { banners.push(data); }
+    saveVisualBanners(banners);
+    syncToLegacyBanners(banners);
+    closeVisualBannerForm(); renderVisualBannersTable();
     showToast('Banner guardado', 'success');
   }
 
+  function syncToLegacyBanners(allBanners) {
+    const heroBanners = allBanners.filter(b => b.position === 'hero-carousel').map(b => ({ title: b.name, subtitle: b.subtitle, image: b.image, startDate: b.startDate, endDate: b.endDate, active: b.active }));
+    saveBanners(heroBanners);
+    const photoPositions = ['after-featured','after-categories','before-footer'];
+    const promoPhotos = allBanners.filter(b => photoPositions.includes(b.position)).map(b => ({ title: b.name, image: b.image, position: b.position, link: b.productId ? `producto.html?id=${b.productId}` : '', active: b.active }));
+    localStorage.setItem('libretech_promo_photos', JSON.stringify(promoPhotos));
+  }
+
+  function initVisualBanners() {
+    document.querySelectorAll('.pv-banner-slot').forEach(slot => {
+      slot.addEventListener('click', () => {
+        const pos = slot.dataset.slot;
+        const banners = getVisualBanners().filter(b => b.position === pos);
+        if (banners.length === 1) openVisualBannerForm(getVisualBanners().indexOf(banners[0]));
+        else if (banners.length > 1) showToast(`${banners.length} banners en esta posición — edítalos en la tabla`, 'info');
+        else openVisualBannerForm(pos);
+      });
+    });
+    const addBtn = document.getElementById('btnAddVisualBanner');
+    if (addBtn) addBtn.addEventListener('click', () => openVisualBannerForm(-1));
+    const closeBtn = document.getElementById('btnCloseVisualBanner');
+    if (closeBtn) closeBtn.addEventListener('click', closeVisualBannerForm);
+    const cancelBtn = document.getElementById('btnCancelVisualBanner');
+    if (cancelBtn) cancelBtn.addEventListener('click', closeVisualBannerForm);
+    const form = document.getElementById('visualBannerForm');
+    if (form) form.addEventListener('submit', e => { e.preventDefault(); saveVisualBannerForm(); });
+    const imageArea = document.getElementById('vbImageArea');
+    const imageInput = document.getElementById('vbImageInput');
+    if (imageArea && imageInput) {
+      imageArea.addEventListener('click', () => imageInput.click());
+      imageInput.addEventListener('change', () => {
+        const file = imageInput.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { showToast('Imagen máx. 5MB', 'error'); return; }
+        const reader = new FileReader();
+        reader.onload = e => { document.getElementById('vbImagePreview').src = e.target.result; document.getElementById('vbImagePreview').style.display = 'block'; document.getElementById('vbUploadText').style.display = 'none'; vbCurrentImage = e.target.result; };
+        reader.readAsDataURL(file);
+      });
+    }
+    migrateOldBanners();
+    renderVisualBannersTable();
+  }
+
+  function migrateOldBanners() {
+    if (getVisualBanners().length > 0) return;
+    const merged = [];
+    getBanners().forEach(b => { merged.push({ name: b.title || 'Banner Hero', position: 'hero-carousel', subtitle: b.subtitle || '', image: b.image || '', startDate: b.startDate || '', endDate: b.endDate || '', active: b.active !== false, productId: '' }); });
+    let oldPhotos = []; try { oldPhotos = JSON.parse(localStorage.getItem('libretech_promo_photos') || '[]'); } catch {}
+    oldPhotos.forEach(p => { merged.push({ name: p.title || 'Banner Foto', position: p.position || 'after-featured', image: p.image || '', active: p.active !== false, productId: '', subtitle: '' }); });
+    if (merged.length > 0) saveVisualBanners(merged);
+  }
+
   // ===== PQRs =====
+  const PQR_STATUS_LABELS = { open: 'Abierto', answered: 'Respondido', closed: 'Cerrado' };derVisualBannersTable() {
+    const tbody = document.getElementById('visualBannersTableBody');
+    if (!tbody) return;
+    const banners = getVisualBanners();
+    if (banners.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-tertiary)">No hay banners configurados.</td></tr>';
+      updatePagePreview(); return;
+    }
+    const products = getProducts();
+    tbody.innerHTML = banners.map((b, i) => {
+      const prod = b.productId ? products.find(p => p.id === b.productId) : null;
+      return `<tr>
+        <td><div style="width:80px;height:40px;border-radius:4px;overflow:hidden;background:var(--bg-secondary)">${b.image ? `<img src="${escapeAttr(b.image)}" style="width:100%;height:100%;object-fit:cover">` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:0.65rem;color:var(--text-tertiary)">—</div>'}</div></td>
+        <td><strong>${escapeHTML(b.name || 'Sin nombre')}</strong>${b.subtitle ? `<div style="font-size:0.75rem;color:var(--text-tertiary)">${escapeHTML(b.subtitle)}</div>` : ''}</td>
+        <td style="font-size:0.8rem">${POSITION_LABELS[b.position] || b.position}</td>
+        <td style="font-size:0.8rem">${prod ? escapeHTML(prod.name) : '—'}</td>
+        <td><span class="table-status ${b.active ? 'active' : 'inactive'}"><span class="table-status-dot"></span>${b.active ? 'Activo' : 'Inactivo'}</span></td>
+        <td><div class="table-actions">
+          <button class="table-btn" onclick="Admin._editVB(${i})" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="table-btn delete" onclick="Admin._deleteVB(${i})" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+        </div></td>
+      </tr>`;
+    }).join('');
+    updatePagePreview();
+  }
+
+  function updatePagePreview() {
+    const banners = getVisualBanners();
+    const slots = ['hero-carousel','side-left','after-featured','side-right','after-categories','before-footer'];
+    slots.forEach(slot => {
+      const slotBanners = banners.filter(b => b.position === slot && b.active);
+      const camelId = 'pvStatus' + slot.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
+      const statusEl = document.getElementById(camelId);
+      const slotEl = document.querySelector(`.pv-banner-slot[data-slot="${slot}"]`);
+      if (!statusEl || !slotEl) return;
+      if (slotBanners.length > 0) {
+        statusEl.textContent = `${slotBanners.length} banner${slotBanners.length > 1 ? 's' : ''}`;
+        if (slotBanners[0].image) { slotEl.style.backgroundImage = `url(${slotBanners[0].image})`; slotEl.classList.add('pv-has-image'); }
+        else { slotEl.style.backgroundImage = ''; slotEl.classList.remove('pv-has-image'); }
+      } else {
+        statusEl.textContent = slot.startsWith('side') ? 'Auto' : 'Vacío';
+        slotEl.style.backgroundImage = ''; slotEl.classList.remove('pv-has-image');
+      }
+    });
+  }
+
+  let editingVBIndex = -1;
+  let vbCurrentImage = '';
+
+  function populateVBProductSelect() {
+    const select = document.getElementById('vbProduct');
+    if (!select) return;
+    const products = getProducts();
+    select.innerHTML = '<option value="">— Ninguno —</option>' + products.map(p => `<option value="${escapeAttr(p.id)}">${escapeHTML(p.name)} ($${(p.price||0).toLocaleString('es-CO')})</option>`).join('');
+  }
+
+  function openVisualBannerForm(indexOrSlot) {
+    editingVBIndex = typeof indexOrSlot === 'number' ? indexOrSlot : -1;
+    const form = document.getElementById('visualBannerForm');
+    form.reset(); vbCurrentImage = '';
+    document.getElementById('vbImagePreview').style.display = 'none';
+    document.getElementById('vbUploadText').style.display = 'block';
+    populateVBProductSelect();
+    if (editingVBIndex >= 0) {
+      const b = getVisualBanners()[editingVBIndex];
+      if (!b) return;
+      document.getElementById('visualBannerTitle').textContent = 'Editar Banner';
+      document.getElementById('vbName').value = b.name || '';
+      document.getElementById('vbPosition').value = b.position || 'after-featured';
+      document.getElementById('vbProduct').value = b.productId || '';
+      document.getElementById('vbSubtitle').value = b.subtitle || '';
+      document.getElementById('vbStartDate').value = b.startDate || '';
+      document.getElementById('vbEndDate').value = b.endDate || '';
+      document.getElementById('vbActive').checked = b.active !== false;
+      vbCurrentImage = b.image || '';
+      if (b.image) { document.getElementById('vbImagePreview').src = b.image; document.getElementById('vbImagePreview').style.display = 'block'; document.getElementById('vbUploadText').style.display = 'none'; }
+    } else {
+      document.getElementById('visualBannerTitle').textContent = 'Agregar Banner';
+      if (typeof indexOrSlot === 'string') document.getElementById('vbPosition').value = indexOrSlot;
+    }
+    document.getElementById('visualBannerOverlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeVisualBannerForm() { document.getElementById('visualBannerOverlay').classList.remove('active'); document.body.style.overflow = ''; }
+
+  function saveVisualBannerForm() {
+    const name = document.getElementById('vbName').value.trim();
+    if (!name) { showToast('Nombre requerido', 'error'); return; }
+    const preview = document.getElementById('vbImagePreview');
+    const image = preview.style.display !== 'none' ? preview.src : vbCurrentImage;
+    const data = {
+      name, position: document.getElementById('vbPosition').value,
+      productId: document.getElementById('vbProduct').value || '',
+      subtitle: document.getElementById('vbSubtitle').value.trim(),
+      startDate: document.getElementById('vbStartDate').value,
+      endDate: document.getElementById('vbEndDate').value,
+      active: document.getElementById('vbActive').checked, image
+    };
+    const banners = getVisualBanners();
+    if (editingVBIndex >= 0) { banners[editingVBIndex] = data; } else { banners.push(data); }
+    saveVisualBanners(banners);
+    syncToLegacyBanners(banners);
+    closeVisualBannerForm(); renderVisualBannersTable();
+    showToast('Banner guardado', 'success');
+  }
+
+  function syncToLegacyBanners(allBanners) {
+    const heroBanners = allBanners.filter(b => b.position === 'hero-carousel').map(b => ({ title: b.name, subtitle: b.subtitle, image: b.image, startDate: b.startDate, endDate: b.endDate, active: b.active }));
+    saveBanners(heroBanners);
+    const photoPositions = ['after-featured','after-categories','before-footer'];
+    const promoPhotos = allBanners.filter(b => photoPositions.includes(b.position)).map(b => ({ title: b.name, image: b.image, position: b.position, link: b.productId ? `producto.html?id=${b.productId}` : '', active: b.active }));
+    localStorage.setItem('libretech_promo_photos', JSON.stringify(promoPhotos));
+  }
+
+  function initVisualBanners() {
+    document.querySelectorAll('.pv-banner-slot').forEach(slot => {
+      slot.addEventListener('click', () => {
+        const pos = slot.dataset.slot;
+        const banners = getVisualBanners().filter(b => b.position === pos);
+        if (banners.length === 1) openVisualBannerForm(getVisualBanners().indexOf(banners[0]));
+        else if (banners.length > 1) showToast(`${banners.length} banners en esta posición — edítalos en la tabla`, 'info');
+        else openVisualBannerForm(pos);
+      });
+    });
+    const addBtn = document.getElementById('btnAddVisualBanner');
+    if (addBtn) addBtn.addEventListener('click', () => openVisualBannerForm(-1));
+    const closeBtn = document.getElementById('btnCloseVisualBanner');
+    if (closeBtn) closeBtn.addEventListener('click', closeVisualBannerForm);
+    const cancelBtn = document.getElementById('btnCancelVisualBanner');
+    if (cancelBtn) cancelBtn.addEventListener('click', closeVisualBannerForm);
+    const form = document.getElementById('visualBannerForm');
+    if (form) form.addEventListener('submit', e => { e.preventDefault(); saveVisualBannerForm(); });
+    const imageArea = document.getElementById('vbImageArea');
+    const imageInput = document.getElementById('vbImageInput');
+    if (imageArea && imageInput) {
+      imageArea.addEventListener('click', () => imageInput.click());
+      imageInput.addEventListener('change', () => {
+        const file = imageInput.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { showToast('Imagen máx. 5MB', 'error'); return; }
+        const reader = new FileReader();
+        reader.onload = e => { document.getElementById('vbImagePreview').src = e.target.result; document.getElementById('vbImagePreview').style.display = 'block'; document.getElementById('vbUploadText').style.display = 'none'; vbCurrentImage = e.target.result; };
+        reader.readAsDataURL(file);
+      });
+    }
+    migrateOldBanners();
+    renderVisualBannersTable();
+  }
+
+  function migrateOldBanners() {
+    if (getVisualBanners().length > 0) return;
+    const merged = [];
+    getBanners().forEach(b => { merged.push({ name: b.title || 'Banner Hero', position: 'hero-carousel', subtitle: b.subtitle || '', image: b.image || '', startDate: b.startDate || '', endDate: b.endDate || '', active: b.active !== false, productId: '' }); });
+    let oldPhotos = []; try { oldPhotos = JSON.parse(localStorage.getItem('libretech_promo_photos') || '[]'); } catch {}
+    oldPhotos.forEach(p => { merged.push({ name: p.title || 'Banner Foto', position: p.position || 'after-featured', image: p.image || '', active: p.active !== false, productId: '', subtitle: '' }); });
+    if (merged.length > 0) saveVisualBanners(merged);
+  }
+
+  // ===== PQRs =====
+  const PQR_STATUS_LABELS = { open: 'Abierto', answered: 'Respondido', closed: 'Cerrado' };
+  function getPqrs() { try { return JSON.parse(localStorage.getItem(PQRS_KEY) || '[]'); } catch { return []; } }
+  function savePqrs(pqrs) { localStorage.setItem(PQRS_KEY, JSON.stringify(pqrs)); }
+
+  function renderPqrsTable() {
+    const tbody = document.getElementById('pqrsTableBody');
+    if (!tbody) return;
   const PQR_STATUS_LABELS = { open: 'Abierto', answered: 'Respondido', closed: 'Cerrado' };
   function getPqrs() { try { return JSON.parse(localStorage.getItem(PQRS_KEY) || '[]'); } catch { return []; } }
   function savePqrs(pqrs) { localStorage.setItem(PQRS_KEY, JSON.stringify(pqrs)); }
@@ -1393,96 +1626,9 @@ const Admin = (() => {
     showToast('Redes sociales guardadas', 'success');
   }
 
-  // ===== PROMO PHOTO BANNERS (full-width image banners) =====
-  const PROMO_PHOTOS_KEY = 'libretech_promo_photos';
-
-  function getPromoPhotos() { try { return JSON.parse(localStorage.getItem(PROMO_PHOTOS_KEY) || '[]'); } catch { return []; } }
-  function savePromoPhotos(arr) { localStorage.setItem(PROMO_PHOTOS_KEY, JSON.stringify(arr)); }
-
-  function renderPromoPhotosTable() {
-    const container = document.getElementById('promoPhotosContainer');
-    if (!container) return;
-    const photos = getPromoPhotos();
-    if (photos.length === 0) {
-      container.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">No hay banners de foto promocional.</p>';
-      return;
-    }
-    container.innerHTML = photos.map((p, i) => `
-      <div style="display:flex;align-items:center;gap:var(--spacing-md);padding:var(--spacing-md);background:var(--bg-secondary);border-radius:var(--radius-md);margin-bottom:var(--spacing-sm)">
-        <div style="width:160px;height:60px;border-radius:var(--radius-sm);overflow:hidden;background:var(--bg-tertiary);flex-shrink:0">
-          ${p.image ? `<img src="${escapeAttr(p.image)}" style="width:100%;height:100%;object-fit:cover">` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:0.7rem">Sin imagen</div>'}
-        </div>
-        <div style="flex:1;min-width:0">
-          <strong style="font-size:0.9rem">${escapeHTML(p.title || 'Sin título')}</strong>
-          <div style="font-size:0.8rem;color:var(--text-secondary)">${p.link ? escapeHTML(p.link) : 'Sin enlace'}</div>
-          <div style="font-size:0.75rem;color:var(--text-tertiary)">${p.position || 'Después de destacados'} | ${p.active ? '✅ Activo' : '❌ Inactivo'}</div>
-        </div>
-        <div class="table-actions">
-          <button class="table-btn" onclick="Admin._editPromoPhoto(${i})" title="Editar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
-          <button class="table-btn delete" onclick="Admin._deletePromoPhoto(${i})" title="Eliminar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-          </button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  let editingPromoPhotoIndex = -1;
-  function openPromoPhotoForm(index = -1) {
-    editingPromoPhotoIndex = index;
-    const form = document.getElementById('promoPhotoForm');
-    form.reset();
-    document.getElementById('promoPhotoImagePreview').style.display = 'none';
-    document.getElementById('promoPhotoUploadText').style.display = 'block';
-
-    if (index >= 0) {
-      const photos = getPromoPhotos();
-      const p = photos[index];
-      if (!p) return;
-      document.getElementById('promoPhotoFormTitle').textContent = 'Editar banner foto';
-      document.getElementById('promoPhotoTitle').value = p.title || '';
-      document.getElementById('promoPhotoLink').value = p.link || '';
-      document.getElementById('promoPhotoPosition').value = p.position || 'after-featured';
-      document.getElementById('promoPhotoActive').checked = p.active !== false;
-      if (p.image) {
-        document.getElementById('promoPhotoImagePreview').src = p.image;
-        document.getElementById('promoPhotoImagePreview').style.display = 'block';
-        document.getElementById('promoPhotoUploadText').style.display = 'none';
-      }
-    } else {
-      document.getElementById('promoPhotoFormTitle').textContent = 'Agregar banner foto';
-    }
-    document.getElementById('promoPhotoFormOverlay').classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-  function closePromoPhotoForm() { document.getElementById('promoPhotoFormOverlay').classList.remove('active'); document.body.style.overflow = ''; }
-
-  function savePromoPhotoForm() {
-    const preview = document.getElementById('promoPhotoImagePreview');
-    const image = preview.style.display !== 'none' ? preview.src : '';
-    if (!image) { showToast('Se requiere una imagen', 'error'); return; }
-    const data = {
-      title: document.getElementById('promoPhotoTitle').value.trim(),
-      link: document.getElementById('promoPhotoLink').value.trim(),
-      position: document.getElementById('promoPhotoPosition').value || 'after-featured',
-      active: document.getElementById('promoPhotoActive').checked,
-      image
-    };
-    const photos = getPromoPhotos();
-    if (editingPromoPhotoIndex >= 0) { photos[editingPromoPhotoIndex] = data; } else { photos.push(data); }
-    savePromoPhotos(photos);
-    closePromoPhotoForm();
-    renderPromoPhotosTable();
-    showToast('Banner foto guardado', 'success');
-  }
-
   return {
     init,
-    _editBanner: openBannerForm,
-    _deleteBanner: (i) => { if (confirm('¿Eliminar este banner?')) { const b = getBanners(); b.splice(i, 1); saveBanners(b); renderBannersTable(); showToast('Banner eliminado', 'info'); } },
-    _editPromoPhoto: openPromoPhotoForm,
-    _deletePromoPhoto: (i) => { if (confirm('¿Eliminar este banner foto?')) { const p = getPromoPhotos(); p.splice(i, 1); savePromoPhotos(p); renderPromoPhotosTable(); showToast('Banner foto eliminado', 'info'); } }
+    _editVB: openVisualBannerForm,
+    _deleteVB: (i) => { if (confirm('¿Eliminar este banner?')) { const b = getVisualBanners(); b.splice(i, 1); saveVisualBanners(b); syncToLegacyBanners(b); renderVisualBannersTable(); updatePagePreview(); showToast('Banner eliminado', 'info'); } }
   };
 })();
