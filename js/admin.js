@@ -35,8 +35,7 @@ const Admin = (() => {
     try {
       const user = await SB.getUser();
       if (!user) return false;
-      const admin = await SB.isAdmin(user.id);
-      return !!admin;
+      return SB.isAdmin(user);
     } catch {
       return false;
     }
@@ -45,10 +44,19 @@ const Admin = (() => {
   async function login(email, password) {
     try {
       const { data, error } = await SB.client.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      if (error) {
+        const msg = error.message || '';
+        if (msg === 'Invalid login credentials') {
+          showToast('Correo o contraseña incorrectos', 'error');
+        } else if (msg.includes('Email not confirmed')) {
+          showToast('Tu correo aún no ha sido verificado. Revisa tu bandeja de entrada.', 'error');
+        } else {
+          showToast(msg, 'error');
+        }
+        return false;
+      }
       const user = data.user;
-      const admin = await SB.isAdmin(user.id);
-      if (!admin) {
+      if (!SB.isAdmin(user)) {
         await SB.client.auth.signOut();
         showToast('No tienes permisos de administrador', 'error');
         return false;
@@ -56,9 +64,7 @@ const Admin = (() => {
       showDashboard();
       return true;
     } catch (err) {
-      showToast(err.message === 'Invalid login credentials'
-        ? 'Correo o contraseña incorrectos'
-        : err.message, 'error');
+      showToast(err.message || 'Error al iniciar sesión', 'error');
       return false;
     }
   }

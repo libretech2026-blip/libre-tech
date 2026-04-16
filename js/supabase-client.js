@@ -230,7 +230,14 @@ const SB = (() => {
   }
 
   function isAdmin(user) {
-    return user?.user_metadata?.is_admin === true;
+    if (!user) return false;
+    // Check user_metadata flag (set via Supabase Dashboard SQL)
+    if (user.user_metadata?.is_admin === true) return true;
+    if (user.app_metadata?.is_admin === true) return true;
+    // Fallback: check admin email (update this list as needed)
+    const adminEmails = ['admin@libretechtienda.com'];
+    if (user.email && adminEmails.includes(user.email.toLowerCase())) return true;
+    return false;
   }
 
   function onAuthChange(callback) {

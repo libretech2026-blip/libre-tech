@@ -497,26 +497,37 @@ input, select, textarea {
 /* Password visibility toggle */
 .password-wrapper {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 .password-wrapper .form-input {
-  padding-right: 40px;
+  padding-right: 42px;
+  width: 100%;
 }
 .password-toggle {
   position: absolute;
-  right: 8px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: 2px;
   color: var(--text-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
 }
 .password-toggle:hover {
   color: var(--text-primary);
+  background: rgba(0,0,0,0.05);
+}
+[data-theme="dark"] .password-toggle:hover {
+  background: rgba(255,255,255,0.1);
 }
 
 .login-divider {
@@ -547,6 +558,10 @@ input, select, textarea {
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--border-light);
   font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 
 .login-register p {

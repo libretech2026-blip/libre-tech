@@ -13,6 +13,7 @@ const Auth = (() => {
     loadUser();
     updateUI();
     bindEvents();
+    initGoogleSignIn();
     // Listen to Supabase auth state changes
     SB.onAuthChange(user => {
       if (user) {
@@ -220,7 +221,19 @@ const Auth = (() => {
 
       try {
         const { data, error } = await SB.client.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          const msg = error.message || '';
+          if (msg === 'Invalid login credentials') {
+            showToast('Correo o contraseña incorrectos. Verifica tus datos.', 'error');
+          } else if (msg.includes('Email not confirmed')) {
+            showToast('Tu correo aún no ha sido verificado. Revisa tu bandeja de entrada y confirma tu cuenta.', 'error');
+          } else if (msg.includes('Invalid email')) {
+            showToast('El correo ingresado no es válido.', 'error');
+          } else {
+            showToast(msg, 'error');
+          }
+          return;
+        }
         const user = data.user;
         setUser({
           id: user.id,
@@ -231,9 +244,7 @@ const Auth = (() => {
         document.getElementById('userDropdown')?.classList.remove('active');
         showToast(`¡Bienvenido, ${currentUser.name}!`, 'success');
       } catch (err) {
-        showToast(err.message === 'Invalid login credentials'
-          ? 'Correo o contraseña incorrectos'
-          : err.message, 'error');
+        showToast('Error al iniciar sesión. Intenta de nuevo.', 'error');
       }
     });
 
@@ -278,18 +289,30 @@ const Auth = (() => {
         const { data, error } = await SB.client.auth.signUp({
           email,
           password,
-          options: { data: { name } }
+          options: {
+            data: { name },
+            emailRedirectTo: window.location.origin + '/index.html'
+          }
         });
-        if (error) throw error;
-        if (data.user) {
-          setUser({ id: data.user.id, name, email, picture: '' });
-          document.getElementById('userDropdown')?.classList.remove('active');
-          hideRegisterPanel();
-          showToast(`¡Cuenta creada! Bienvenido, ${name}`, 'success');
-        } else {
-          showToast('Revisa tu correo para confirmar tu cuenta', 'info');
-          hideRegisterPanel();
+        if (error) {
+          if (error.message.includes('already registered') || error.message.includes('already been registered')) {
+            showToast('Este correo ya está registrado. Intenta iniciar sesión.', 'error');
+          } else {
+            showToast(error.message || 'Error al crear la cuenta', 'error');
+          }
+          return;
         }
+        // Supabase with email confirmation: user exists but identities might be empty
+        // if the email is already taken, or email_confirmed_at is null if confirmation needed
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          // Email already registered
+          showToast('Este correo ya está registrado. Intenta iniciar sesión.', 'error');
+          return;
+        }
+        // Always show verification message — Supabase requires email confirmation
+        hideRegisterPanel();
+        document.getElementById('registerForm')?.reset();
+        showToast('✅ ¡Cuenta creada! Revisa tu correo electrónico y haz clic en el enlace de verificación para activar tu cuenta.', 'success', 8000);
       } catch (err) {
         showToast(err.message || 'Error al crear la cuenta', 'error');
       }
@@ -297,6 +320,12 @@ const Auth = (() => {
 
     // Back to login from register
     document.getElementById('btnBackToLogin')?.addEventListener('click', e => {
+      e.preventDefault();
+      hideRegisterPanel();
+    });
+
+    // Back to login from register (second link)
+    document.getElementById('btnBackToLogin2')?.addEventListener('click', e => {
       e.preventDefault();
       hideRegisterPanel();
     });
@@ -360,7 +389,7 @@ const Auth = (() => {
     }).format(price);
   }
 
-  function showToast(message, type = 'info') {
+  function showToast(message, type = 'info', duration) {
     // Reutilizar si Cart está disponible
     if (typeof Cart !== 'undefined' && Cart.showToast) {
       Cart.showToast(message, type);
@@ -380,7 +409,7 @@ const Auth = (() => {
       const onEnd = () => { toast.remove(); };
       toast.addEventListener('animationend', onEnd);
       setTimeout(onEnd, 400);
-    }, 3000);
+    }, duration || 3000);
   }
 
   return { init, getUser, isLoggedIn, openLoginDropdown };
