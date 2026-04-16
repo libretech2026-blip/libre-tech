@@ -300,6 +300,19 @@ const Auth = (() => {
       e.preventDefault();
       hideRegisterPanel();
     });
+
+    // Password visibility toggles
+    document.querySelectorAll('.password-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const wrapper = btn.closest('.password-wrapper');
+        const input = wrapper?.querySelector('input');
+        if (!input) return;
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        btn.querySelector('.eye-open').style.display = show ? 'none' : '';
+        btn.querySelector('.eye-closed').style.display = show ? '' : 'none';
+      });
+    });
   }
 
   function toggleDropdown() {

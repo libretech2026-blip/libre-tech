@@ -9,8 +9,13 @@ const Store = (() => {
 
   const PRODUCTS_KEY = 'libretech_products';
   const RATINGS_KEY  = 'libretech_ratings';
-  const WISHLIST_KEY = 'libretech_wishlist';
+  const WISHLIST_KEY_BASE = 'libretech_wishlist';
   const SOCIAL_KEY   = 'libretech_social_links';
+
+  function getWishlistKey() {
+    const user = Auth && Auth.getUser && Auth.getUser();
+    return user ? WISHLIST_KEY_BASE + '_' + user.id : WISHLIST_KEY_BASE;
+  }
 
   // Productos vienen de Supabase (cacheados en localStorage por SB.syncProducts())
 
@@ -729,11 +734,11 @@ const Store = (() => {
 
   // ===================== WISHLIST =====================
   function getWishlist() {
-    try { return JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem(getWishlistKey()) || '[]'); } catch { return []; }
   }
 
   function saveWishlist(list) {
-    localStorage.setItem(WISHLIST_KEY, JSON.stringify(list));
+    localStorage.setItem(getWishlistKey(), JSON.stringify(list));
   }
 
   function isInWishlist(productId) {

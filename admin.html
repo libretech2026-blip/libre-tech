@@ -54,7 +54,10 @@
           </div>
           <div class="form-group">
             <label class="form-label" for="adminPassword">Contraseña</label>
-            <input type="password" class="form-input" id="adminPassword" placeholder="Contraseña" required>
+            <div class="password-wrapper">
+              <input type="password" class="form-input" id="adminPassword" placeholder="Contraseña" required>
+              <button type="button" class="password-toggle" aria-label="Mostrar contraseña"><svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-closed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>
+            </div>
             <p class="form-error" id="loginError" style="display:none">Credenciales incorrectas o sin permisos de admin</p>
           </div>
           <button type="submit" class="btn btn-primary btn-full btn-lg">Ingresar</button>
@@ -803,6 +806,18 @@
     document.addEventListener('DOMContentLoaded', async () => {
       try { await SB.syncProducts(); } catch (e) { console.warn('SB sync:', e); }
       Admin.init();
+      // Password visibility toggle
+      document.querySelectorAll('.password-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const wrapper = btn.closest('.password-wrapper');
+          const input = wrapper?.querySelector('input');
+          if (!input) return;
+          const show = input.type === 'password';
+          input.type = show ? 'text' : 'password';
+          btn.querySelector('.eye-open').style.display = show ? 'none' : '';
+          btn.querySelector('.eye-closed').style.display = show ? '' : 'none';
+        });
+      });
     });
   </script>
 </body>

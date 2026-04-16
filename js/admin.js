@@ -15,70 +15,60 @@ const Admin = (() => {
   const VIEWS_KEY = 'libretech_views';
   const SOCIAL_KEY = 'libretech_social_links';
 
-  // ContraseÃ±a admin (hash SHA-256)
-  // ContraseÃ±a por defecto: "LibreTech2026!"
-  // Para cambiarla, genera un nuevo hash SHA-256 y reemplaza aquÃ­
-  const ADMIN_HASH = 'ffc37d18a54f184b8daa904fd3a3e261a6906b549316aee73bc9fcc8f3d2525b';
-
   let csvParsedData = [];
   let editingProductId = null;
   let currentColors = [];
   let currentSpecs = [];
   let currentImages = [];
 
-  // --- InicializaciÃ³n ---
+  // --- Inicialización ---
   function init() {
-    if (isAuthenticated()) {
-      showDashboard();
-    }
+    // Check if already authenticated via Supabase session
+    checkAuth().then(ok => {
+      if (ok) showDashboard();
+    });
     bindEvents();
   }
 
-  // --- AutenticaciÃ³n simple ---
-  async function hashPassword(password) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  function isAuthenticated() {
+  // --- Autenticación via Supabase ---
+  async function checkAuth() {
     try {
-      const session = sessionStorage.getItem(AUTH_KEY);
-      return session === 'true';
+      const user = await SB.getUser();
+      if (!user) return false;
+      const admin = await SB.isAdmin(user.id);
+      return !!admin;
     } catch {
       return false;
     }
   }
 
-  function setAuthenticated(value) {
+  async function login(email, password) {
     try {
-      if (value) {
-        sessionStorage.setItem(AUTH_KEY, 'true');
-      } else {
-        sessionStorage.removeItem(AUTH_KEY);
+      const { data, error } = await SB.client.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      const user = data.user;
+      const admin = await SB.isAdmin(user.id);
+      if (!admin) {
+        await SB.client.auth.signOut();
+        showToast('No tienes permisos de administrador', 'error');
+        return false;
       }
-    } catch {
-      // Silenciar
-    }
-  }
-
-  async function login(password) {
-    const hash = await hashPassword(password);
-    if (hash === ADMIN_HASH) {
-      setAuthenticated(true);
       showDashboard();
       return true;
+    } catch (err) {
+      showToast(err.message === 'Invalid login credentials'
+        ? 'Correo o contraseña incorrectos'
+        : err.message, 'error');
+      return false;
     }
-    return false;
   }
 
-  function logout() {
-    setAuthenticated(false);
+  async function logout() {
+    try { await SB.client.auth.signOut(); } catch {}
     document.getElementById('adminDashboard').style.display = 'none';
     document.getElementById('adminLoginWrapper').style.display = 'flex';
     document.getElementById('adminPassword').value = '';
+    document.getElementById('adminEmail').value = '';
   }
 
   async function showDashboard() {
@@ -1014,7 +1004,7 @@ const Admin = (() => {
 
   // ===== PAGES CMS =====
   const DEFAULT_PAGES = {
-    'sobre-nosotros': { title: 'Sobre Nosotros', content: '<h1>Sobre Nosotros</h1><p>Somos LIBRE TECH, tu tienda de confianza.</p>' },
+    'sobre-nosotros': { title: 'Sobre Nosotros', content: '<h1>Sobre Nosotros</h1><p>Somos LIBRE TECH, tu tienda de confianza para productos de tecnología en Colombia. Nos apasiona ofrecer productos de calidad a precios accesibles.</p><p>Nuestro compromiso es brindarte la mejor experiencia de compra en línea con atención personalizada por WhatsApp.</p><p>Nos encontramos en <strong>Barranquilla, Colombia</strong> 🌴</p><div style="margin-top:1.5rem;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.15)"><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-75.06%2C10.91%2C-74.95%2C11.02&amp;layer=mapnik&amp;marker=10.9639,-74.7964" width="100%" height="350" style="border:0;display:block" loading="lazy" title="Barranquilla, Colombia"></iframe></div>' },
     'preguntas-frecuentes': { title: 'Preguntas Frecuentes', content: '<h1>Preguntas Frecuentes</h1><p>PrÃ³ximamente...</p>' },
     'contactanos': { title: 'ContÃ¡ctanos', content: '<h1>ContÃ¡ctanos</h1><p>WhatsApp: +57 300 560 6287</p>' },
     'seguimiento-pedido': { title: 'Seguimiento de Pedido', content: '<h1>Seguimiento de su Pedido</h1><p>ContÃ¡ctanos por WhatsApp.</p>' },

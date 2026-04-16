@@ -6,23 +6,33 @@
 const Cart = (() => {
   'use strict';
 
-  const STORAGE_KEY = 'libretech_cart';
+  const STORAGE_KEY_BASE = 'libretech_cart';
   const ORDERS_KEY = 'libretech_orders';
   const WHATSAPP_NUMBER = '573005606287';
 
   let items = [];
+
+  function getStorageKey() {
+    const user = (typeof Auth !== 'undefined') && Auth.getUser && Auth.getUser();
+    return user ? STORAGE_KEY_BASE + '_' + user.id : STORAGE_KEY_BASE;
+  }
 
   // --- Inicialización ---
   function init() {
     load();
     bindEvents();
     updateUI();
+    // Reload cart when user logs in/out
+    document.addEventListener('auth-changed', () => {
+      load();
+      updateUI();
+    });
   }
 
   // --- Persistencia (localStorage) ---
   function load() {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
+      const data = localStorage.getItem(getStorageKey());
       items = data ? JSON.parse(data) : [];
     } catch {
       items = [];
@@ -31,7 +41,7 @@ const Cart = (() => {
 
   function save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      localStorage.setItem(getStorageKey(), JSON.stringify(items));
     } catch {
       // localStorage lleno o no disponible
     }
