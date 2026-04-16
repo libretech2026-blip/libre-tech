@@ -116,7 +116,7 @@ const Admin = (() => {
   }
 
   async function addProduct(product) {
-    product.id = 'prod-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+    product.id = crypto.randomUUID();
     product.createdAt = new Date().toISOString().split('T')[0];
     // Always save locally first so data is never lost
     const products = getProducts();
@@ -552,7 +552,7 @@ const Admin = (() => {
     let sbErrors = 0;
 
     for (const p of csvParsedData) {
-      p.id = 'prod-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+      p.id = crypto.randomUUID();
       p.createdAt = new Date().toISOString().split('T')[0];
       products.push(p);
       // Try to sync each product to Supabase
@@ -1419,11 +1419,11 @@ const Admin = (() => {
     }
 
     tbody.innerHTML = users.map(u => {
-      const email = Cart.escapeHTML(u.email || 'Sin email');
-      const name = Cart.escapeHTML(u.full_name || (u.user_metadata ? u.user_metadata.full_name : '') || u.name || '');
+      const email = escapeHTML(u.email || 'Sin email');
+      const name = escapeHTML(u.full_name || (u.user_metadata ? u.user_metadata.full_name : '') || u.name || '');
       const created = u.created_at ? new Date(u.created_at).toLocaleDateString('es-CO') : '';
       const lastSignIn = u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString('es-CO') : '';
-      const uid = Cart.escapeAttr(u.id || u.email || '');
+      const uid = escapeAttr(u.id || u.email || '');
       return '<tr>' +
         '<td>' + email + '</td>' +
         '<td>' + (name || '\u2014') + '</td>' +
@@ -1431,10 +1431,10 @@ const Admin = (() => {
         '<td>' + (lastSignIn || '\u2014') + '</td>' +
         '<td>' +
           '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
-            '<button class="btn btn-secondary btn-sm" onclick="Admin._changeUserPw(\'' + uid + '\',\'' + Cart.escapeAttr(u.email || '') + '\')" title="Cambiar contrase\u00f1a">' +
+            '<button class="btn btn-secondary btn-sm" onclick="Admin._changeUserPw(\'' + uid + '\',\'' + escapeAttr(u.email || '') + '\')" title="Cambiar contrase\u00f1a">' +
               '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>' +
             '</button>' +
-            '<button class="btn btn-secondary btn-sm" onclick="Admin._deleteUser(\'' + uid + '\',\'' + Cart.escapeAttr(u.email || '') + '\')" title="Eliminar usuario" style="color:var(--danger)">' +
+            '<button class="btn btn-secondary btn-sm" onclick="Admin._deleteUser(\'' + uid + '\',\'' + escapeAttr(u.email || '') + '\')" title="Eliminar usuario" style="color:var(--danger)">' +
               '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
             '</button>' +
           '</div>' +

@@ -106,8 +106,10 @@ RETURNS TABLE(id uuid, email text, full_name text, created_at timestamptz, last_
 AS $$
 BEGIN
   -- Check if caller is admin
-  IF NOT (SELECT email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com')
-          FROM auth.users WHERE auth.users.id = auth.uid()) THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM auth.users au WHERE au.id = auth.uid()
+    AND au.email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com')
+  ) THEN
     RAISE EXCEPTION 'Not authorized';
   END IF;
   
@@ -125,8 +127,10 @@ CREATE OR REPLACE FUNCTION admin_delete_user(target_user_id uuid)
 RETURNS void AS $$
 BEGIN
   -- Check if caller is admin
-  IF NOT (SELECT email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com')
-          FROM auth.users WHERE auth.users.id = auth.uid()) THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM auth.users au WHERE au.id = auth.uid()
+    AND au.email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com')
+  ) THEN
     RAISE EXCEPTION 'Not authorized';
   END IF;
 
@@ -145,8 +149,10 @@ CREATE OR REPLACE FUNCTION admin_update_password(target_user_id uuid, new_passwo
 RETURNS void AS $$
 BEGIN
   -- Check if caller is admin
-  IF NOT (SELECT email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com')
-          FROM auth.users WHERE auth.users.id = auth.uid()) THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM auth.users au WHERE au.id = auth.uid()
+    AND au.email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com')
+  ) THEN
     RAISE EXCEPTION 'Not authorized';
   END IF;
 

@@ -3242,35 +3242,6 @@ input, select, textarea {
     justify-content: center;
   }
 
-  /* Admin responsive */
-  .admin-main {
-    padding: var(--spacing-md);
-  }
-
-  .products-table th:nth-child(3),
-  .products-table td:nth-child(3),
-  .products-table th:nth-child(4),
-  .products-table td:nth-child(4) {
-    display: none;
-  }
-
-  .admin-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .admin-stats-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .social-links-form {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-panel-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
   .toast-container {
     left: var(--spacing-md);
     right: var(--spacing-md);
@@ -4576,6 +4547,308 @@ input, select, textarea {
 .btn-wishlist-card.active svg {
   fill: #ff3b5c;
   stroke: #ff3b5c;
+}
+
+/* ============================================================
+   ADMIN RESPONSIVE
+   ============================================================ */
+
+/* ---------- Tablet (≤1024px) ---------- */
+@media (max-width: 1024px) {
+  .admin-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .social-links-form {
+    grid-template-columns: 1fr;
+  }
+
+  .pv-row {
+    grid-template-columns: 1fr;
+  }
+  .pv-row:last-of-type {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Mobile (≤768px) ---------- */
+@media (max-width: 768px) {
+  /* Header: stack vertically */
+  .admin-header {
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .admin-header .header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .admin-header .header-actions .btn span,
+  .admin-header .header-actions .btn:not(.theme-toggle):not(#btnAdminLogout) {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  }
+
+  .admin-title {
+    font-size: 0.95rem;
+  }
+
+  .admin-badge {
+    font-size: 0.55rem;
+    padding: 2px 7px;
+  }
+
+  /* Tabs: horizontal scroll, smaller */
+  .admin-tabs {
+    gap: 2px;
+    padding: 3px;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .admin-tab {
+    padding: 8px 10px;
+    font-size: 0.72rem;
+    gap: 4px;
+  }
+
+  .admin-tab span {
+    display: none;
+  }
+
+  .admin-tab svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Main content area */
+  .admin-main {
+    padding: var(--spacing-md) var(--spacing-sm);
+  }
+
+  /* Panels */
+  .admin-panel-header {
+    padding: var(--spacing-md);
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+
+  .admin-panel-header h3 {
+    font-size: 0.95rem;
+  }
+
+  .admin-panel-body {
+    padding: var(--spacing-md);
+  }
+
+  /* Tables — hide less important columns */
+  .products-table th:nth-child(3),
+  .products-table td:nth-child(3),
+  .products-table th:nth-child(4),
+  .products-table td:nth-child(4) {
+    display: none;
+  }
+
+  .products-table th,
+  .products-table td {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.78rem;
+  }
+
+  .table-product-thumb {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Stat cards */
+  .stat-card {
+    padding: var(--spacing-md);
+  }
+
+  .stat-card-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .stat-card-value {
+    font-size: 1.35rem;
+  }
+
+  /* Login card */
+  .admin-login-card {
+    padding: var(--spacing-lg);
+    margin: 0 var(--spacing-md);
+  }
+
+  /* Modals */
+  .product-form-overlay {
+    padding: var(--spacing-sm);
+    align-items: flex-end;
+  }
+
+  .product-form-modal {
+    max-height: 95vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-width: 100%;
+  }
+
+  .product-form-modal form div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* CSV zone */
+  .csv-upload-zone {
+    padding: var(--spacing-lg);
+  }
+
+  /* Visual preview */
+  .page-preview {
+    font-size: 0.7rem;
+  }
+
+  .pv-section {
+    font-size: 0.7rem;
+    padding: 8px 10px;
+    min-height: 32px;
+  }
+
+  .pv-hero {
+    min-height: 48px;
+  }
+
+  .pv-sidebar-banner {
+    min-height: 50px;
+  }
+
+  .pv-edit-btn {
+    opacity: 1;
+    font-size: 0.65rem;
+    padding: 3px 8px;
+  }
+
+  /* Buttons */
+  .btn {
+    font-size: 0.8rem;
+    padding: var(--spacing-xs) var(--spacing-md);
+  }
+
+  .btn svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+/* ---------- Small phones (≤480px) ---------- */
+@media (max-width: 480px) {
+  .admin-header-left {
+    gap: var(--spacing-sm);
+  }
+
+  .admin-header .header-actions {
+    gap: 4px;
+  }
+
+  .admin-header .header-actions .btn {
+    font-size: 0;
+    padding: 8px;
+    gap: 0;
+  }
+
+  .admin-header .header-actions .btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .admin-header .header-actions .theme-toggle {
+    width: 34px;
+    height: 34px;
+  }
+
+  .admin-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .stat-card {
+    padding: var(--spacing-sm);
+    gap: var(--spacing-sm);
+  }
+
+  .stat-card-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .stat-card-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .stat-card-value {
+    font-size: 1.1rem;
+  }
+
+  .stat-card-label {
+    font-size: 0.7rem;
+  }
+
+  /* Products table: only show name + actions */
+  .products-table th:nth-child(2),
+  .products-table td:nth-child(2),
+  .products-table th:nth-child(5),
+  .products-table td:nth-child(5) {
+    display: none;
+  }
+
+  .table-product-info {
+    max-width: 140px;
+  }
+
+  .table-product-info span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+  }
+
+  /* Modal — full screen */
+  .product-form-overlay {
+    padding: 0;
+  }
+
+  .product-form-modal {
+    border-radius: 0;
+    max-height: 100vh;
+    height: 100vh;
+  }
+
+  .modal-header {
+    padding: var(--spacing-md);
+  }
+
+  .modal-header h2 {
+    font-size: 1rem;
+  }
+
+  .modal-body {
+    padding: var(--spacing-md);
+  }
+
+  /* Admin tabs — icon-only */
+  .admin-tab {
+    padding: 8px;
+  }
+
+  .admin-tab svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 /* ==================== WISHLIST DETAIL BUTTON ==================== */

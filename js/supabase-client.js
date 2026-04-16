@@ -20,6 +20,32 @@ const SB = (() => {
   if (!client) console.error('[SB] Supabase JS library not loaded — include the CDN before this script.');
 
   /* ----------------------------------------------------------
+     MIGRATE — Convert all prod-xxx IDs to UUID at startup
+  ---------------------------------------------------------- */
+  function migrateProductIds() {
+    try {
+      const raw = localStorage.getItem(PRODUCTS_LS_KEY);
+      if (!raw) return;
+      const products = JSON.parse(raw);
+      let changed = false;
+      for (const p of products) {
+        if (p.id && !UUID_RE.test(p.id)) {
+          p.id = crypto.randomUUID();
+          changed = true;
+        }
+      }
+      if (changed) {
+        localStorage.setItem(PRODUCTS_LS_KEY, JSON.stringify(products));
+        console.log('[SB] Migrated', products.length, 'product IDs to UUID format');
+      }
+    } catch (e) {
+      console.warn('[SB] migrateProductIds error:', e.message);
+    }
+  }
+  // Run migration immediately
+  migrateProductIds();
+
+  /* ----------------------------------------------------------
      PRODUCTS — Fetch from Supabase → cache in localStorage
   ---------------------------------------------------------- */
   function mapRow(row) {
@@ -52,9 +78,18 @@ const SB = (() => {
     return m ? m[1] : null;
   }
 
+  // UUID v4 regex to validate IDs
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  function ensureUUID(id) {
+    if (UUID_RE.test(id)) return id;
+    // Convert non-UUID id to a proper UUID via crypto
+    return crypto.randomUUID();
+  }
+
   function toRow(p) {
     const row = {
-      id:            p.id,
+      id:            ensureUUID(p.id),
       name:          p.name,
       price:         p.price,
       description:   p.description   || '',
@@ -135,6 +170,7 @@ const SB = (() => {
   }
 
   async function updateProduct(id, updates) {
+    const safeId = ensureUUID(id);
     const partial = {};
     if ('name'        in updates) partial.name         = updates.name;
     if ('price'       in updates) partial.price        = updates.price;
@@ -156,7 +192,7 @@ const SB = (() => {
     let attempts = 0;
     let current = { ...partial };
     while (attempts < 10) {
-      const { error } = await client.from('products').update(current).eq('id', id);
+      const { error } = await client.from('products').update(current).eq('id', safeId);
       if (!error) return;
       const col = extractMissingCol(error.message);
       if (col && !missingCols.has(col)) {
@@ -171,7 +207,8 @@ const SB = (() => {
   }
 
   async function deleteProduct(id) {
-    const { error } = await client.from('products').delete().eq('id', id);
+    const safeId = ensureUUID(id);
+    const { error } = await client.from('products').delete().eq('id', safeId);
     if (error) throw error;
   }
 
@@ -304,8 +341,15 @@ const SB = (() => {
     if (!client) throw new Error('Supabase not available');
     let successCount = 0;
     let failCount = 0;
+    let idsChanged = false;
+
     for (const p of products) {
       try {
+        // Fix non-UUID IDs before pushing
+        if (!UUID_RE.test(p.id)) {
+          p.id = crypto.randomUUID();
+          idsChanged = true;
+        }
         const row = toRow(p);
         await resilientUpsert(row);
         successCount++;
@@ -314,6 +358,12 @@ const SB = (() => {
         console.warn('[SB] pushAll fail:', p.id, e.message);
       }
     }
+
+    // Persist fixed IDs back to localStorage
+    if (idsChanged) {
+      localStorage.setItem(PRODUCTS_LS_KEY, JSON.stringify(products));
+    }
+
     return { successCount, failCount };
   }
 
