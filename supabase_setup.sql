@@ -3,9 +3,35 @@
 -- Run this in Supabase Dashboard → SQL Editor
 -- ============================================================
 
--- 1. Add missing columns to products table (if they don't exist)
+-- 1. Add ALL missing columns to products table
 DO $$
 BEGIN
+  -- Base columns
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='description') THEN
+    ALTER TABLE products ADD COLUMN description text DEFAULT '';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='category') THEN
+    ALTER TABLE products ADD COLUMN category text DEFAULT '';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='brand') THEN
+    ALTER TABLE products ADD COLUMN brand text DEFAULT '';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='image_url') THEN
+    ALTER TABLE products ADD COLUMN image_url text DEFAULT '';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='stock') THEN
+    ALTER TABLE products ADD COLUMN stock integer DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='active') THEN
+    ALTER TABLE products ADD COLUMN active boolean DEFAULT true;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='featured') THEN
+    ALTER TABLE products ADD COLUMN featured boolean DEFAULT false;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='created_at') THEN
+    ALTER TABLE products ADD COLUMN created_at timestamptz DEFAULT now();
+  END IF;
+  -- Extended columns
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='colors') THEN
     ALTER TABLE products ADD COLUMN colors jsonb DEFAULT '[]'::jsonb;
   END IF;
@@ -36,13 +62,15 @@ CREATE TABLE IF NOT EXISTS profiles (
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- Policy: anyone can read profiles (admin will use this)
-CREATE POLICY IF NOT EXISTS "Profiles are viewable by authenticated users"
+DROP POLICY IF EXISTS "Profiles are viewable by authenticated users" ON profiles;
+CREATE POLICY "Profiles are viewable by authenticated users"
   ON profiles FOR SELECT
   TO authenticated
   USING (true);
 
 -- Policy: users can update their own profile
-CREATE POLICY IF NOT EXISTS "Users can update own profile"
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE
   TO authenticated
   USING (auth.uid() = id);

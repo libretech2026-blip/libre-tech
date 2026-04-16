@@ -44,12 +44,16 @@ const SB = (() => {
   }
 
   // Reverse map: JS object → Supabase row
-  // Extended columns that may not exist in every database setup
-  const EXTENDED_COLS = ['colors', 'specs', 'offer_active', 'offer_price', 'offer_percent'];
-  let schemaHasExtended = true; // optimistic; set to false on first failure
+  // Track which columns the DB actually has (discovered on first error)
+  let missingCols = new Set();
 
-  function toRow(p, includeExtended) {
-    const base = {
+  function extractMissingCol(errorMsg) {
+    const m = errorMsg && errorMsg.match(/Could not find the '(\w+)' column/);
+    return m ? m[1] : null;
+  }
+
+  function toRow(p) {
+    const row = {
       id:            p.id,
       name:          p.name,
       price:         p.price,
@@ -59,16 +63,35 @@ const SB = (() => {
       image_url:     p.image         || '',
       stock:         p.stock         ?? 0,
       active:        p.active        !== false,
-      featured:      p.featured      === true
+      featured:      p.featured      === true,
+      colors:        p.colors        || [],
+      specs:         p.specs         || [],
+      offer_active:  p.offerActive   === true,
+      offer_price:   p.offerPrice    || 0,
+      offer_percent: p.offerPercent  || 0
     };
-    if (includeExtended !== false && schemaHasExtended) {
-      base.colors        = p.colors      || [];
-      base.specs         = p.specs       || [];
-      base.offer_active  = p.offerActive === true;
-      base.offer_price   = p.offerPrice  || 0;
-      base.offer_percent = p.offerPercent|| 0;
+    // Strip columns known to be missing from the DB
+    missingCols.forEach(c => delete row[c]);
+    return row;
+  }
+
+  // Retry an insert/upsert, stripping the failing column each time (max 10 retries)
+  async function resilientUpsert(row) {
+    let attempts = 0;
+    while (attempts < 10) {
+      const { data, error } = await client.from('products').upsert(row, { onConflict: 'id' }).select().single();
+      if (!error) return data;
+      const col = extractMissingCol(error.message);
+      if (col && !missingCols.has(col)) {
+        console.warn('[SB] Column missing, will skip:', col);
+        missingCols.add(col);
+        delete row[col];
+        attempts++;
+      } else {
+        throw error;
+      }
     }
-    return base;
+    throw new Error('Too many missing columns');
   }
 
   async function syncProducts() {
@@ -107,20 +130,8 @@ const SB = (() => {
   ---------------------------------------------------------- */
   async function insertProduct(product) {
     const row = toRow(product);
-    const { data, error } = await client.from('products').insert(row).select().single();
-    if (error) {
-      // If extended columns don't exist in the DB, retry without them
-      if (schemaHasExtended && error.message && error.message.includes('column')) {
-        console.warn('[SB] Extended columns missing, retrying without them:', error.message);
-        schemaHasExtended = false;
-        const baseRow = toRow(product, false);
-        const { data: d2, error: e2 } = await client.from('products').insert(baseRow).select().single();
-        if (e2) throw e2;
-        return d2 ? mapRow(d2) : product;
-      }
-      throw error;
-    }
-    return data ? mapRow(data) : product;
+    const saved = await resilientUpsert(row);
+    return saved ? mapRow(saved) : product;
   }
 
   async function updateProduct(id, updates) {
@@ -134,24 +145,28 @@ const SB = (() => {
     if ('stock'       in updates) partial.stock        = updates.stock;
     if ('active'      in updates) partial.active       = updates.active;
     if ('featured'    in updates) partial.featured     = updates.featured;
-    if (schemaHasExtended) {
-      if ('colors'      in updates) partial.colors       = updates.colors;
-      if ('specs'       in updates) partial.specs        = updates.specs;
-      if ('offerActive' in updates) partial.offer_active = updates.offerActive;
-      if ('offerPrice'  in updates) partial.offer_price  = updates.offerPrice;
-    }
+    if ('colors'      in updates) partial.colors       = updates.colors;
+    if ('specs'       in updates) partial.specs        = updates.specs;
+    if ('offerActive' in updates) partial.offer_active = updates.offerActive;
+    if ('offerPrice'  in updates) partial.offer_price  = updates.offerPrice;
+    if ('offerPercent'in updates) partial.offer_percent = updates.offerPercent;
+    // Strip columns known to be missing
+    missingCols.forEach(c => delete partial[c]);
 
-    const { error } = await client.from('products').update(partial).eq('id', id);
-    if (error) {
-      if (schemaHasExtended && error.message && error.message.includes('column')) {
-        console.warn('[SB] Extended columns missing in update, retrying:', error.message);
-        schemaHasExtended = false;
-        EXTENDED_COLS.forEach(c => delete partial[c]);
-        const { error: e2 } = await client.from('products').update(partial).eq('id', id);
-        if (e2) throw e2;
-        return;
+    let attempts = 0;
+    let current = { ...partial };
+    while (attempts < 10) {
+      const { error } = await client.from('products').update(current).eq('id', id);
+      if (!error) return;
+      const col = extractMissingCol(error.message);
+      if (col && !missingCols.has(col)) {
+        console.warn('[SB] Column missing in update, will skip:', col);
+        missingCols.add(col);
+        delete current[col];
+        attempts++;
+      } else {
+        throw error;
       }
-      throw error;
     }
   }
 
@@ -292,17 +307,12 @@ const SB = (() => {
     for (const p of products) {
       try {
         const row = toRow(p);
-        const { error } = await client.from('products').upsert(row, { onConflict: 'id' });
-        if (error) {
-          if (schemaHasExtended && error.message && error.message.includes('column')) {
-            schemaHasExtended = false;
-            const baseRow = toRow(p, false);
-            const { error: e2 } = await client.from('products').upsert(baseRow, { onConflict: 'id' });
-            if (e2) { failCount++; console.warn('[SB] pushAll fail:', p.id, e2.message); }
-            else successCount++;
-          } else { failCount++; console.warn('[SB] pushAll fail:', p.id, error.message); }
-        } else successCount++;
-      } catch (e) { failCount++; }
+        await resilientUpsert(row);
+        successCount++;
+      } catch (e) {
+        failCount++;
+        console.warn('[SB] pushAll fail:', p.id, e.message);
+      }
     }
     return { successCount, failCount };
   }
