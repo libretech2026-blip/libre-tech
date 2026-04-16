@@ -497,34 +497,39 @@ input, select, textarea {
 /* Password visibility toggle */
 .password-wrapper {
   position: relative;
-  display: flex;
-  align-items: center;
 }
 .password-wrapper .form-input {
-  padding-right: 42px;
+  padding-right: 44px;
   width: 100%;
+  box-sizing: border-box;
 }
 .password-toggle {
   position: absolute;
-  right: 10px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
-  padding: 2px;
+  padding: 4px;
   color: var(--text-tertiary);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
 }
 .password-toggle:hover {
   color: var(--text-primary);
-  background: rgba(0,0,0,0.05);
+  background: rgba(0,0,0,0.06);
 }
 [data-theme="dark"] .password-toggle:hover {
   background: rgba(255,255,255,0.1);
@@ -576,6 +581,19 @@ input, select, textarea {
 }
 
 .create-account-link:hover {
+  text-decoration: underline;
+}
+
+.forgot-password-link {
+  text-align: right;
+  margin-top: -4px;
+}
+.forgot-password-link a {
+  font-size: 0.78rem;
+  color: var(--primary-blue);
+  text-decoration: none;
+}
+.forgot-password-link a:hover {
   text-decoration: underline;
 }
 
@@ -2052,6 +2070,33 @@ input, select, textarea {
   box-shadow: var(--shadow-sm);
   overflow: hidden;
   border: 1px solid var(--border-light);
+  width: 100%;
+}
+
+.admin-tab-content {
+  width: 100%;
+}
+
+.admin-tab-content .admin-stats {
+  width: 100%;
+}
+
+.social-links-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  max-width: 100%;
+}
+
+.social-links-form .btn {
+  grid-column: 1 / -1;
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
 }
 
 .admin-panel-header {
@@ -3058,6 +3103,14 @@ input, select, textarea {
 
   .admin-stats {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .social-links-form {
+    grid-template-columns: 1fr;
   }
 
   .admin-panel-header {

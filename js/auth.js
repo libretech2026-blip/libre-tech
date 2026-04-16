@@ -330,6 +330,26 @@ const Auth = (() => {
       hideRegisterPanel();
     });
 
+    // Forgot password
+    document.getElementById('btnForgotPassword')?.addEventListener('click', async e => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail')?.value?.trim();
+      if (!email) {
+        showToast('Escribe tu correo electrónico arriba y luego haz clic en "¿Olvidaste tu contraseña?"', 'info', 5000);
+        document.getElementById('loginEmail')?.focus();
+        return;
+      }
+      try {
+        const { error } = await SB.client.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/index.html#reset-password'
+        });
+        if (error) throw error;
+        showToast('📧 Te enviamos un enlace para restablecer tu contraseña. Revisa tu correo.', 'success', 6000);
+      } catch (err) {
+        showToast(err.message || 'Error al enviar el correo de recuperación', 'error');
+      }
+    });
+
     // Password visibility toggles
     document.querySelectorAll('.password-toggle').forEach(btn => {
       btn.addEventListener('click', () => {

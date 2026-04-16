@@ -118,34 +118,44 @@ const Admin = (() => {
   async function addProduct(product) {
     product.id = 'prod-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
     product.createdAt = new Date().toISOString().split('T')[0];
-    try {
-      if (typeof SB !== 'undefined' && SB.client) { await SB.insertProduct(product); return product; }
-    } catch (e) { console.warn('[Admin] SB insert fell back to local:', e.message); }
+    // Always save locally first so data is never lost
     const products = getProducts();
     products.push(product);
     saveProducts(products);
+    try {
+      if (typeof SB !== 'undefined' && SB.client) { await SB.insertProduct(product); }
+    } catch (e) {
+      console.warn('[Admin] SB insert failed (saved locally):', e.message);
+      showToast('Producto guardado localmente — error al sincronizar con Supabase', 'error');
+    }
     return product;
   }
 
   async function updateProduct(id, updates) {
-    try {
-      if (typeof SB !== 'undefined' && SB.client) { await SB.updateProduct(id, updates); return getProducts().find(p => p.id === id) || null; }
-    } catch (e) { console.warn('[Admin] SB update fell back to local:', e.message); }
+    // Update locally first
     const products = getProducts();
     const index = products.findIndex(p => p.id === id);
-    if (index === -1) return null;
-    products[index] = { ...products[index], ...updates };
-    saveProducts(products);
-    return products[index];
+    if (index !== -1) { products[index] = { ...products[index], ...updates }; saveProducts(products); }
+    try {
+      if (typeof SB !== 'undefined' && SB.client) { await SB.updateProduct(id, updates); }
+    } catch (e) {
+      console.warn('[Admin] SB update failed (saved locally):', e.message);
+      showToast('Cambio guardado localmente — error al sincronizar con Supabase', 'error');
+    }
+    return products[index] || null;
   }
 
   async function deleteProduct(id) {
-    try {
-      if (typeof SB !== 'undefined' && SB.client) { await SB.deleteProduct(id); return; }
-    } catch (e) { console.warn('[Admin] SB delete fell back to local:', e.message); }
+    // Delete locally first
     let products = getProducts();
     products = products.filter(p => p.id !== id);
     saveProducts(products);
+    try {
+      if (typeof SB !== 'undefined' && SB.client) { await SB.deleteProduct(id); }
+    } catch (e) {
+      console.warn('[Admin] SB delete failed (deleted locally):', e.message);
+      showToast('Eliminado localmente — error al sincronizar con Supabase', 'error');
+    }
   }
 
   // --- Stats ---
@@ -438,21 +448,41 @@ const Admin = (() => {
   // --- Excel Parsing (SheetJS) ---
   function parseExcel(data) {
     try {
-      const workbook = XLSX.read(data, { type: 'array' });
+      const workbook = XLSX.read(data, { type: 'array', codepage: 65001 });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      const json = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
 
       const products = [];
       json.forEach(row => {
-        const name = String(row.nombre || row.Nombre || row.name || row.Name || '').trim();
+        const name = cleanText(row.nombre || row.Nombre || row.name || row.Name || '');
         const price = parseInt(row.precio || row.Precio || row.price || row.Price || 0) || 0;
-        const description = String(row.descripcion || row.Descripcion || row.description || row.Description || '').trim();
-        const category = String(row.categoria || row.Categoria || row.category || row.Category || '').trim();
+        const description = cleanText(row.descripcion || row.Descripcion || row.description || row.Description || '');
+        const category = cleanText(row.categoria || row.Categoria || row.category || row.Category || '');
+        const brand = cleanText(row.marca || row.Marca || row.brand || row.Brand || '');
         const stock = parseInt(row.stock || row.Stock || 0) || 0;
+        const colorRaw = cleanText(row.color || row.Color || row.colores || row.Colores || '');
+        const colors = colorRaw ? colorRaw.split(/[,;|]/).map(c => c.trim()).filter(Boolean) : [];
+
+        // Specs: columns like spec1, spec2... or especificacion1, etc.
+        const specs = [];
+        for (const key of Object.keys(row)) {
+          const kl = key.toLowerCase();
+          if ((kl.startsWith('spec') || kl.startsWith('especificacion') || kl.startsWith('especificación')) && row[key]) {
+            const val = cleanText(String(row[key]));
+            if (val) {
+              const parts = val.split(':');
+              if (parts.length >= 2) {
+                specs.push({ key: parts[0].trim(), value: parts.slice(1).join(':').trim() });
+              } else {
+                specs.push({ key: kl, value: val });
+              }
+            }
+          }
+        }
 
         if (name && price > 0) {
-          products.push({ name, price, description, category, stock, image: '', active: true });
+          products.push({ name, price, description, category, brand, stock, image: '', active: true, colors, specs });
         }
       });
       return products;
@@ -460,6 +490,19 @@ const Admin = (() => {
       console.error('Error parsing Excel:', err);
       return [];
     }
+  }
+
+  // Fix encoding issues (â€", Ã­, etc.) from improperly encoded files
+  function cleanText(val) {
+    if (!val) return '';
+    let s = String(val).trim();
+    // Common mojibake replacements
+    s = s.replace(/â€"/g, '—').replace(/â€œ/g, '"').replace(/â€\u009D/g, '"')
+         .replace(/â€˜/g, "'").replace(/â€™/g, "'").replace(/â€¢/g, '•')
+         .replace(/Ã¡/g, 'á').replace(/Ã©/g, 'é').replace(/Ã­/g, 'í')
+         .replace(/Ã³/g, 'ó').replace(/Ãº/g, 'ú').replace(/Ã±/g, 'ñ')
+         .replace(/Ã'/g, 'Ñ');
+    return s;
   }
 
   function handleCSVFile(file) {
@@ -502,19 +545,25 @@ const Admin = (() => {
     preview.style.display = 'block';
   }
 
-  function importCSVProducts() {
+  async function importCSVProducts() {
     if (csvParsedData.length === 0) return;
 
     const products = getProducts();
+    let sbErrors = 0;
 
-    csvParsedData.forEach(p => {
+    for (const p of csvParsedData) {
       p.id = 'prod-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
       p.createdAt = new Date().toISOString().split('T')[0];
       products.push(p);
-    });
+      // Try to sync each product to Supabase
+      try {
+        if (typeof SB !== 'undefined' && SB.client) { await SB.insertProduct(p); }
+      } catch (e) { sbErrors++; console.warn('[Admin] CSV import SB insert error:', e.message); }
+    }
 
     saveProducts(products);
-    showToast(`${csvParsedData.length} productos importados exitosamente`, 'success');
+    const msg = `${csvParsedData.length} productos importados exitosamente`;
+    showToast(sbErrors > 0 ? msg + ` (${sbErrors} no sincronizados con Supabase)` : msg, sbErrors > 0 ? 'error' : 'success');
 
     csvParsedData = [];
     document.getElementById('csvPreview').style.display = 'none';
@@ -871,7 +920,9 @@ const Admin = (() => {
 
     setTimeout(() => {
       toast.classList.add('toast-out');
-      toast.addEventListener('animationend', () => toast.remove());
+      const remove = () => { if (toast.parentNode) toast.remove(); };
+      toast.addEventListener('animationend', remove);
+      setTimeout(remove, 500); // Fallback if animationend doesn't fire
     }, 3000);
   }
 

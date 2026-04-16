@@ -74,6 +74,14 @@ const SB = (() => {
 
       if (error) throw error;
       const products = (data || []).map(mapRow);
+
+      // Don't overwrite local cache with empty result if we already have products locally
+      const cached = getCachedProducts();
+      if (products.length === 0 && cached.length > 0) {
+        console.warn('[SB] Supabase returned 0 products but localStorage has', cached.length, '— keeping local cache');
+        return cached;
+      }
+
       localStorage.setItem(PRODUCTS_LS_KEY, JSON.stringify(products));
       return products;
     } catch (e) {
@@ -94,8 +102,7 @@ const SB = (() => {
     const row = toRow(product);
     const { data, error } = await client.from('products').insert(row).select().single();
     if (error) throw error;
-    await syncProducts();
-    return mapRow(data);
+    return data ? mapRow(data) : product;
   }
 
   async function updateProduct(id, updates) {
@@ -116,13 +123,11 @@ const SB = (() => {
 
     const { error } = await client.from('products').update(partial).eq('id', id);
     if (error) throw error;
-    await syncProducts();
   }
 
   async function deleteProduct(id) {
     const { error } = await client.from('products').delete().eq('id', id);
     if (error) throw error;
-    await syncProducts();
   }
 
   /* ----------------------------------------------------------
