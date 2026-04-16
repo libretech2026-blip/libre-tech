@@ -88,6 +88,7 @@ const Admin = (() => {
     renderVisualBannersTable();
     renderPqrsTable();
     populateCategoriesDatalist();
+    initUserManagement();
   }
 
   // Fetch orders from Supabase and cache locally
@@ -655,7 +656,7 @@ const Admin = (() => {
       c.style.display = 'none';
     });
 
-    const tabMap = { products: 'tabProducts', csv: 'tabCsv', orders: 'tabOrders', pages: 'tabPages', stats: 'tabStats', visual: 'tabVisual', pqrs: 'tabPqrs', social: 'tabSocial' };
+    const tabMap = { products: 'tabProducts', csv: 'tabCsv', orders: 'tabOrders', pages: 'tabPages', stats: 'tabStats', visual: 'tabVisual', pqrs: 'tabPqrs', social: 'tabSocial', users: 'tabUsers' };
     const tabEl = document.getElementById(tabMap[tabName]);
     if (tabEl) tabEl.style.display = 'block';
 
@@ -665,6 +666,7 @@ const Admin = (() => {
     if (tabName === 'visual') { renderVisualBannersTable(); updatePagePreview(); }
     if (tabName === 'pqrs') renderPqrsTable();
     if (tabName === 'social') loadSocialLinks();
+    if (tabName === 'users') renderUsersTable();
   }
 
   // --- Eventos ---
@@ -688,6 +690,23 @@ const Admin = (() => {
 
     // Agregar producto
     document.getElementById('btnAddProduct')?.addEventListener('click', () => openProductForm());
+
+    // Sync DB
+    document.getElementById('btnSyncSupabase')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btnSyncSupabase');
+      btn.disabled = true;
+      btn.textContent = 'Sincronizando...';
+      try {
+        const products = getProducts();
+        const { successCount, failCount } = await SB.pushAllProducts(products);
+        showToast(`Sync: ${successCount} ok, ${failCount} errores`, successCount > 0 ? 'success' : 'error');
+      } catch (err) {
+        showToast('Error sync: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sync DB';
+      }
+    });
 
     // Tabla de productos (delegación)
     document.getElementById('productsTableBody')?.addEventListener('click', async e => {
@@ -1367,6 +1386,130 @@ const Admin = (() => {
   }
 
 
+  // ===== USUARIOS =====
+  const USERS_LS_KEY = 'libretech_users';
+
+  function getLocalUsers() {
+    try { return JSON.parse(localStorage.getItem(USERS_LS_KEY) || '[]'); } catch { return []; }
+  }
+  function saveLocalUsers(users) { localStorage.setItem(USERS_LS_KEY, JSON.stringify(users)); }
+
+  async function renderUsersTable() {
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-secondary);">Cargando...</td></tr>';
+
+    let users = [];
+    try {
+      users = await SB.listUsers();
+    } catch (e) {
+      console.warn('[Admin] listUsers error:', e.message);
+    }
+
+    // Merge with local registrations tracked from auth events
+    const localUsers = getLocalUsers();
+    const emailSet = new Set(users.map(u => (u.email || '').toLowerCase()));
+    localUsers.forEach(lu => {
+      if (!emailSet.has((lu.email || '').toLowerCase())) users.push(lu);
+    });
+
+    if (users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-secondary);">No hay usuarios registrados.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = users.map(u => {
+      const email = Cart.escapeHTML(u.email || 'Sin email');
+      const name = Cart.escapeHTML(u.full_name || (u.user_metadata ? u.user_metadata.full_name : '') || u.name || '');
+      const created = u.created_at ? new Date(u.created_at).toLocaleDateString('es-CO') : '';
+      const lastSignIn = u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString('es-CO') : '';
+      const uid = Cart.escapeAttr(u.id || u.email || '');
+      return '<tr>' +
+        '<td>' + email + '</td>' +
+        '<td>' + (name || '\u2014') + '</td>' +
+        '<td>' + (created || '\u2014') + '</td>' +
+        '<td>' + (lastSignIn || '\u2014') + '</td>' +
+        '<td>' +
+          '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
+            '<button class="btn btn-secondary btn-sm" onclick="Admin._changeUserPw(\'' + uid + '\',\'' + Cart.escapeAttr(u.email || '') + '\')" title="Cambiar contrase\u00f1a">' +
+              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>' +
+            '</button>' +
+            '<button class="btn btn-secondary btn-sm" onclick="Admin._deleteUser(\'' + uid + '\',\'' + Cart.escapeAttr(u.email || '') + '\')" title="Eliminar usuario" style="color:var(--danger)">' +
+              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
+            '</button>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function openUserPasswordModal(userId, email) {
+    document.getElementById('userPasswordUserId').value = userId;
+    document.getElementById('userPasswordEmail').textContent = 'Usuario: ' + email;
+    document.getElementById('userNewPassword').value = '';
+    document.getElementById('userConfirmPassword').value = '';
+    document.getElementById('userPasswordOverlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeUserPasswordModal() {
+    document.getElementById('userPasswordOverlay').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  function initUserManagement() {
+    document.getElementById('btnRefreshUsers')?.addEventListener('click', renderUsersTable);
+    document.getElementById('btnCloseUserPassword')?.addEventListener('click', closeUserPasswordModal);
+    document.getElementById('btnCancelUserPassword')?.addEventListener('click', closeUserPasswordModal);
+
+    document.getElementById('userPasswordForm')?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const userId = document.getElementById('userPasswordUserId').value;
+      const pw = document.getElementById('userNewPassword').value;
+      const confirmPw = document.getElementById('userConfirmPassword').value;
+      if (pw !== confirmPw) { showToast('Las contrase\u00f1as no coinciden', 'error'); return; }
+      if (pw.length < 6) { showToast('M\u00ednimo 6 caracteres', 'error'); return; }
+      try {
+        await SB.updateUserPassword(userId, pw);
+        showToast('Contrase\u00f1a actualizada', 'success');
+        closeUserPasswordModal();
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+    });
+
+    // Track registrations via auth state changes
+    SB.onAuthChange(user => {
+      if (!user) return;
+      const users = getLocalUsers();
+      const exists = users.some(u => u.id === user.id || (u.email || '').toLowerCase() === (user.email || '').toLowerCase());
+      if (!exists) {
+        users.push({
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || '',
+          created_at: user.created_at || new Date().toISOString(),
+          last_sign_in_at: user.last_sign_in_at || new Date().toISOString()
+        });
+        saveLocalUsers(users);
+      }
+    });
+  }
+
+  async function handleDeleteUser(userId, email) {
+    if (!confirm('\u00bfEst\u00e1s seguro de eliminar al usuario ' + email + '? Esta acci\u00f3n no se puede deshacer.')) return;
+    try {
+      await SB.deleteUser(userId);
+      // Also remove from local cache
+      const users = getLocalUsers().filter(u => u.id !== userId && (u.email || '').toLowerCase() !== email.toLowerCase());
+      saveLocalUsers(users);
+      showToast('Usuario eliminado', 'success');
+      renderUsersTable();
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    }
+  }
+
   // ===== PQRs =====
   const PQR_STATUS_LABELS = { open: 'Abierto', answered: 'Respondido', closed: 'Cerrado' };
   function getPqrs() { try { return JSON.parse(localStorage.getItem(PQRS_KEY) || '[]'); } catch { return []; } }
@@ -1463,6 +1606,8 @@ const Admin = (() => {
   return {
     init,
     _editVB: openVisualBannerForm,
-    _deleteVB: (i) => { if (confirm('¿Eliminar este banner?')) { const b = getVisualBanners(); b.splice(i, 1); saveVisualBanners(b); syncToLegacyBanners(b); renderVisualBannersTable(); updatePagePreview(); showToast('Banner eliminado', 'info'); } }
+    _deleteVB: (i) => { if (confirm('¿Eliminar este banner?')) { const b = getVisualBanners(); b.splice(i, 1); saveVisualBanners(b); syncToLegacyBanners(b); renderVisualBannersTable(); updatePagePreview(); showToast('Banner eliminado', 'info'); } },
+    _changeUserPw: openUserPasswordModal,
+    _deleteUser: handleDeleteUser
   };
 })();

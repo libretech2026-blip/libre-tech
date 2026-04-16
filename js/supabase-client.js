@@ -44,8 +44,12 @@ const SB = (() => {
   }
 
   // Reverse map: JS object → Supabase row
-  function toRow(p) {
-    return {
+  // Extended columns that may not exist in every database setup
+  const EXTENDED_COLS = ['colors', 'specs', 'offer_active', 'offer_price', 'offer_percent'];
+  let schemaHasExtended = true; // optimistic; set to false on first failure
+
+  function toRow(p, includeExtended) {
+    const base = {
       id:            p.id,
       name:          p.name,
       price:         p.price,
@@ -55,13 +59,16 @@ const SB = (() => {
       image_url:     p.image         || '',
       stock:         p.stock         ?? 0,
       active:        p.active        !== false,
-      featured:      p.featured      === true,
-      colors:        p.colors        || [],
-      specs:         p.specs         || [],
-      offer_active:  p.offerActive   === true,
-      offer_price:   p.offerPrice    || 0,
-      offer_percent: p.offerPercent  || 0
+      featured:      p.featured      === true
     };
+    if (includeExtended !== false && schemaHasExtended) {
+      base.colors        = p.colors      || [];
+      base.specs         = p.specs       || [];
+      base.offer_active  = p.offerActive === true;
+      base.offer_price   = p.offerPrice  || 0;
+      base.offer_percent = p.offerPercent|| 0;
+    }
+    return base;
   }
 
   async function syncProducts() {
@@ -101,7 +108,18 @@ const SB = (() => {
   async function insertProduct(product) {
     const row = toRow(product);
     const { data, error } = await client.from('products').insert(row).select().single();
-    if (error) throw error;
+    if (error) {
+      // If extended columns don't exist in the DB, retry without them
+      if (schemaHasExtended && error.message && error.message.includes('column')) {
+        console.warn('[SB] Extended columns missing, retrying without them:', error.message);
+        schemaHasExtended = false;
+        const baseRow = toRow(product, false);
+        const { data: d2, error: e2 } = await client.from('products').insert(baseRow).select().single();
+        if (e2) throw e2;
+        return d2 ? mapRow(d2) : product;
+      }
+      throw error;
+    }
     return data ? mapRow(data) : product;
   }
 
@@ -116,13 +134,25 @@ const SB = (() => {
     if ('stock'       in updates) partial.stock        = updates.stock;
     if ('active'      in updates) partial.active       = updates.active;
     if ('featured'    in updates) partial.featured     = updates.featured;
-    if ('colors'      in updates) partial.colors       = updates.colors;
-    if ('specs'       in updates) partial.specs        = updates.specs;
-    if ('offerActive' in updates) partial.offer_active = updates.offerActive;
-    if ('offerPrice'  in updates) partial.offer_price  = updates.offerPrice;
+    if (schemaHasExtended) {
+      if ('colors'      in updates) partial.colors       = updates.colors;
+      if ('specs'       in updates) partial.specs        = updates.specs;
+      if ('offerActive' in updates) partial.offer_active = updates.offerActive;
+      if ('offerPrice'  in updates) partial.offer_price  = updates.offerPrice;
+    }
 
     const { error } = await client.from('products').update(partial).eq('id', id);
-    if (error) throw error;
+    if (error) {
+      if (schemaHasExtended && error.message && error.message.includes('column')) {
+        console.warn('[SB] Extended columns missing in update, retrying:', error.message);
+        schemaHasExtended = false;
+        EXTENDED_COLS.forEach(c => delete partial[c]);
+        const { error: e2 } = await client.from('products').update(partial).eq('id', id);
+        if (e2) throw e2;
+        return;
+      }
+      throw error;
+    }
   }
 
   async function deleteProduct(id) {
@@ -252,6 +282,58 @@ const SB = (() => {
     });
   }
 
+  /* ----------------------------------------------------------
+     BULK SYNC — Push all local products to Supabase
+  ---------------------------------------------------------- */
+  async function pushAllProducts(products) {
+    if (!client) throw new Error('Supabase not available');
+    let successCount = 0;
+    let failCount = 0;
+    for (const p of products) {
+      try {
+        const row = toRow(p);
+        const { error } = await client.from('products').upsert(row, { onConflict: 'id' });
+        if (error) {
+          if (schemaHasExtended && error.message && error.message.includes('column')) {
+            schemaHasExtended = false;
+            const baseRow = toRow(p, false);
+            const { error: e2 } = await client.from('products').upsert(baseRow, { onConflict: 'id' });
+            if (e2) { failCount++; console.warn('[SB] pushAll fail:', p.id, e2.message); }
+            else successCount++;
+          } else { failCount++; console.warn('[SB] pushAll fail:', p.id, error.message); }
+        } else successCount++;
+      } catch (e) { failCount++; }
+    }
+    return { successCount, failCount };
+  }
+
+  /* ----------------------------------------------------------
+     USER MANAGEMENT (admin) — via auth.admin (requires service_role) 
+     or via database functions
+  ---------------------------------------------------------- */
+  async function listUsers() {
+    // Use a database view or function to list auth.users
+    const { data, error } = await client.rpc('list_users');
+    if (error) {
+      console.warn('[SB] listUsers RPC not available:', error.message);
+      // Fallback: try reading from profiles table
+      const { data: profiles, error: e2 } = await client.from('profiles').select('*').order('created_at', { ascending: false });
+      if (e2) { console.warn('[SB] profiles fallback failed:', e2.message); return []; }
+      return profiles || [];
+    }
+    return data || [];
+  }
+
+  async function deleteUser(userId) {
+    const { error } = await client.rpc('admin_delete_user', { target_user_id: userId });
+    if (error) throw error;
+  }
+
+  async function updateUserPassword(userId, newPassword) {
+    const { error } = await client.rpc('admin_update_password', { target_user_id: userId, new_password: newPassword });
+    if (error) throw error;
+  }
+
   // --- Public API ---
   return {
     client,
@@ -262,6 +344,7 @@ const SB = (() => {
     updateProduct,
     deleteProduct,
     decrementStock,
+    pushAllProducts,
     toRow,
     mapRow,
     // Orders
@@ -275,6 +358,10 @@ const SB = (() => {
     getSession,
     getUser,
     isAdmin,
-    onAuthChange
+    onAuthChange,
+    // User management
+    listUsers,
+    deleteUser,
+    updateUserPassword
   };
 })();

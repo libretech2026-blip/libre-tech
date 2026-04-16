@@ -1,0 +1,138 @@
+-- ============================================================
+-- LIBRE TECH — Supabase Setup SQL
+-- Run this in Supabase Dashboard → SQL Editor
+-- ============================================================
+
+-- 1. Add missing columns to products table (if they don't exist)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='colors') THEN
+    ALTER TABLE products ADD COLUMN colors jsonb DEFAULT '[]'::jsonb;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='specs') THEN
+    ALTER TABLE products ADD COLUMN specs jsonb DEFAULT '[]'::jsonb;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='offer_active') THEN
+    ALTER TABLE products ADD COLUMN offer_active boolean DEFAULT false;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='offer_price') THEN
+    ALTER TABLE products ADD COLUMN offer_price numeric DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='offer_percent') THEN
+    ALTER TABLE products ADD COLUMN offer_percent numeric DEFAULT 0;
+  END IF;
+END $$;
+
+-- 2. Create profiles table (mirrors auth.users for admin queries)
+CREATE TABLE IF NOT EXISTS profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email text,
+  full_name text DEFAULT '',
+  created_at timestamptz DEFAULT now(),
+  last_sign_in_at timestamptz
+);
+
+-- Enable RLS on profiles
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- Policy: anyone can read profiles (admin will use this)
+CREATE POLICY IF NOT EXISTS "Profiles are viewable by authenticated users"
+  ON profiles FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- Policy: users can update their own profile
+CREATE POLICY IF NOT EXISTS "Users can update own profile"
+  ON profiles FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = id);
+
+-- 3. Trigger to auto-create profile on new user signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, created_at, last_sign_in_at)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+    NEW.created_at,
+    NEW.last_sign_in_at
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    last_sign_in_at = EXCLUDED.last_sign_in_at;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Drop existing trigger if any, then create
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT OR UPDATE ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 4. RPC function: list all users (admin only)
+CREATE OR REPLACE FUNCTION list_users()
+RETURNS TABLE(id uuid, email text, full_name text, created_at timestamptz, last_sign_in_at timestamptz)
+AS $$
+BEGIN
+  -- Check if caller is admin
+  IF NOT (SELECT email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com')
+          FROM auth.users WHERE auth.users.id = auth.uid()) THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+  
+  RETURN QUERY
+    SELECT u.id, u.email::text, 
+           COALESCE(u.raw_user_meta_data->>'full_name', '')::text AS full_name,
+           u.created_at, u.last_sign_in_at
+    FROM auth.users u
+    ORDER BY u.created_at DESC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 5. RPC function: admin delete user
+CREATE OR REPLACE FUNCTION admin_delete_user(target_user_id uuid)
+RETURNS void AS $$
+BEGIN
+  -- Check if caller is admin
+  IF NOT (SELECT email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com')
+          FROM auth.users WHERE auth.users.id = auth.uid()) THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  -- Don't allow deleting self
+  IF target_user_id = auth.uid() THEN
+    RAISE EXCEPTION 'Cannot delete yourself';
+  END IF;
+
+  -- Delete from auth.users (cascades to profiles)
+  DELETE FROM auth.users WHERE id = target_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 6. RPC function: admin update user password
+CREATE OR REPLACE FUNCTION admin_update_password(target_user_id uuid, new_password text)
+RETURNS void AS $$
+BEGIN
+  -- Check if caller is admin
+  IF NOT (SELECT email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com')
+          FROM auth.users WHERE auth.users.id = auth.uid()) THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  -- Update password via auth schema
+  UPDATE auth.users 
+  SET encrypted_password = crypt(new_password, gen_salt('bf'))
+  WHERE id = target_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 7. Populate profiles from existing users
+INSERT INTO profiles (id, email, full_name, created_at, last_sign_in_at)
+SELECT id, email, COALESCE(raw_user_meta_data->>'full_name', ''), created_at, last_sign_in_at
+FROM auth.users
+ON CONFLICT (id) DO UPDATE SET
+  email = EXCLUDED.email,
+  last_sign_in_at = EXCLUDED.last_sign_in_at;

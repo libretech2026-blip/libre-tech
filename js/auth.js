@@ -99,6 +99,7 @@ const Auth = (() => {
     const emailEl = document.getElementById('userEmail');
     const loginPanel = document.getElementById('loginPanel');
     const loggedPanel = document.getElementById('loggedPanel');
+    const adminLink = document.getElementById('adminFooterLink');
 
     if (currentUser) {
       // Mostrar panel logueado, ocultar login
@@ -118,12 +119,20 @@ const Auth = (() => {
       else if (profileBtn) profileBtn.style.display = 'flex';
       if (nameEl) nameEl.textContent = currentUser.name || '';
       if (emailEl) emailEl.textContent = currentUser.email || '';
+
+      // Show admin link only for admins
+      if (adminLink) {
+        SB.getUser().then(u => {
+          adminLink.style.display = (u && SB.isAdmin(u)) ? '' : 'none';
+        }).catch(() => { adminLink.style.display = 'none'; });
+      }
     } else {
       // Mostrar panel login, ocultar logueado
       if (loginPanel) loginPanel.style.display = 'block';
       if (loggedPanel) loggedPanel.style.display = 'none';
       if (profileBtn) profileBtn.style.display = 'flex';
       if (avatar) avatar.style.display = 'none';
+      if (adminLink) adminLink.style.display = 'none';
     }
   }
 

@@ -492,14 +492,33 @@ const Store = (() => {
     const dotsC = document.getElementById('heroCarouselDots');
     if (!track || !dotsC) return;
 
+    // Hero banners from admin Visualización tab
+    let heroBanners = [];
+    try { heroBanners = JSON.parse(localStorage.getItem('libretech_banners') || '[]').filter(b => b.active && b.image); } catch {}
+
     const featured = getActiveProducts().filter(p => p.featured === true).slice(0, 6);
     if (featured.length === 0) {
-      // fallback: show all products
       featured.push(...getActiveProducts().slice(0, 4));
     }
-    if (featured.length === 0) return;
+    if (featured.length === 0 && heroBanners.length === 0) return;
 
-    track.innerHTML = featured.map(p => {
+    // Build slides: custom banners first, then featured products
+    let slidesHTML = '';
+
+    heroBanners.forEach(b => {
+      const now = new Date();
+      if (b.startDate && new Date(b.startDate) > now) return;
+      if (b.endDate && new Date(b.endDate) < now) return;
+      slidesHTML += `
+      <div class="hero-slide hero-slide--banner">
+        <div class="hero-slide-image">
+          <img src="${Cart.escapeAttr(b.image)}" alt="${Cart.escapeAttr(b.title || 'Banner')}" loading="lazy">
+        </div>
+        ${b.subtitle ? `<div class="hero-slide-info"><h3 class="hero-slide-name">${Cart.escapeHTML(b.subtitle)}</h3></div>` : ''}
+      </div>`;
+    });
+
+    slidesHTML += featured.map(p => {
       const hasOffer = p.offerActive && p.offerPrice;
       const discountPercent = hasOffer ? Math.round((1 - p.offerPrice / p.price) * 100) : 0;
       return `
@@ -527,13 +546,16 @@ const Store = (() => {
       </a>
     `}).join('');
 
+    track.innerHTML = slidesHTML;
+    const totalSlides = heroBanners.length + featured.length;
+
     // Dots
-    dotsC.innerHTML = featured.map((_, i) =>
-      `<button class="carousel-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Ir a producto ${i + 1}"></button>`
+    dotsC.innerHTML = Array.from({ length: totalSlides }, (_, i) =>
+      `<button class="carousel-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Ir a slide ${i + 1}"></button>`
     ).join('');
 
     carouselIndex = 0;
-    const slideCount = featured.length;
+    const slideCount = totalSlides;
 
     dotsC.addEventListener('click', e => {
       const dot = e.target.closest('.carousel-dot');
