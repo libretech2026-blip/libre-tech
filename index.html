@@ -32,9 +32,10 @@
   - products, orders, order_items, pqrs, reviews
   - site_config (key/value para banners y redes sociales)
   - customer_profiles (datos de envío del usuario)
+  - coupons (cupones de descuento con código, tipo, valor, vencimiento, usos)
 
   == ÚLTIMA ACTUALIZACIÓN ==
-  Abril 2026 — v3.0:
+  Abril 2026 — v3.1:
   - Banners y redes sociales persistidos en Supabase (site_config)
   - Hero carrusel: imagen como fondo (background-image)
   - Banners con enlaces a productos, secciones o URLs
@@ -43,6 +44,10 @@
   - Mi Perfil: datos de envío guardados en Supabase
   - Checkout como invitado con opción de login/registro
   - Estadísticas excluyen pedidos cancelados
+  - SEO: metadatos Open Graph, Twitter Card, JSON-LD
+  - PWA: manifest.json + Service Worker (cache stale-while-revalidate)
+  - Cupones de descuento: input en formulario de pedido, validación contra Supabase
+  - Admin: Dashboard de analíticas avanzado (KPIs, gráficos, actividad reciente)
   - Fix: QuotaExceededError en localStorage (Supabase es fuente de verdad)
   - Fix: Encoding en mensajes WhatsApp y textos de estadísticas
   ============================================================

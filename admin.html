@@ -4,15 +4,15 @@
   ============================================================
 
   == PESTAÑAS ==
-  1. Dashboard   — Resumen rápido
-  2. Productos   — CRUD, carga CSV/Excel, imágenes, especificaciones, ofertas
-  3. Pedidos     — Gestión de estados (pendiente, procesando, enviado, entregado, cancelado)
-  4. PQRs        — Peticiones, quejas, reclamos, sugerencias
-  5. Reseñas     — Moderación de reseñas de productos
-  6. Páginas     — Editor de páginas estáticas (Nosotros, Garantía, etc.)
+  1. Dashboard    — Resumen rápido
+  2. Productos    — CRUD, carga CSV/Excel, imágenes, especificaciones, ofertas
+  3. Pedidos      — Gestión de estados (pendiente, procesando, enviado, entregado, cancelado)
+  4. PQRs         — Peticiones, quejas, reclamos, sugerencias
+  5. Reseñas      — Moderación de reseñas de productos
+  6. Páginas      — Editor de páginas estáticas (Nosotros, Garantía, etc.)
   7. Estadísticas — Ingresos, ventas, productos más vistos/vendidos, ventas por categoría
                     (pedidos cancelados no se cuentan)
-  8. Usuarios    — Listado de usuarios registrados
+  8. Usuarios     — Listado de usuarios registrados
   9. Visualización — Gestión de banners del sitio:
       * Hero Carrusel (solo imagen de fondo)
       * Laterales izquierdo/derecho (múltiples banners por lado)
@@ -20,9 +20,23 @@
       * Opciones de enlace: producto enlazado, sección de página o URL personalizada
       * Banners se guardan en Supabase (site_config), localStorage como caché
   10. Redes Sociales — Links configurables (guardados en Supabase)
+  11. Cupones     — Gestión de cupones de descuento:
+      * Código único, tipo (porcentaje o monto fijo), valor
+      * Compra mínima, límite de usos, fecha de vencimiento
+      * Estado activo/inactivo, conteo de usos
+      * Integrado con carrito: input de cupón en formulario de pedido
+      * Persistencia en Supabase (tabla coupons)
+  12. Analíticas  — Dashboard de analíticas avanzado:
+      * KPIs: ingresos, pedidos, ticket promedio, pendientes, completados, productos activos
+      * Gráfico de ventas por día (barras CSS)
+      * Top 10 productos más vendidos
+      * Ventas por categoría con porcentajes
+      * Pedidos por estado
+      * Actividad reciente (últimos 15 pedidos)
+      * Filtro por rango de fechas (7/30/90/365 días o todo)
 
   == ÚLTIMA ACTUALIZACIÓN ==
-  Abril 2026 — v3.0
+  Abril 2026 — v3.1
   ============================================================
 -->
 <!DOCTYPE html>

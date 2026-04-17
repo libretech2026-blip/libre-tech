@@ -3,9 +3,8 @@
    Cache-first for static assets, network-first for API calls
    ============================================================ */
 
-const CACHE_NAME = 'libretech-v1';
+const CACHE_NAME = 'libretech-v2';
 const STATIC_ASSETS = [
-  '/',
   '/index.html',
   '/producto.html',
   '/css/styles.css',
@@ -42,42 +41,45 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch: network-first for API/Supabase, cache-first for static assets
+// Fetch handler
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // Network-first for Supabase API and external resources
-  if (url.hostname.includes('supabase') || url.hostname.includes('googleapis') || url.hostname.includes('gstatic')) {
+  // Skip cross-origin requests (Supabase, Google Fonts, CDN, etc.)
+  if (url.origin !== self.location.origin) return;
+
+  // For navigation requests (HTML pages), use network-first
+  if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).then(response => {
-        return response;
-      }).catch(() => caches.match(event.request))
+      fetch(event.request).catch(() => caches.match(event.request))
     );
     return;
   }
 
-  // Cache-first for static assets
+  // Cache-first for same-origin static assets
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) {
-        // Return cached, but also fetch fresh copy in background
+        // Return cached, update in background
         fetch(event.request).then(response => {
-          if (response && response.status === 200) {
+          if (response && response.ok && response.type === 'basic') {
             caches.open(CACHE_NAME).then(cache => cache.put(event.request, response));
           }
         }).catch(() => {});
         return cached;
       }
       return fetch(event.request).then(response => {
-        if (response && response.status === 200) {
+        if (response && response.ok && response.type === 'basic') {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
         }
         return response;
       });
+    })
+  );
     })
   );
 });
