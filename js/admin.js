@@ -2468,7 +2468,7 @@ const Admin = (() => {
 
     if (banners.length === 0) {
 
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-tertiary)">No hay banners configurados.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-tertiary)">No hay banners configurados.</td></tr>';
 
       updatePagePreview(); return;
 
@@ -2480,7 +2480,19 @@ const Admin = (() => {
 
       const prod = b.productId ? products.find(p => p.id === b.productId) : null;
 
-      return `<tr>
+      return `<tr draggable="true" data-vb-index="${i}">
+
+        <td style="cursor:grab;text-align:center;width:40px;">
+          <div style="display:flex;flex-direction:column;gap:2px;align-items:center;">
+            <button class="table-btn" onclick="Admin._moveVB(${i},-1)" title="Subir" style="width:24px;height:24px;" ${i === 0 ? 'disabled' : ''}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            <button class="table-btn" onclick="Admin._moveVB(${i},1)" title="Bajar" style="width:24px;height:24px;" ${i === banners.length - 1 ? 'disabled' : ''}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </td>
 
         <td><div style="width:80px;height:40px;border-radius:4px;overflow:hidden;background:var(--bg-secondary)">${b.image ? `<img src="${escapeAttr(b.image)}" style="width:100%;height:100%;object-fit:cover">` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:0.65rem;color:var(--text-tertiary)">—</div>'}</div></td>
 
@@ -2504,8 +2516,42 @@ const Admin = (() => {
 
     }).join('');
 
+    // Drag and drop reorder
+    initBannerDragDrop(tbody);
+
     updatePagePreview();
 
+  }
+
+  function initBannerDragDrop(tbody) {
+    let dragSrcIndex = null;
+    tbody.querySelectorAll('tr[draggable]').forEach(row => {
+      row.addEventListener('dragstart', e => {
+        dragSrcIndex = parseInt(row.dataset.vbIndex);
+        e.dataTransfer.effectAllowed = 'move';
+        row.style.opacity = '0.4';
+      });
+      row.addEventListener('dragend', () => { row.style.opacity = '1'; });
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        row.style.borderTop = '2px solid var(--primary-blue)';
+      });
+      row.addEventListener('dragleave', () => { row.style.borderTop = ''; });
+      row.addEventListener('drop', e => {
+        e.preventDefault();
+        row.style.borderTop = '';
+        const dropIndex = parseInt(row.dataset.vbIndex);
+        if (dragSrcIndex === null || dragSrcIndex === dropIndex) return;
+        const banners = getVisualBanners();
+        const [moved] = banners.splice(dragSrcIndex, 1);
+        banners.splice(dropIndex, 0, moved);
+        saveVisualBanners(banners);
+        syncToLegacyBanners(banners);
+        renderVisualBannersTable();
+        showToast('Banner reordenado', 'info');
+      });
+    });
   }
 
 
@@ -2664,7 +2710,7 @@ const Admin = (() => {
 
     syncToLegacyBanners(banners);
 
-    closeVisualBannerForm(); renderVisualBannersTable();
+    closeVisualBannerForm(); renderVisualBannersTable(); updatePagePreview();
 
     showToast('Banner guardado', 'success');
 
@@ -2683,6 +2729,13 @@ const Admin = (() => {
     const promoPhotos = allBanners.filter(b => photoPositions.includes(b.position)).map(b => ({ title: b.name, image: b.image, position: b.position, link: b.productId ? `producto.html?id=${b.productId}` : '', active: b.active }));
 
     localStorage.setItem('libretech_promo_photos', JSON.stringify(promoPhotos));
+
+    // Sync side banners (left and right)
+    const sideBanners = allBanners.filter(b => b.position === 'side-left' || b.position === 'side-right').map(b => ({
+      name: b.name, subtitle: b.subtitle, image: b.image, position: b.position,
+      productId: b.productId || '', active: b.active
+    }));
+    localStorage.setItem('libretech_side_banners', JSON.stringify(sideBanners));
 
   }
 
@@ -3228,6 +3281,8 @@ const Admin = (() => {
     _editVB: openVisualBannerForm,
 
     _deleteVB: (i) => { if (confirm('¿Eliminar este banner?')) { const b = getVisualBanners(); b.splice(i, 1); saveVisualBanners(b); syncToLegacyBanners(b); renderVisualBannersTable(); updatePagePreview(); showToast('Banner eliminado', 'info'); } },
+
+    _moveVB: (i, dir) => { const b = getVisualBanners(); const j = i + dir; if (j < 0 || j >= b.length) return; [b[i], b[j]] = [b[j], b[i]]; saveVisualBanners(b); syncToLegacyBanners(b); renderVisualBannersTable(); },
 
     _changeUserPw: openUserPasswordModal,
 

@@ -413,76 +413,106 @@ const Store = (() => {
   function renderPromoBanners() {
     const products = getActiveProducts();
 
-    // --- Left banner (featured section): pick a product on offer or a top category ---
+    // Load admin-configured side banners
+    let sideBanners = [];
+    try { sideBanners = JSON.parse(localStorage.getItem('libretech_side_banners') || '[]'); } catch {}
+    const leftAdminBanners = sideBanners.filter(b => b.position === 'side-left' && b.active);
+    const rightAdminBanners = sideBanners.filter(b => b.position === 'side-right' && b.active);
+
+    // --- Left banner ---
     const bannerLeft = document.getElementById('promoBannerFeatured');
     if (bannerLeft) {
-      // Find a product with an active offer
-      const offerProduct = products.find(p => p.offerActive && p.offerPrice);
-      if (offerProduct) {
-        const discount = Math.round((1 - offerProduct.offerPrice / offerProduct.price) * 100);
+      if (leftAdminBanners.length > 0) {
+        const b = leftAdminBanners[0];
+        const link = b.productId ? `producto.html?id=${encodeURIComponent(b.productId)}` : '#';
         bannerLeft.innerHTML = `
-          <a href="producto.html?id=${encodeURIComponent(offerProduct.id)}" class="promo-banner-link promo-banner--offer-style">
-            <div class="promo-banner-badge">🔥 OFERTA</div>
-            <div class="promo-banner-img">
-              ${offerProduct.image ? `<img src="${Cart.escapeAttr(offerProduct.image)}" alt="${Cart.escapeAttr(offerProduct.name)}" loading="lazy">` : ''}
-            </div>
+          <a href="${link}" class="promo-banner-link promo-banner--custom-style">
+            ${b.image ? `<div class="promo-banner-img"><img src="${Cart.escapeAttr(b.image)}" alt="${Cart.escapeAttr(b.name)}" loading="lazy"></div>` : ''}
             <div class="promo-banner-body">
-              <span class="promo-banner-discount">-${discount}%</span>
-              <h4 class="promo-banner-title">${Cart.escapeHTML(offerProduct.name)}</h4>
-              <div class="promo-banner-prices">
-                <span class="promo-banner-new-price">${Cart.formatPrice(offerProduct.offerPrice)}</span>
-                <span class="promo-banner-old-price">${Cart.formatPrice(offerProduct.price)}</span>
-              </div>
-              <span class="promo-banner-cta">Ver producto →</span>
+              <h4 class="promo-banner-title">${Cart.escapeHTML(b.name)}</h4>
+              ${b.subtitle ? `<p class="promo-banner-desc">${Cart.escapeHTML(b.subtitle)}</p>` : ''}
+              <span class="promo-banner-cta">Ver más →</span>
             </div>
           </a>`;
       } else {
-        // Fallback: audio category promo
-        const audioProd = products.filter(p => p.category === 'Audio' && p.featured).slice(0, 1)[0]
-          || products.filter(p => p.category === 'Audio').slice(0, 1)[0];
-        bannerLeft.innerHTML = `
-          <a href="${audioProd ? 'producto.html?id=' + encodeURIComponent(audioProd.id) : '#'}" class="promo-banner-link promo-banner--category-style">
-            <div class="promo-banner-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-            </div>
-            <h4 class="promo-banner-title">Audio Premium</h4>
-            <p class="promo-banner-desc">Descubre nuestra selección de audífonos y parlantes</p>
-            <span class="promo-banner-cta">Explorar →</span>
-          </a>`;
+        // Fallback: product on offer or audio category
+        const offerProduct = products.find(p => p.offerActive && p.offerPrice);
+        if (offerProduct) {
+          const discount = Math.round((1 - offerProduct.offerPrice / offerProduct.price) * 100);
+          bannerLeft.innerHTML = `
+            <a href="producto.html?id=${encodeURIComponent(offerProduct.id)}" class="promo-banner-link promo-banner--offer-style">
+              <div class="promo-banner-badge">🔥 OFERTA</div>
+              <div class="promo-banner-img">
+                ${offerProduct.image ? `<img src="${Cart.escapeAttr(offerProduct.image)}" alt="${Cart.escapeAttr(offerProduct.name)}" loading="lazy">` : ''}
+              </div>
+              <div class="promo-banner-body">
+                <span class="promo-banner-discount">-${discount}%</span>
+                <h4 class="promo-banner-title">${Cart.escapeHTML(offerProduct.name)}</h4>
+                <div class="promo-banner-prices">
+                  <span class="promo-banner-new-price">${Cart.formatPrice(offerProduct.offerPrice)}</span>
+                  <span class="promo-banner-old-price">${Cart.formatPrice(offerProduct.price)}</span>
+                </div>
+                <span class="promo-banner-cta">Ver producto →</span>
+              </div>
+            </a>`;
+        } else {
+          bannerLeft.innerHTML = `
+            <div class="promo-banner-link promo-banner--category-style">
+              <div class="promo-banner-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <h4 class="promo-banner-title">Audio Premium</h4>
+              <p class="promo-banner-desc">Descubre nuestra selección de audífonos y parlantes</p>
+              <span class="promo-banner-cta">Explorar →</span>
+            </div>`;
+        }
       }
     }
 
-    // --- Right banner (top categories section): category lifestyle or specific product ---
+    // --- Right banner ---
     const bannerRight = document.getElementById('promoBannerCategories');
     if (bannerRight) {
-      // Pick a popular/featured power bank or wearable
-      const promoProd = products.find(p => p.featured && (p.category === 'Power Banks' || p.category === 'Wearables'))
-        || products.find(p => p.category === 'Cargadores' && p.featured);
-      if (promoProd) {
+      if (rightAdminBanners.length > 0) {
+        const b = rightAdminBanners[0];
+        const link = b.productId ? `producto.html?id=${encodeURIComponent(b.productId)}` : '#';
         bannerRight.innerHTML = `
-          <a href="producto.html?id=${encodeURIComponent(promoProd.id)}" class="promo-banner-link promo-banner--highlight-style">
-            <div class="promo-banner-tag">⚡ DESTACADO</div>
-            <div class="promo-banner-img">
-              ${promoProd.image ? `<img src="${Cart.escapeAttr(promoProd.image)}" alt="${Cart.escapeAttr(promoProd.name)}" loading="lazy">` : ''}
-            </div>
+          <a href="${link}" class="promo-banner-link promo-banner--custom-style">
+            ${b.image ? `<div class="promo-banner-img"><img src="${Cart.escapeAttr(b.image)}" alt="${Cart.escapeAttr(b.name)}" loading="lazy"></div>` : ''}
             <div class="promo-banner-body">
-              <h4 class="promo-banner-title">${Cart.escapeHTML(promoProd.name)}</h4>
-              <p class="promo-banner-desc">${Cart.escapeHTML((promoProd.description || '').substring(0, 80))}${(promoProd.description || '').length > 80 ? '…' : ''}</p>
-              <span class="promo-banner-price">${Cart.formatPrice(promoProd.offerActive && promoProd.offerPrice ? promoProd.offerPrice : promoProd.price)}</span>
-              <span class="promo-banner-cta">Comprar ahora →</span>
+              <h4 class="promo-banner-title">${Cart.escapeHTML(b.name)}</h4>
+              ${b.subtitle ? `<p class="promo-banner-desc">${Cart.escapeHTML(b.subtitle)}</p>` : ''}
+              <span class="promo-banner-cta">Ver más →</span>
             </div>
           </a>`;
       } else {
-        // Fallback: Cargadores category promo
-        bannerRight.innerHTML = `
-          <div class="promo-banner-link promo-banner--category-style">
-            <div class="promo-banner-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>
-            </div>
-            <h4 class="promo-banner-title">Carga Rápida</h4>
-            <p class="promo-banner-desc">Cargadores y power banks de alta potencia</p>
-            <span class="promo-banner-cta">Ver todos →</span>
-          </div>`;
+        // Fallback: featured product or category
+        const promoProd = products.find(p => p.featured && (p.category === 'Power Banks' || p.category === 'Wearables'))
+          || products.find(p => p.category === 'Cargadores' && p.featured);
+        if (promoProd) {
+          bannerRight.innerHTML = `
+            <a href="producto.html?id=${encodeURIComponent(promoProd.id)}" class="promo-banner-link promo-banner--highlight-style">
+              <div class="promo-banner-tag">⚡ DESTACADO</div>
+              <div class="promo-banner-img">
+                ${promoProd.image ? `<img src="${Cart.escapeAttr(promoProd.image)}" alt="${Cart.escapeAttr(promoProd.name)}" loading="lazy">` : ''}
+              </div>
+              <div class="promo-banner-body">
+                <h4 class="promo-banner-title">${Cart.escapeHTML(promoProd.name)}</h4>
+                <p class="promo-banner-desc">${Cart.escapeHTML((promoProd.description || '').substring(0, 80))}${(promoProd.description || '').length > 80 ? '…' : ''}</p>
+                <span class="promo-banner-price">${Cart.formatPrice(promoProd.offerActive && promoProd.offerPrice ? promoProd.offerPrice : promoProd.price)}</span>
+                <span class="promo-banner-cta">Comprar ahora →</span>
+              </div>
+            </a>`;
+        } else {
+          bannerRight.innerHTML = `
+            <div class="promo-banner-link promo-banner--category-style">
+              <div class="promo-banner-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>
+              </div>
+              <h4 class="promo-banner-title">Carga Rápida</h4>
+              <p class="promo-banner-desc">Cargadores y power banks de alta potencia</p>
+              <span class="promo-banner-cta">Ver todos →</span>
+            </div>`;
+        }
       }
     }
   }

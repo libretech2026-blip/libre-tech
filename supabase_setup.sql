@@ -105,16 +105,37 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 -- 2b. Create orders table
 CREATE TABLE IF NOT EXISTS orders (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  customer_name text DEFAULT '',
-  customer_email text DEFAULT '',
-  customer_phone text DEFAULT '',
-  method text DEFAULT 'contraentrega',
-  status text DEFAULT 'pending',
-  total numeric DEFAULT 0,
-  items jsonb DEFAULT '[]'::jsonb,
   created_at timestamptz DEFAULT now()
 );
+
+-- Add all columns to orders (safe if they already exist)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='user_id') THEN
+    ALTER TABLE orders ADD COLUMN user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='customer_name') THEN
+    ALTER TABLE orders ADD COLUMN customer_name text DEFAULT '';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='customer_email') THEN
+    ALTER TABLE orders ADD COLUMN customer_email text DEFAULT '';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='customer_phone') THEN
+    ALTER TABLE orders ADD COLUMN customer_phone text DEFAULT '';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='method') THEN
+    ALTER TABLE orders ADD COLUMN method text DEFAULT 'contraentrega';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='status') THEN
+    ALTER TABLE orders ADD COLUMN status text DEFAULT 'pending';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='total') THEN
+    ALTER TABLE orders ADD COLUMN total numeric DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='items') THEN
+    ALTER TABLE orders ADD COLUMN items jsonb DEFAULT '[]'::jsonb;
+  END IF;
+END $$;
 
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 
@@ -142,16 +163,37 @@ CREATE POLICY "Admin can update orders"
 -- 2c. Create pqrs table
 CREATE TABLE IF NOT EXISTS pqrs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  user_email text DEFAULT '',
-  type text DEFAULT 'peticion',
-  subject text DEFAULT '',
-  message text DEFAULT '',
-  status text DEFAULT 'open',
-  admin_reply text DEFAULT '',
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
+  created_at timestamptz DEFAULT now()
 );
+
+-- Add all columns to pqrs (safe if they already exist)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='pqrs' AND column_name='user_id') THEN
+    ALTER TABLE pqrs ADD COLUMN user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='pqrs' AND column_name='user_email') THEN
+    ALTER TABLE pqrs ADD COLUMN user_email text DEFAULT '';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='pqrs' AND column_name='type') THEN
+    ALTER TABLE pqrs ADD COLUMN type text DEFAULT 'peticion';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='pqrs' AND column_name='subject') THEN
+    ALTER TABLE pqrs ADD COLUMN subject text DEFAULT '';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='pqrs' AND column_name='message') THEN
+    ALTER TABLE pqrs ADD COLUMN message text DEFAULT '';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='pqrs' AND column_name='status') THEN
+    ALTER TABLE pqrs ADD COLUMN status text DEFAULT 'open';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='pqrs' AND column_name='admin_reply') THEN
+    ALTER TABLE pqrs ADD COLUMN admin_reply text DEFAULT '';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='pqrs' AND column_name='updated_at') THEN
+    ALTER TABLE pqrs ADD COLUMN updated_at timestamptz DEFAULT now();
+  END IF;
+END $$;
 
 ALTER TABLE pqrs ENABLE ROW LEVEL SECURITY;
 
@@ -176,13 +218,37 @@ CREATE POLICY "Admin can update pqrs"
 -- 2d. Create reviews table
 CREATE TABLE IF NOT EXISTS reviews (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id uuid NOT NULL,
-  user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  user_name text DEFAULT '',
-  rating integer NOT NULL CHECK (rating >= 1 AND rating <= 5),
-  comment text DEFAULT '',
   created_at timestamptz DEFAULT now()
 );
+
+-- Add all columns to reviews (safe if they already exist)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reviews' AND column_name='product_id') THEN
+    ALTER TABLE reviews ADD COLUMN product_id uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reviews' AND column_name='user_id') THEN
+    ALTER TABLE reviews ADD COLUMN user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reviews' AND column_name='user_name') THEN
+    ALTER TABLE reviews ADD COLUMN user_name text DEFAULT '';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reviews' AND column_name='rating') THEN
+    ALTER TABLE reviews ADD COLUMN rating integer NOT NULL DEFAULT 5;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='reviews' AND column_name='comment') THEN
+    ALTER TABLE reviews ADD COLUMN comment text DEFAULT '';
+  END IF;
+END $$;
+
+-- Add check constraint for rating if not exists
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.constraint_column_usage WHERE table_name='reviews' AND constraint_name='reviews_rating_check') THEN
+    ALTER TABLE reviews ADD CONSTRAINT reviews_rating_check CHECK (rating >= 1 AND rating <= 5);
+  END IF;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 

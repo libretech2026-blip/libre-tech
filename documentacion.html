@@ -242,7 +242,7 @@
   <div class="doc-header">
     <h1>📘 LIBRE TECH - Documentación</h1>
     <p>Documentación técnica y registro de cambios del proyecto</p>
-    <span class="version">v1.1.0 — Última actualización: 15 de abril de 2026</span>
+    <span class="version">v2.0.0 — Última actualización: 16 de abril de 2026</span>
   </div>
 
   <div class="doc-container">
@@ -272,15 +272,19 @@
       </p>
       <h3>Características principales</h3>
       <ul>
-        <li>Catálogo de productos con navegación por categoría y marca</li>
-        <li>Búsqueda en tiempo real con resultados desplegables</li>
-        <li>Carrito de compras con persistencia en localStorage</li>
-        <li>Finalización de pedidos vía WhatsApp</li>
-        <li>Autenticación con Google (OAuth 2.0) y login con formulario</li>
-        <li>Panel de administración protegido por contraseña</li>
+        <li>Catálogo de 66+ productos con navegación por categoría y marca</li>
+        <li>Búsqueda en tiempo real con resultados desplegables (desktop y mobile)</li>
+        <li>Carrito de compras y lista de deseos con persistencia</li>
+        <li>Página de detalle de producto con galería, zoom, colores, specs y reseñas</li>
+        <li>Finalización de pedidos vía WhatsApp o proceso de checkout</li>
+        <li>Autenticación con Supabase (email/contraseña + Google OAuth)</li>
+        <li>Panel de administración con 10 módulos (productos, pedidos, banners, PQRs, reseñas, usuarios, etc.)</li>
+        <li>Sistema de banners visual con minimapa interactivo y drag & drop</li>
+        <li>Sistema de PQRs (Peticiones, Quejas, Reclamos, Sugerencias)</li>
+        <li>Reseñas y calificaciones por producto con moderación admin</li>
         <li>Importación masiva de productos desde archivos CSV/TXT</li>
-        <li>Historial de pedidos por usuario</li>
-        <li>Diseño responsive y moderno</li>
+        <li>Base de datos PostgreSQL en Supabase con RLS (Row Level Security)</li>
+        <li>Diseño responsive, tema oscuro/claro y UI moderna</li>
       </ul>
     </section>
 
@@ -290,16 +294,22 @@
       <div class="file-tree">
         <span class="folder">LIBRE_TECH/</span><br>
         ├── <span class="file">index.html</span> <span class="comment">— Tienda principal (frontend del cliente)</span><br>
-        ├── <span class="file">admin.html</span> <span class="comment">— Panel de administración</span><br>
+        ├── <span class="file">producto.html</span> <span class="comment">— Página de detalle de producto</span><br>
+        ├── <span class="file">pqr.html</span> <span class="comment">— Formulario de PQRs (Peticiones, Quejas, Reclamos)</span><br>
+        ├── <span class="file">pagina.html</span> <span class="comment">— Páginas dinámicas del admin</span><br>
+        ├── <span class="file">admin.html</span> <span class="comment">— Panel de administración (10 módulos)</span><br>
         ├── <span class="file">documentacion.html</span> <span class="comment">— Este archivo de documentación</span><br>
+        ├── <span class="file">supabase_setup.sql</span> <span class="comment">— SQL completo para configurar Supabase</span><br>
         ├── <span class="file">LOGO_LIBRETECH.png</span> <span class="comment">— Logo del proyecto</span><br>
         ├── <span class="folder">css/</span><br>
-        │   └── <span class="file">styles.css</span> <span class="comment">— Estilos globales (tienda + admin)</span><br>
+        │   └── <span class="file">styles.css</span> <span class="comment">— Estilos globales (~5100+ líneas)</span><br>
         ├── <span class="folder">js/</span><br>
-        │   ├── <span class="file">app.js</span> <span class="comment">— Lógica principal: productos, filtros, búsqueda</span><br>
-        │   ├── <span class="file">cart.js</span> <span class="comment">— Módulo del carrito de compras</span><br>
-        │   ├── <span class="file">auth.js</span> <span class="comment">— Autenticación (Google + formulario local)</span><br>
-        │   └── <span class="file">admin.js</span> <span class="comment">— Lógica del panel de administración</span><br>
+        │   ├── <span class="file">app.js</span> <span class="comment">— Lógica principal: productos, filtros, banners, carrusel</span><br>
+        │   ├── <span class="file">cart.js</span> <span class="comment">— Módulo del carrito de compras y wishlist</span><br>
+        │   ├── <span class="file">auth.js</span> <span class="comment">— Autenticación Supabase (email, Google OAuth)</span><br>
+        │   ├── <span class="file">admin.js</span> <span class="comment">— Panel de administración (~3200+ líneas)</span><br>
+        │   ├── <span class="file">product-detail.js</span> <span class="comment">— Detalle de producto, reseñas, zoom de fotos</span><br>
+        │   └── <span class="file">supabase-client.js</span> <span class="comment">— Cliente Supabase con CRUD, auth, pedidos, PQRs, reseñas</span><br>
         ├── <span class="folder">img/</span><br>
         │   └── <span class="folder">products/</span> <span class="comment">— Imágenes de productos</span><br>
         └── <span class="folder">SCRAPPING/</span> <span class="comment">— Datos scrapeados (referencia)</span>
@@ -315,11 +325,12 @@
         </thead>
         <tbody>
           <tr><td>HTML5</td><td>Estructura semántica de las páginas</td></tr>
-          <tr><td>CSS3 (Custom Properties)</td><td>Estilos, tema, animaciones, responsive design</td></tr>
+          <tr><td>CSS3 (Custom Properties)</td><td>Estilos, tema oscuro/claro, animaciones, responsive design</td></tr>
           <tr><td>JavaScript ES6+ (Vanilla)</td><td>Lógica de la aplicación (módulos IIFE)</td></tr>
-          <tr><td>localStorage</td><td>Persistencia de productos, carrito, usuarios y pedidos</td></tr>
-          <tr><td>Google Identity Services</td><td>Autenticación OAuth 2.0 con Google</td></tr>
-          <tr><td>WhatsApp API (wa.me)</td><td>Generación de pedidos via WhatsApp</td></tr>
+          <tr><td>Supabase</td><td>Backend: base de datos PostgreSQL, autenticación, storage, RLS, RPCs</td></tr>
+          <tr><td>localStorage</td><td>Caché de productos, banners, configuración visual, carrito</td></tr>
+          <tr><td>Supabase Auth</td><td>Autenticación con email/contraseña y Google OAuth 2.0</td></tr>
+          <tr><td>WhatsApp API (wa.me)</td><td>Generación de pedidos vía WhatsApp</td></tr>
           <tr><td>Google Fonts (Inter)</td><td>Tipografía principal</td></tr>
         </tbody>
       </table>
@@ -332,13 +343,15 @@
       <h3>4.1 Store (<code>app.js</code>)</h3>
       <p>Módulo IIFE que maneja la lógica principal de la tienda.</p>
       <ul>
-        <li><strong>seedProducts()</strong> — Carga productos iniciales de demostración si el localStorage está vacío</li>
-        <li><strong>getFilteredProducts()</strong> — Filtra por categoría, marca y término de búsqueda</li>
+        <li><strong>renderProducts()</strong> — Renderiza las tarjetas de producto en el grid con filtros</li>
         <li><strong>renderCategories()</strong> — Genera chips de filtro por categoría dinámicamente</li>
-        <li><strong>renderBrandSubFilters(category)</strong> — Muestra sub-filtros de marca al seleccionar una categoría</li>
-        <li><strong>renderProducts()</strong> — Renderiza las tarjetas de producto en el grid</li>
-        <li><strong>renderSearchDropdown(query)</strong> — Muestra resultados de búsqueda en tiempo real (dropdown)</li>
-        <li><strong>initHeaderScroll()</strong> — Efecto de sombra en el header al hacer scroll</li>
+        <li><strong>renderBrandSubFilters()</strong> — Muestra sub-filtros de marca al seleccionar categoría</li>
+        <li><strong>renderSearchDropdown()</strong> — Búsqueda en tiempo real con dropdown de resultados</li>
+        <li><strong>initHeroCarousel()</strong> — Carrusel hero con banners del admin o productos destacados</li>
+        <li><strong>renderPromoBanners()</strong> — Banners laterales configurables desde admin (izq/der)</li>
+        <li><strong>renderPromoPhotoBanners()</strong> — Banners full-width configurables desde admin</li>
+        <li><strong>renderSocialLinks()</strong> — Redes sociales del footer desde admin</li>
+        <li><strong>Wishlist</strong> — Lista de deseos con sidebar y persistencia</li>
       </ul>
 
       <h3>4.2 Cart (<code>cart.js</code>)</h3>
@@ -348,33 +361,120 @@
         <li><strong>removeItem(productId)</strong> — Elimina un producto del carrito</li>
         <li><strong>updateQuantity(productId, delta)</strong> — Ajusta la cantidad (+/-)</li>
         <li><strong>sendToWhatsApp()</strong> — Genera mensaje formateado y abre WhatsApp</li>
-        <li><strong>showToast(message, type)</strong> — Muestra notificaciones tipo toast con auto-eliminación</li>
+        <li><strong>checkout()</strong> — Proceso de pago con formulario (nombre, email, teléfono)</li>
+        <li><strong>showToast(message, type)</strong> — Notificaciones toast con auto-eliminación</li>
         <li><strong>formatPrice(price)</strong> — Formato COP (pesos colombianos)</li>
       </ul>
 
       <h3>4.3 Auth (<code>auth.js</code>)</h3>
-      <p>Módulo IIFE de autenticación.</p>
+      <p>Módulo IIFE de autenticación con Supabase.</p>
       <ul>
-        <li><strong>initGoogleSignIn()</strong> — Configura Google Identity Services</li>
-        <li><strong>handleGoogleResponse()</strong> — Procesa el JWT token de Google</li>
-        <li><strong>setUser(user) / logoutUser()</strong> — Gestiona la sesión del usuario</li>
-        <li><strong>renderOrders()</strong> — Muestra el historial de pedidos del usuario</li>
-        <li>Formulario de login local (email + contraseña) integrado en el dropdown de perfil</li>
+        <li><strong>Supabase Auth</strong> — Login con email/contraseña y registro de cuentas</li>
+        <li><strong>Google OAuth</strong> — Autenticación OAuth 2.0 con Google vía Supabase</li>
+        <li><strong>onAuthChange()</strong> — Escucha cambios de sesión y actualiza la UI</li>
+        <li><strong>renderOrders()</strong> — Historial de pedidos del usuario desde Supabase</li>
+        <li>Panel dropdown con estados autenticado/no autenticado</li>
       </ul>
 
-      <h3>4.4 Admin (<code>admin.js</code>)</h3>
-      <p>Panel de administración protegido por contraseña.</p>
+      <h3>4.4 Supabase Client (<code>supabase-client.js</code>)</h3>
+      <p>Wrapper centralizado para todas las operaciones con Supabase.</p>
       <ul>
-        <li>CRUD completo de productos (crear, leer, actualizar, eliminar)</li>
-        <li>Carga de imágenes de productos (base64 en localStorage)</li>
-        <li>Importación masiva desde archivos CSV/TXT</li>
-        <li>Estadísticas del catálogo (productos, categorías, activos, pedidos)</li>
+        <li><strong>Productos</strong> — syncProducts, getCachedProducts, insertProduct, updateProduct, deleteProduct, pushAllProducts</li>
+        <li><strong>Pedidos</strong> — saveOrder, getOrders, getAllOrders, updateOrderStatus</li>
+        <li><strong>PQRs</strong> — submitPqr, getUserPqrs, getAllPqrs, replyPqr</li>
+        <li><strong>Reseñas</strong> — getProductReviews, submitReview, deleteReview, getAllReviews</li>
+        <li><strong>Usuarios</strong> — listUsers, deleteUser, updateUserPassword</li>
+        <li><strong>Storage</strong> — uploadImage (Supabase Storage para imágenes)</li>
+        <li><strong>Auth</strong> — getSession, getUser, isAdmin, onAuthChange</li>
       </ul>
+
+      <h3>4.5 Product Detail (<code>product-detail.js</code>)</h3>
+      <p>Módulo para la página de detalle de producto.</p>
+      <ul>
+        <li><strong>Galería de imágenes</strong> — Imagen principal con zoom (scroll + pinch)</li>
+        <li><strong>Reseñas y calificaciones</strong> — Formulario de reseña y listado desde Supabase</li>
+        <li><strong>Colores y especificaciones</strong> — Selector de colores y tabla de specs</li>
+        <li><strong>Productos relacionados</strong> — Sugerencias por categoría</li>
+      </ul>
+
+      <h3>4.6 Admin (<code>admin.js</code>) — 10 Módulos</h3>
+      <p>Panel de administración con 10 pestañas:</p>
+      <table>
+        <thead><tr><th>Pestaña</th><th>Función</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Productos</strong></td><td>CRUD completo con formulario, imágenes, colores, specs, ofertas</td></tr>
+          <tr><td><strong>CSV</strong></td><td>Importación masiva desde archivos CSV/TXT</td></tr>
+          <tr><td><strong>Pedidos</strong></td><td>Gestión de pedidos (pendiente/procesando/enviado/entregado/cancelado)</td></tr>
+          <tr><td><strong>Páginas</strong></td><td>Editor de páginas estáticas personalizadas</td></tr>
+          <tr><td><strong>Estadísticas</strong></td><td>Métricas: productos, pedidos, usuarios, ingresos</td></tr>
+          <tr><td><strong>Visualización</strong></td><td>Sistema de banners visual con minimapa de la página, drag & drop, reorden</td></tr>
+          <tr><td><strong>PQRs</strong></td><td>Gestión de peticiones, quejas, reclamos y sugerencias (Supabase)</td></tr>
+          <tr><td><strong>Redes Sociales</strong></td><td>Configuración de enlaces a redes sociales del footer</td></tr>
+          <tr><td><strong>Usuarios</strong></td><td>Listado, cambio de contraseña y eliminación de usuarios (via RPCs)</td></tr>
+          <tr><td><strong>Reseñas</strong></td><td>Moderación de todas las reseñas del sitio (Supabase)</td></tr>
+        </tbody>
+      </table>
     </section>
 
     <!-- 5. CHANGELOG -->
     <section class="doc-section" id="changelog">
       <h2>5. Registro de cambios (Changelog)</h2>
+
+      <div class="changelog-entry">
+        <span class="date">16 de abril de 2026</span>
+        <h4>v2.0.0 — Supabase, Admin completo, PQRs, Reseñas y Banners</h4>
+        <p>Migración completa a Supabase y nuevas funcionalidades:</p>
+        <ul>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Migración a Supabase</strong> — Base de datos PostgreSQL con tablas: products, profiles, orders, pqrs, reviews. Autenticación con email/contraseña y Google OAuth. Row Level Security (RLS) en todas las tablas. RPCs para gestión de usuarios (list_users, admin_delete_user, admin_update_password).
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Cliente Supabase (<code>supabase-client.js</code>)</strong> — Wrapper centralizado ~470 líneas con CRUD para productos, pedidos, PQRs, reseñas, usuarios, autenticación y storage.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Página de detalle de producto (<code>producto.html</code>)</strong> — Galería de imágenes con zoom (scroll + pinch para mobile), selector de colores, tabla de especificaciones, productos relacionados, y sistema completo de reseñas con calificación de estrellas.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Sistema de PQRs (<code>pqr.html</code>)</strong> — Formulario para Peticiones, Quejas, Reclamos y Sugerencias. Los usuarios logueados pueden enviar PQRs y ver su historial. Admin puede ver todas y responder desde el panel.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Sistema de reseñas</strong> — Los usuarios pueden calificar productos (1-5 estrellas) y dejar comentarios. Las reseñas se almacenan en Supabase. Admin puede moderar (eliminar) desde el panel.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Admin: 10 módulos</strong> — El panel creció de 4 a 10 pestañas: Productos, CSV, Pedidos, Páginas, Estadísticas, Visualización, PQRs, Redes Sociales, Usuarios, Reseñas.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Sistema de banners visual</strong> — Minimapa interactivo de la página con 6 posiciones de banner (Hero Carrusel, Lateral Izq, Después de Destacados, Lateral Der, Después de Categorías, Antes del Footer). Soporta drag & drop y botones de reordenar. Los banners laterales ahora se controlan desde admin.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Lista de deseos (Wishlist)</strong> — Sidebar con productos favoritos y persistencia en localStorage.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Búsqueda mobile</strong> — Botón de búsqueda dedicado para móviles con overlay a pantalla completa.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Sombra lateral derecha</strong> — Se corrigió un bug donde el box-shadow del carrito y wishlist era visible incluso cuando estaban ocultos. Ahora solo se muestra cuando están activos.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Modal de detalle de pedido</strong> — Se corrigió un bug donde el contenido del modal aparecía fuera de su overlay, visible siempre en el admin.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Tablas del admin</strong> — Se agregaron estilos profesionales para las tablas de usuarios y reseñas (<code>.admin-table</code>), con headers sticky, hover states y responsive.
+          </li>
+        </ul>
+      </div>
 
       <div class="changelog-entry">
         <span class="date">15 de abril de 2026</span>
@@ -446,54 +546,95 @@
       <h3>6.1 Búsqueda en tiempo real</h3>
       <p>
         Al escribir en la barra de búsqueda, se ejecuta una búsqueda con debounce (300ms) que filtra los productos
-        activos por nombre, descripción, categoría y marca. Los resultados aparecen en un dropdown posicionado
-        debajo de la barra. Se cierra al hacer clic fuera o al seleccionar un producto.
+        activos por nombre, descripción, categoría y marca. Los resultados aparecen en un dropdown. En mobile,
+        hay un botón dedicado que abre un overlay de búsqueda a pantalla completa.
       </p>
-      <pre>// Flujo de búsqueda:
-1. Usuario escribe en #searchInput
-2. Debounce de 300ms
-3. Se filtran productos con getActiveProducts()
-4. Se renderizan máximo 8 resultados en #searchDropdown
-5. Clic en resultado → Cart.addItem() y se cierra dropdown</pre>
 
       <h3>6.2 Sistema de filtros (Categorías + Marcas)</h3>
-      <p>
-        Los filtros funcionan en dos niveles:
-      </p>
+      <p>Los filtros funcionan en dos niveles:</p>
       <ul>
-        <li><strong>Nivel 1 — Categorías:</strong> Chips generados dinámicamente desde los productos activos.
-        Al seleccionar una categoría se muestra el segundo nivel de filtros.</li>
-        <li><strong>Nivel 2 — Marcas:</strong> Sub-filtros que aparecen debajo de las categorías, mostrando
-        únicamente las marcas existentes dentro de la categoría seleccionada.</li>
+        <li><strong>Nivel 1 — Categorías:</strong> Chips generados dinámicamente desde los productos activos.</li>
+        <li><strong>Nivel 2 — Marcas:</strong> Sub-filtros que aparecen al seleccionar una categoría.</li>
       </ul>
 
-      <h3>6.3 Panel de perfil y autenticación</h3>
+      <h3>6.3 Autenticación con Supabase</h3>
       <p>
-        El acceso al perfil se realiza mediante un botón con ícono de usuario ubicado en el header, a la izquierda
-        del botón de carrito. Ambos botones están en el extremo derecho de la barra de navegación.
+        La autenticación se maneja a través de Supabase Auth. Soporta registro e inicio de sesión con
+        email/contraseña, y también Google OAuth 2.0. La sesión se gestiona automáticamente con
+        <code>onAuthStateChange()</code>. El panel dropdown muestra formulario de login cuando no hay sesión,
+        y nombre + historial de pedidos + enlace PQR cuando está autenticado.
       </p>
-      <p>El dropdown de perfil tiene dos estados:</p>
+
+      <h3>6.4 Página de detalle de producto</h3>
+      <p>
+        Cada producto tiene su propia página (<code>producto.html?id=UUID</code>) con:
+      </p>
       <ul>
-        <li><strong>No autenticado:</strong> Muestra formulario con campos de correo/usuario y contraseña,
-        botón de iniciar sesión, separador visual, botón de Google, y enlace para crear cuenta.</li>
-        <li><strong>Autenticado:</strong> Muestra nombre y email del usuario, enlace a "Mis pedidos" y
-        botón de "Cerrar sesión".</li>
+        <li>Galería de imágenes con zoom (scroll en desktop, pinch en mobile)</li>
+        <li>Selector de colores disponibles</li>
+        <li>Tabla de especificaciones técnicas</li>
+        <li>Sistema de reseñas con calificación de 1-5 estrellas</li>
+        <li>Formulario para dejar reseña (usuarios autenticados)</li>
+        <li>Productos relacionados por categoría</li>
       </ul>
 
-      <h3>6.4 Notificaciones Toast</h3>
+      <h3>6.5 Sistema de banners (Admin → Visualización)</h3>
+      <p>
+        El admin tiene un minimapa interactivo de la página que muestra 6 posiciones de banner.
+        Al hacer clic en una posición se abre el formulario para crear/editar el banner de esa zona.
+        La tabla de banners soporta:
+      </p>
+      <ul>
+        <li><strong>6 posiciones:</strong> Hero Carrusel, Lateral Izquierdo, Después de Destacados, Lateral Derecho, Después de Categorías, Antes del Footer</li>
+        <li><strong>Drag & drop:</strong> Arrastra filas para reordenar banners</li>
+        <li><strong>Botones ↑↓:</strong> Subir/bajar banners con un clic</li>
+        <li><strong>Sincronización:</strong> Los cambios en admin se reflejan automáticamente en la tienda (via localStorage)</li>
+        <li><strong>Producto vinculado:</strong> Cada banner puede enlazar a un producto específico</li>
+        <li><strong>Fechas:</strong> Programar banners con fecha de inicio y fin</li>
+      </ul>
+
+      <h3>6.6 Sistema de PQRs</h3>
+      <p>
+        Los usuarios autenticados pueden enviar Peticiones, Quejas, Reclamos y Sugerencias desde
+        <code>pqr.html</code>. Los PQRs se almacenan en Supabase con RLS (cada usuario solo ve los suyos,
+        admin ve todos). El admin puede responder PQRs desde el panel.
+      </p>
+
+      <h3>6.7 Reseñas y calificaciones</h3>
+      <p>
+        Los usuarios autenticados pueden calificar productos (1-5 estrellas) y dejar comentarios.
+        Las reseñas se almacenan en Supabase (tabla <code>reviews</code>). El admin puede moderar
+        (eliminar reseñas inapropiadas) desde la pestaña Reseñas del panel.
+      </p>
+
+      <h3>6.8 Base de datos Supabase</h3>
+      <p>
+        El proyecto usa Supabase como backend con las siguientes tablas:
+      </p>
+      <table>
+        <thead><tr><th>Tabla</th><th>Descripción</th><th>RLS</th></tr></thead>
+        <tbody>
+          <tr><td><code>products</code></td><td>Catálogo de productos (66+)</td><td>SELECT público, INSERT/UPDATE/DELETE solo admin</td></tr>
+          <tr><td><code>profiles</code></td><td>Perfiles de usuarios (mirror de auth.users)</td><td>SELECT autenticados, UPDATE propio</td></tr>
+          <tr><td><code>orders</code></td><td>Pedidos de clientes</td><td>INSERT autenticados, SELECT propio + admin, UPDATE admin</td></tr>
+          <tr><td><code>pqrs</code></td><td>Peticiones, Quejas, Reclamos, Sugerencias</td><td>INSERT propio, SELECT propio + admin, UPDATE admin</td></tr>
+          <tr><td><code>reviews</code></td><td>Reseñas y calificaciones</td><td>SELECT público, INSERT propio, DELETE admin</td></tr>
+        </tbody>
+      </table>
+      <p>RPCs de seguridad (SECURITY DEFINER):</p>
+      <ul>
+        <li><code>is_admin()</code> — Verifica si el usuario actual es admin</li>
+        <li><code>list_users()</code> — Lista todos los usuarios (solo admin)</li>
+        <li><code>admin_delete_user(uuid)</code> — Elimina un usuario (solo admin)</li>
+        <li><code>admin_update_password(uuid, text)</code> — Cambia contraseña de usuario (solo admin)</li>
+        <li><code>handle_new_user()</code> — Trigger que crea perfil automáticamente al registrarse</li>
+      </ul>
+
+      <h3>6.9 Notificaciones Toast</h3>
       <p>
         Las notificaciones tipo toast aparecen en la esquina inferior derecha. Soportan tres tipos:
         <code>success</code>, <code>error</code>, <code>info</code>. Se eliminan automáticamente después de
-        3 segundos con animación de salida. Se incluye un fallback de eliminación por <code>setTimeout</code>
-        para evitar que se queden pegadas.
-      </p>
-
-      <h3>6.5 Banner Hero con iconos tecnológicos</h3>
-      <p>
-        El banner principal utiliza 6 iconos SVG de objetos tecnológicos que flotan con animación CSS.
-        Los iconos incluyen: audífonos, chip/CPU, señal WiFi, smartphone, monitor y símbolo Bluetooth.
-        La animación usa <code>will-change: transform, opacity</code> para optimización GPU y keyframes
-        suaves con diferentes duraciones y delays para un efecto orgánico.
+        3 segundos con fallback de eliminación por <code>setTimeout</code>.
       </p>
     </section>
 
@@ -506,29 +647,49 @@
         </thead>
         <tbody>
           <tr>
-            <td>Configurar Google Client ID para login real</td>
-            <td><span class="badge-status badge-planned">Pendiente</span></td>
+            <td>Autenticación con Supabase (email + Google)</td>
+            <td><span class="badge-status badge-done">Completado</span></td>
             <td>Alta</td>
           </tr>
           <tr>
-            <td>Implementar registro de cuentas (crear cuenta)</td>
-            <td><span class="badge-status badge-planned">Pendiente</span></td>
+            <td>Backend PostgreSQL con Supabase y RLS</td>
+            <td><span class="badge-status badge-done">Completado</span></td>
+            <td>Alta</td>
+          </tr>
+          <tr>
+            <td>Sistema de reseñas y calificaciones</td>
+            <td><span class="badge-status badge-done">Completado</span></td>
+            <td>Alta</td>
+          </tr>
+          <tr>
+            <td>Sistema de PQRs</td>
+            <td><span class="badge-status badge-done">Completado</span></td>
             <td>Media</td>
           </tr>
           <tr>
-            <td>Backend para persistencia de datos (reemplazar localStorage)</td>
+            <td>Panel admin completo (10 módulos)</td>
+            <td><span class="badge-status badge-done">Completado</span></td>
+            <td>Alta</td>
+          </tr>
+          <tr>
+            <td>Sistema de banners visual con drag &amp; drop</td>
+            <td><span class="badge-status badge-done">Completado</span></td>
+            <td>Media</td>
+          </tr>
+          <tr>
+            <td>Pasarela de pagos (PSE, tarjeta, Nequi)</td>
             <td><span class="badge-status badge-planned">Pendiente</span></td>
             <td>Alta</td>
           </tr>
           <tr>
-            <td>Cargar imágenes reales de productos</td>
+            <td>Notificaciones por email (pedidos, PQRs)</td>
             <td><span class="badge-status badge-planned">Pendiente</span></td>
             <td>Media</td>
           </tr>
           <tr>
             <td>Optimización SEO y metadatos Open Graph</td>
             <td><span class="badge-status badge-planned">Pendiente</span></td>
-            <td>Baja</td>
+            <td>Media</td>
           </tr>
           <tr>
             <td>PWA (Progressive Web App) con Service Worker</td>
@@ -536,9 +697,14 @@
             <td>Baja</td>
           </tr>
           <tr>
-            <td>Pasarela de pagos (PSE, tarjeta, Nequi)</td>
+            <td>Cupones de descuento</td>
             <td><span class="badge-status badge-planned">Pendiente</span></td>
-            <td>Alta</td>
+            <td>Media</td>
+          </tr>
+          <tr>
+            <td>Dashboard de analíticas avanzado</td>
+            <td><span class="badge-status badge-planned">Pendiente</span></td>
+            <td>Baja</td>
           </tr>
         </tbody>
       </table>
