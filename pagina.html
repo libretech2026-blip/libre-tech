@@ -113,13 +113,366 @@
     'use strict';
     const PAGES_KEY = 'libretech_pages';
     const DEFAULT_PAGES = {
-      'sobre-nosotros': { title: 'Sobre Nosotros', content: '<h1>Sobre Nosotros</h1><p>Somos LIBRE TECH, tu tienda de confianza para productos de tecnología en Colombia. Nos apasiona ofrecer productos de calidad a precios accesibles.</p><p>Nuestro compromiso es brindarte la mejor experiencia de compra en línea con atención personalizada por WhatsApp.</p><p>Nos encontramos en <strong>Barranquilla, Colombia</strong> 🌴</p><div style="margin-top:1.5rem;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.15)"><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-75.06%2C10.91%2C-74.95%2C11.02&amp;layer=mapnik&amp;marker=10.9639,-74.7964" width="100%" height="350" style="border:0;display:block" loading="lazy" title="Barranquilla, Colombia"></iframe></div>' },
-      'preguntas-frecuentes': { title: 'Preguntas Frecuentes', content: '<h1>Preguntas Frecuentes</h1><h3>¿Cómo realizo un pedido?</h3><p>Agrega los productos a tu carrito y finaliza el pedido por WhatsApp. Nuestro equipo te confirmará la disponibilidad y el pago.</p><h3>¿Cuánto tarda el envío?</h3><p>Los envíos dentro de la ciudad tardan entre 1-3 días hábiles. Envíos nacionales entre 3-7 días hábiles.</p><h3>¿Aceptan devoluciones?</h3><p>Sí, aceptamos devoluciones dentro de los primeros 5 días hábiles desde la recepción del producto. Consulta nuestra política de devoluciones para más detalles.</p>' },
-      'contactanos': { title: 'Contáctanos', content: '<h1>Contáctanos</h1><p>¿Tienes alguna pregunta o necesitas ayuda? Estamos aquí para ti.</p><p><strong>WhatsApp:</strong> <a href="https://wa.me/573005606287" target="_blank">+57 300 560 6287</a></p><p><strong>Horario de atención:</strong> Lunes a Sábado, 8:00 AM - 6:00 PM</p>' },
-      'seguimiento-pedido': { title: 'Seguimiento de Pedido', content: '<h1>Seguimiento de su Pedido</h1><p>Para rastrear tu pedido, contáctanos por WhatsApp con tu número de pedido y te daremos información actualizada sobre el estado de tu envío.</p><p><a href="https://wa.me/573005606287" target="_blank">Consultar estado de mi pedido</a></p>' },
-      'politica-privacidad': { title: 'Política de Privacidad', content: '<h1>Política de Privacidad</h1><p>En LIBRE TECH respetamos tu privacidad. Los datos que recopilamos se utilizan únicamente para procesar tu pedido y mejorar tu experiencia de compra.</p><p>No compartimos tu información personal con terceros sin tu consentimiento.</p>' },
-      'terminos-condiciones': { title: 'Términos y Condiciones', content: '<h1>Términos y Condiciones</h1><p>Al utilizar nuestro sitio web y realizar compras, aceptas los siguientes términos:</p><ul><li>Los precios están en pesos colombianos (COP) e incluyen IVA.</li><li>Los pedidos se confirman una vez verificado el pago.</li><li>Las imágenes son de referencia y pueden variar ligeramente.</li><li>Nos reservamos el derecho de cancelar pedidos por falta de stock.</li></ul>' },
-      'devoluciones-garantias': { title: 'Devoluciones y Garantías', content: '<h1>Política de Devoluciones y Garantías</h1><p><strong>Devoluciones:</strong> Tienes 5 días hábiles desde la recepción para solicitar una devolución. El producto debe estar en su empaque original y sin uso.</p><p><strong>Garantía:</strong> Todos nuestros productos cuentan con garantía del fabricante. Contáctanos por WhatsApp para gestionar cualquier reclamo de garantía.</p>' }
+      'sobre-nosotros': { title: 'Sobre Nosotros', content: `<h1>Sobre Nosotros</h1>
+<p>Somos <strong>LIBRE TECH</strong>, una tienda colombiana de tecnología fundada con el propósito de hacer accesible la tecnología de calidad a todos. Desde nuestra sede en <strong>Barranquilla, Colombia</strong>, trabajamos cada día para traerte los mejores productos al mejor precio.</p>
+
+<h2>Nuestra Misión</h2>
+<p>Democratizar el acceso a la tecnología en Colombia, ofreciendo productos originales de alta calidad con atención personalizada y envíos a todo el país.</p>
+
+<h2>Nuestra Visión</h2>
+<p>Ser la tienda de tecnología en línea preferida de los colombianos, reconocida por la confianza, calidad y experiencia excepcional que brindamos a nuestros clientes.</p>
+
+<h2>Nuestros Valores</h2>
+<ul>
+<li><strong>Confianza:</strong> Todos nuestros productos son originales y cuentan con garantía.</li>
+<li><strong>Calidad:</strong> Seleccionamos cuidadosamente cada artículo de nuestro catálogo.</li>
+<li><strong>Servicio:</strong> Atención personalizada por WhatsApp con respuesta rápida.</li>
+<li><strong>Accesibilidad:</strong> Precios justos y envíos a todo el territorio colombiano.</li>
+</ul>
+
+<h2>¿Por qué elegirnos?</h2>
+<div class="contact-grid">
+<div class="contact-card">
+<strong>📦 Envíos Nacionales</strong>
+<p>Enviamos a toda Colombia con seguimiento de tu paquete.</p>
+</div>
+<div class="contact-card">
+<strong>✅ Productos Originales</strong>
+<p>100% originales con garantía de fabricante.</p>
+</div>
+<div class="contact-card">
+<strong>💬 Atención WhatsApp</strong>
+<p>Resolvemos tus dudas en minutos por WhatsApp.</p>
+</div>
+<div class="contact-card">
+<strong>🔒 Compra Segura</strong>
+<p>Tu información personal siempre protegida.</p>
+</div>
+</div>
+
+<h2>Nuestra Ubicación</h2>
+<p>Nos encontramos en <strong>Barranquilla, Atlántico, Colombia</strong>.</p>
+<div style="margin-top:1rem;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.15)"><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-75.06%2C10.91%2C-74.95%2C11.02&layer=mapnik&marker=10.9639,-74.7964" width="100%" height="350" style="border:0;display:block" loading="lazy" title="Barranquilla, Colombia"></iframe></div>` },
+
+      'preguntas-frecuentes': { title: 'Preguntas Frecuentes', content: `<h1>Preguntas Frecuentes</h1>
+<p>Aquí encontrarás respuestas a las preguntas más comunes de nuestros clientes.</p>
+
+<div class="faq-item">
+<p class="faq-question">¿Cómo realizo un pedido?</p>
+<p>Agrega los productos que deseas a tu carrito de compras y haz clic en "Finalizar pedido". Serás redirigido a WhatsApp donde nuestro equipo te confirmará la disponibilidad, opciones de pago y detalles de envío.</p>
+</div>
+
+<div class="faq-item">
+<p class="faq-question">¿Qué métodos de pago aceptan?</p>
+<p>Aceptamos transferencias bancarias (Bancolombia, Nequi, Daviplata), pagos en efectivo contra entrega (solo Barranquilla) y PSE. Coordinamos el método de pago por WhatsApp.</p>
+</div>
+
+<div class="faq-item">
+<p class="faq-question">¿Cuánto tarda el envío?</p>
+<p><strong>Barranquilla y área metropolitana:</strong> 1-2 días hábiles.<br>
+<strong>Ciudades principales:</strong> 2-4 días hábiles.<br>
+<strong>Otras ciudades y municipios:</strong> 3-7 días hábiles.</p>
+</div>
+
+<div class="faq-item">
+<p class="faq-question">¿Cuánto cuesta el envío?</p>
+<p>El costo del envío varía según la ciudad de destino y el peso del paquete. Te informamos el valor exacto al momento de confirmar tu pedido por WhatsApp. ¡Recuerda que frecuentemente tenemos promociones de envío gratis!</p>
+</div>
+
+<div class="faq-item">
+<p class="faq-question">¿Los productos son originales?</p>
+<p>Sí, todos nuestros productos son 100% originales y nuevos. Trabajamos directamente con distribuidores autorizados para garantizar la autenticidad de cada artículo.</p>
+</div>
+
+<div class="faq-item">
+<p class="faq-question">¿Tienen garantía los productos?</p>
+<p>Sí, todos los productos cuentan con garantía del fabricante. La duración de la garantía varía según el producto y fabricante. Para hacer válida la garantía, contáctanos por WhatsApp con tu número de pedido.</p>
+</div>
+
+<div class="faq-item">
+<p class="faq-question">¿Puedo devolver un producto?</p>
+<p>Sí, tienes 5 días hábiles desde la recepción para solicitar una devolución. El producto debe estar sin uso y en su empaque original. Consulta nuestra <a href="pagina.html?page=devoluciones-garantias">política de devoluciones</a> para más detalles.</p>
+</div>
+
+<div class="faq-item">
+<p class="faq-question">¿Hacen envíos a todo Colombia?</p>
+<p>¡Sí! Realizamos envíos a todo el territorio colombiano a través de transportadoras confiables con rastreo incluido.</p>
+</div>
+
+<div class="faq-item">
+<p class="faq-question">¿Cómo puedo rastrear mi pedido?</p>
+<p>Una vez despachado tu pedido, te enviaremos el número de guía por WhatsApp. También puedes consultar el estado de tu pedido en nuestra sección de <a href="pagina.html?page=seguimiento-pedido">Seguimiento de Pedido</a>.</p>
+</div>
+
+<p style="margin-top:1.5rem">¿No encontraste lo que buscabas? <a href="https://wa.me/573005606287" target="_blank">Escríbenos por WhatsApp</a> y te ayudamos.</p>` },
+
+      'contactanos': { title: 'Contáctanos', content: `<h1>Contáctanos</h1>
+<p>¿Tienes alguna pregunta, sugerencia o necesitas ayuda con tu pedido? Estamos aquí para ti. ¡No dudes en comunicarte con nosotros!</p>
+
+<div class="contact-grid">
+<div class="contact-card">
+<strong>💬 WhatsApp</strong>
+<p><a href="https://wa.me/573005606287" target="_blank">+57 300 560 6287</a></p>
+<p>Nuestro canal principal de atención</p>
+</div>
+<div class="contact-card">
+<strong>📧 Correo Electrónico</strong>
+<p><a href="mailto:libretech2026@gmail.com">libretech2026@gmail.com</a></p>
+<p>Para consultas detalladas</p>
+</div>
+<div class="contact-card">
+<strong>🕐 Horario de Atención</strong>
+<p>Lunes a Viernes: 8:00 AM - 6:00 PM<br>Sábados: 9:00 AM - 1:00 PM</p>
+</div>
+<div class="contact-card">
+<strong>📍 Ubicación</strong>
+<p>Barranquilla, Atlántico<br>Colombia</p>
+</div>
+</div>
+
+<h2>Escríbenos</h2>
+<p>La forma más rápida de contactarnos es por WhatsApp. Recibirás respuesta en minutos durante el horario de atención.</p>
+<p style="margin-top:1rem"><a href="https://wa.me/573005606287" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">💬 Chatear por WhatsApp</a></p>
+
+<h2>Nuestra Ubicación</h2>
+<div style="margin-top:1rem;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.15)"><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-75.06%2C10.91%2C-74.95%2C11.02&layer=mapnik&marker=10.9639,-74.7964" width="100%" height="350" style="border:0;display:block" loading="lazy" title="Barranquilla, Colombia"></iframe></div>` },
+
+      'seguimiento-pedido': { title: 'Seguimiento de Pedido', content: `<h1>Seguimiento de su Pedido</h1>
+<p>Mantente informado sobre el estado de tu compra.</p>
+
+<h2>¿Cómo rastreo mi pedido?</h2>
+<ol>
+<li>Cuando tu pedido sea despachado, recibirás por WhatsApp el <strong>número de guía</strong> y la <strong>transportadora</strong> asignada.</li>
+<li>Ingresa a la página de la transportadora y digita tu número de guía para ver el estado en tiempo real.</li>
+<li>Si tienes dudas, contáctanos por WhatsApp con tu número de pedido.</li>
+</ol>
+
+<h2>Estados de tu pedido</h2>
+<table>
+<thead><tr><th>Estado</th><th>Descripción</th></tr></thead>
+<tbody>
+<tr><td><strong>Confirmado</strong></td><td>Tu pedido ha sido recibido y el pago verificado.</td></tr>
+<tr><td><strong>En preparación</strong></td><td>Estamos alistando tu paquete para envío.</td></tr>
+<tr><td><strong>Enviado</strong></td><td>Tu pedido está en camino. Recibirás número de guía.</td></tr>
+<tr><td><strong>En tránsito</strong></td><td>La transportadora está llevando tu paquete a destino.</td></tr>
+<tr><td><strong>Entregado</strong></td><td>¡Tu pedido ha sido entregado exitosamente!</td></tr>
+</tbody>
+</table>
+
+<h2>Tiempos estimados de entrega</h2>
+<table>
+<thead><tr><th>Destino</th><th>Tiempo estimado</th></tr></thead>
+<tbody>
+<tr><td>Barranquilla y área metropolitana</td><td>1-2 días hábiles</td></tr>
+<tr><td>Ciudades principales (Bogotá, Medellín, Cali, etc.)</td><td>2-4 días hábiles</td></tr>
+<tr><td>Otras ciudades y municipios</td><td>3-7 días hábiles</td></tr>
+</tbody>
+</table>
+
+<div class="info-card">
+<h4>¿Necesitas ayuda con tu pedido?</h4>
+<p>Contáctanos por WhatsApp con tu número de pedido y te daremos información actualizada al instante.</p>
+<p style="margin-top:0.5rem"><a href="https://wa.me/573005606287" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">💬 Consultar mi pedido</a></p>
+</div>` },
+
+      'politica-privacidad': { title: 'Política de Privacidad', content: `<h1>Política de Privacidad</h1>
+<p><strong>Última actualización:</strong> Enero 2026</p>
+<p>En <strong>LIBRE TECH</strong> nos tomamos muy en serio la protección de tus datos personales. Esta política describe cómo recopilamos, usamos y protegemos tu información.</p>
+
+<h2>1. Información que Recopilamos</h2>
+<p>Recopilamos la siguiente información cuando realizas una compra o interactúas con nuestro sitio:</p>
+<ul>
+<li><strong>Datos de contacto:</strong> Nombre, número de teléfono, dirección de correo electrónico.</li>
+<li><strong>Datos de envío:</strong> Dirección completa, ciudad, departamento.</li>
+<li><strong>Datos de la compra:</strong> Productos adquiridos, cantidades, montos pagados.</li>
+<li><strong>Datos de navegación:</strong> Información del navegador, páginas visitadas (mediante cookies).</li>
+</ul>
+
+<h2>2. Uso de la Información</h2>
+<p>Utilizamos tu información personal para:</p>
+<ul>
+<li>Procesar y gestionar tus pedidos y envíos.</li>
+<li>Comunicarnos contigo sobre el estado de tu pedido.</li>
+<li>Brindarte soporte y atención al cliente.</li>
+<li>Mejorar nuestros productos y servicios.</li>
+<li>Enviarte información sobre ofertas y promociones (solo con tu consentimiento).</li>
+</ul>
+
+<h2>3. Protección de Datos</h2>
+<p>Implementamos medidas de seguridad técnicas y organizativas para proteger tu información personal contra acceso no autorizado, pérdida o alteración. Tu información se almacena de forma segura y solo es accesible por personal autorizado.</p>
+
+<h2>4. Compartir Información</h2>
+<p><strong>No vendemos ni compartimos tu información personal con terceros</strong>, excepto:</p>
+<ul>
+<li>Con empresas de transporte para realizar el envío de tus productos.</li>
+<li>Cuando sea requerido por ley o autoridad competente.</li>
+</ul>
+
+<h2>5. Tus Derechos</h2>
+<p>De acuerdo con la Ley 1581 de 2012 (Ley de Protección de Datos Personales de Colombia), tienes derecho a:</p>
+<ul>
+<li>Conocer, actualizar y rectificar tus datos personales.</li>
+<li>Solicitar la eliminación de tus datos.</li>
+<li>Revocar la autorización del tratamiento de datos.</li>
+<li>Presentar quejas ante la Superintendencia de Industria y Comercio.</li>
+</ul>
+
+<h2>6. Cookies</h2>
+<p>Nuestro sitio utiliza cookies y almacenamiento local del navegador para mejorar tu experiencia de navegación, recordar tus preferencias (como el modo oscuro) y tu carrito de compras. Puedes configurar tu navegador para rechazar cookies, aunque esto podría afectar algunas funcionalidades.</p>
+
+<h2>7. Contacto</h2>
+<p>Si tienes preguntas sobre esta política o deseas ejercer tus derechos sobre tus datos, contáctanos:</p>
+<ul>
+<li><strong>WhatsApp:</strong> <a href="https://wa.me/573005606287" target="_blank">+57 300 560 6287</a></li>
+<li><strong>Correo:</strong> <a href="mailto:libretech2026@gmail.com">libretech2026@gmail.com</a></li>
+</ul>` },
+
+      'terminos-condiciones': { title: 'Términos y Condiciones', content: `<h1>Términos y Condiciones</h1>
+<p><strong>Última actualización:</strong> Enero 2026</p>
+<p>Al acceder y utilizar el sitio web de <strong>LIBRE TECH</strong> y realizar compras, aceptas los siguientes términos y condiciones.</p>
+
+<h2>1. Información General</h2>
+<p>LIBRE TECH es una tienda en línea de productos de tecnología con sede en Barranquilla, Colombia. Nos reservamos el derecho de modificar estos términos en cualquier momento, publicando la versión actualizada en este sitio.</p>
+
+<h2>2. Productos y Precios</h2>
+<ul>
+<li>Todos los precios están expresados en <strong>pesos colombianos (COP)</strong> e incluyen IVA.</li>
+<li>Los precios y la disponibilidad de los productos pueden cambiar sin previo aviso.</li>
+<li>Las imágenes de los productos son de referencia y pueden variar ligeramente del producto real.</li>
+<li>Nos esforzamos por mantener la información de los productos actualizada y precisa.</li>
+</ul>
+
+<h2>3. Proceso de Compra</h2>
+<ol>
+<li>Selecciona los productos y agrégalos al carrito.</li>
+<li>Completa el pedido a través de WhatsApp.</li>
+<li>Nuestro equipo confirmará disponibilidad y monto total.</li>
+<li>Realiza el pago mediante el método acordado.</li>
+<li>Una vez verificado el pago, tu pedido será procesado y enviado.</li>
+</ol>
+
+<h2>4. Confirmación del Pedido</h2>
+<p>Un pedido se considera confirmado únicamente cuando:</p>
+<ul>
+<li>El pago ha sido verificado exitosamente.</li>
+<li>Se ha confirmado la disponibilidad de todos los productos.</li>
+<li>Se ha coordinado la dirección y datos de envío.</li>
+</ul>
+<p>Nos reservamos el derecho de cancelar pedidos en caso de falta de stock o inconsistencias en el pago.</p>
+
+<h2>5. Envíos</h2>
+<ul>
+<li>Realizamos envíos a todo el territorio colombiano.</li>
+<li>Los tiempos de entrega son estimados y pueden variar según la transportadora y el destino.</li>
+<li>LIBRE TECH no se hace responsable por retrasos ocasionados por la transportadora, fuerza mayor o eventos fuera de nuestro control.</li>
+<li>Al recibir tu paquete, verifica que esté en buenas condiciones antes de firmar la guía de recibido.</li>
+</ul>
+
+<h2>6. Métodos de Pago</h2>
+<p>Aceptamos los siguientes métodos de pago:</p>
+<ul>
+<li>Transferencia bancaria (Bancolombia, Nequi, Daviplata)</li>
+<li>PSE (Pagos Seguros en Línea)</li>
+<li>Pago contra entrega (solo disponible en Barranquilla)</li>
+</ul>
+
+<h2>7. Devoluciones y Garantías</h2>
+<p>Consulta nuestra <a href="pagina.html?page=devoluciones-garantias">Política de Devoluciones y Garantías</a> para información completa sobre este tema.</p>
+
+<h2>8. Propiedad Intelectual</h2>
+<p>Todo el contenido del sitio web (textos, imágenes, logos, diseño) es propiedad de LIBRE TECH y está protegido por las leyes de propiedad intelectual de Colombia. Queda prohibida su reproducción sin autorización.</p>
+
+<h2>9. Limitación de Responsabilidad</h2>
+<p>LIBRE TECH no será responsable por daños indirectos, incidentales o consecuentes derivados del uso de nuestros productos o servicios, salvo lo establecido por la ley colombiana de protección al consumidor.</p>
+
+<h2>10. Legislación Aplicable</h2>
+<p>Estos términos se rigen por las leyes de la República de Colombia. Cualquier controversia será resuelta ante los tribunales competentes de Barranquilla, Atlántico.</p>
+
+<h2>11. Contacto</h2>
+<p>Para consultas sobre estos términos, contáctanos:</p>
+<ul>
+<li><strong>WhatsApp:</strong> <a href="https://wa.me/573005606287" target="_blank">+57 300 560 6287</a></li>
+<li><strong>Correo:</strong> <a href="mailto:libretech2026@gmail.com">libretech2026@gmail.com</a></li>
+</ul>` },
+
+      'devoluciones-garantias': { title: 'Devoluciones y Garantías', content: `<h1>Política de Devoluciones y Garantías</h1>
+<p><strong>Última actualización:</strong> Enero 2026</p>
+<p>En <strong>LIBRE TECH</strong> queremos que estés completamente satisfecho con tu compra. Si por alguna razón necesitas hacer una devolución o tienes un problema con tu producto, aquí te explicamos cómo proceder.</p>
+
+<h2>Política de Devoluciones</h2>
+
+<h3>Plazo para devoluciones</h3>
+<p>Tienes <strong>5 días hábiles</strong> desde la fecha de recepción del producto para solicitar una devolución.</p>
+
+<h3>Condiciones para aceptar una devolución</h3>
+<ul>
+<li>El producto debe estar <strong>sin uso</strong> y en  <strong>perfecto estado</strong>.</li>
+<li>Debe incluir <strong>empaque original</strong>, accesorios, manuales y todos los componentes.</li>
+<li>Debe presentar el comprobante de compra (captura de la conversación de WhatsApp o número de pedido).</li>
+</ul>
+
+<h3>Casos en los que NO aplica devolución</h3>
+<ul>
+<li>Productos con signos de uso, rayones o daños causados por el cliente.</li>
+<li>Productos sin empaque original o con empaque deteriorado por el cliente.</li>
+<li>Consumibles o accesorios cuyo sello haya sido abierto (protectores de pantalla, audífonos in-ear, etc.).</li>
+<li>Productos personalizados o comprados en promoción/liquidación (salvo defectos de fábrica).</li>
+</ul>
+
+<h3>Proceso de devolución</h3>
+<ol>
+<li>Contáctanos por <a href="https://wa.me/573005606287" target="_blank">WhatsApp</a> indicando tu número de pedido y razón de la devolución.</li>
+<li>Nuestro equipo evaluará la solicitud y te dará instrucciones de envío.</li>
+<li>Envía el producto en su empaque original.</li>
+<li>Una vez recibido y verificado el estado del producto, procederemos con el reembolso o cambio.</li>
+</ol>
+
+<h3>Reembolsos</h3>
+<p>Los reembolsos se realizan por el mismo método de pago original en un plazo de <strong>3-5 días hábiles</strong> después de recibir y verificar el producto devuelto.</p>
+
+<h2>Política de Garantía</h2>
+
+<h3>Cobertura</h3>
+<p>Todos nuestros productos cuentan con <strong>garantía del fabricante</strong>. La duración varía según el producto:</p>
+<table>
+<thead><tr><th>Categoría</th><th>Garantía</th></tr></thead>
+<tbody>
+<tr><td>Audífonos y parlantes</td><td>3 - 6 meses</td></tr>
+<tr><td>Smartwatches y wearables</td><td>6 meses</td></tr>
+<tr><td>Power Banks y cargadores</td><td>6 meses</td></tr>
+<tr><td>Cables y accesorios</td><td>3 meses</td></tr>
+<tr><td>Otros productos</td><td>Según especificación del fabricante</td></tr>
+</tbody>
+</table>
+
+<h3>La garantía cubre</h3>
+<ul>
+<li>Defectos de fabricación.</li>
+<li>Mal funcionamiento bajo uso normal.</li>
+<li>Componentes defectuosos.</li>
+</ul>
+
+<h3>La garantía NO cubre</h3>
+<ul>
+<li>Daños por mal uso, caídas, líquidos o manipulación indebida.</li>
+<li>Desgaste natural del producto.</li>
+<li>Modificaciones o reparaciones realizadas por terceros no autorizados.</li>
+<li>Daños causados por voltaje inadecuado o cortocircuitos.</li>
+</ul>
+
+<h3>¿Cómo hacer válida la garantía?</h3>
+<ol>
+<li>Contáctanos por <a href="https://wa.me/573005606287" target="_blank">WhatsApp</a> con tu número de pedido y una descripción del problema.</li>
+<li>Envía fotos o video del defecto.</li>
+<li>Nuestro equipo evaluará el caso y te indicará los pasos a seguir.</li>
+<li>Si aplica la garantía, recibirás un reemplazo o reparación sin costo.</li>
+</ol>
+
+<div class="info-card">
+<h4>¿Necesitas hacer una devolución o reclamar garantía?</h4>
+<p>Contáctanos directamente y resolveremos tu caso lo antes posible.</p>
+<p style="margin-top:0.5rem"><a href="https://wa.me/573005606287" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">💬 Contactar soporte</a></p>
+</div>` }
     };
 
     function getPages() {
