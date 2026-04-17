@@ -297,11 +297,28 @@ const Cart = (() => {
       else if (action === 'remove') removeItem(id);
     });
 
-    // Botón contraentrega (WhatsApp)
+    // Botón contraentrega (WhatsApp) — now opens form
     document.getElementById('btnWhatsApp')?.addEventListener('click', sendToWhatsApp);
 
     // Botón pagar en línea
     document.getElementById('btnPayOnline')?.addEventListener('click', payOnline);
+
+    // Order form events
+    document.getElementById('btnCloseOrderForm')?.addEventListener('click', closeOrderForm);
+    document.getElementById('orderFormModal')?.addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeOrderForm();
+    });
+    document.getElementById('whatsappOrderForm')?.addEventListener('submit', submitWhatsAppOrder);
+
+    // Order form auth buttons — open login dropdown
+    document.getElementById('orderFormLoginBtn')?.addEventListener('click', () => {
+      closeOrderForm();
+      if (typeof Auth !== 'undefined' && Auth.openLoginDropdown) Auth.openLoginDropdown();
+    });
+    document.getElementById('orderFormRegisterBtn')?.addEventListener('click', () => {
+      closeOrderForm();
+      if (typeof Auth !== 'undefined' && Auth.openLoginDropdown) Auth.openLoginDropdown();
+    });
   }
 
   // --- Generar número de pedido YYYYMMDDXXXX ---
@@ -348,14 +365,130 @@ const Cart = (() => {
     } catch { /* silent */ }
   }
 
-  // --- Contraentrega (WhatsApp) ---
+  // --- Contraentrega (WhatsApp) --- opens order form instead of direct WA ---
   function sendToWhatsApp() {
     if (items.length === 0) return;
+    openOrderForm();
+  }
+
+  // --- Open WhatsApp Order Form ---
+  async function openOrderForm() {
+    const modal = document.getElementById('orderFormModal');
+    if (!modal) return;
+
+    const user = (typeof Auth !== 'undefined' && Auth.getUser) ? Auth.getUser() : null;
+    const authBanner = document.getElementById('orderFormAuthBanner');
+    const saveLabel = document.getElementById('orderSaveDataLabel');
+
+    // Show/hide auth banner and save checkbox
+    if (user) {
+      if (authBanner) authBanner.style.display = 'none';
+      if (saveLabel) saveLabel.style.display = 'flex';
+
+      // Try to load saved profile
+      if (typeof SB !== 'undefined' && SB.getCustomerProfile) {
+        try {
+          const profile = await SB.getCustomerProfile(user.id);
+          if (profile) {
+            document.getElementById('orderName').value = profile.full_name || user.user_metadata?.name || '';
+            document.getElementById('orderPhone').value = profile.phone || '';
+            document.getElementById('orderAddress').value = profile.address || '';
+            document.getElementById('orderNeighborhood').value = profile.neighborhood || '';
+            document.getElementById('orderCity').value = profile.city || '';
+            document.getElementById('orderDepartment').value = profile.department || '';
+            document.getElementById('orderNotes').value = profile.notes || '';
+          } else {
+            document.getElementById('orderName').value = user.user_metadata?.name || '';
+          }
+        } catch {
+          document.getElementById('orderName').value = user.user_metadata?.name || '';
+        }
+      } else {
+        document.getElementById('orderName').value = user.user_metadata?.name || '';
+      }
+    } else {
+      if (authBanner) authBanner.style.display = 'block';
+      if (saveLabel) saveLabel.style.display = 'none';
+    }
+
+    // Build order summary
+    const summaryEl = document.getElementById('orderSummary');
+    if (summaryEl) {
+      const products = getProducts();
+      let html = '<p style="font-weight:600;font-size:0.9rem;margin:0 0 8px;color:var(--text-primary)">Resumen del pedido:</p>';
+      items.forEach((item, i) => {
+        const product = products.find(p => p.id === item.productId);
+        if (!product) return;
+        const ep = getEffectivePrice(product);
+        html += `<div style="display:flex;justify-content:space-between;font-size:0.85rem;padding:3px 0;color:var(--text-secondary)">
+          <span>${item.quantity}x ${escapeHTML(product.name.substring(0, 40))}${product.name.length > 40 ? '…' : ''}</span>
+          <span style="font-weight:500">${formatPrice(ep * item.quantity)}</span>
+        </div>`;
+      });
+      html += `<div style="border-top:1px solid var(--border-color);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;font-weight:700;color:var(--text-primary)">
+        <span>Total</span><span>${formatPrice(getTotal())}</span>
+      </div>`;
+      summaryEl.innerHTML = html;
+    }
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeOrderForm() {
+    const modal = document.getElementById('orderFormModal');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  // --- Submit order via WhatsApp ---
+  async function submitWhatsAppOrder(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('orderName').value.trim();
+    const phone = document.getElementById('orderPhone').value.trim();
+    const address = document.getElementById('orderAddress').value.trim();
+    const neighborhood = document.getElementById('orderNeighborhood').value.trim();
+    const city = document.getElementById('orderCity').value.trim();
+    const department = document.getElementById('orderDepartment').value.trim();
+    const notes = document.getElementById('orderNotes').value.trim();
+
+    if (!name || !phone || !address || !city) {
+      showToast('Completa los campos obligatorios', 'error');
+      return;
+    }
 
     const orderNumber = generateOrderNumber();
     const products = getProducts();
-    let message = `🛒 *Pedido ${orderNumber} - LIBRE TECH*\n`;
-    message += `📋 *Pedido contraentrega*\n\n`;
+
+    // Save profile if logged in and checkbox is checked
+    const user = (typeof Auth !== 'undefined' && Auth.getUser) ? Auth.getUser() : null;
+    if (user && document.getElementById('orderSaveData')?.checked) {
+      if (typeof SB !== 'undefined' && SB.upsertCustomerProfile) {
+        SB.upsertCustomerProfile(user.id, {
+          full_name: name,
+          phone: phone,
+          address: address,
+          neighborhood: neighborhood,
+          city: city,
+          department: department,
+          notes: notes
+        }).catch(err => console.warn('[Cart] Save profile:', err));
+      }
+    }
+
+    // Build WhatsApp message
+    let message = `🛒 *Pedido ${orderNumber} - LIBRE TECH*\n\n`;
+    message += `👤 *Datos del cliente:*\n`;
+    message += `Nombre: ${name}\n`;
+    message += `Teléfono: ${phone}\n`;
+    message += `Dirección: ${address}`;
+    if (neighborhood) message += `, ${neighborhood}`;
+    message += `\nCiudad: ${city}`;
+    if (department) message += `, ${department}`;
+    message += `\n`;
+    if (notes) message += `Observaciones: ${notes}\n`;
+    message += `\n📋 *Productos:*\n\n`;
 
     items.forEach((item, i) => {
       const product = products.find(p => p.id === item.productId);
@@ -371,14 +504,15 @@ const Cart = (() => {
     message += `*TOTAL: ${formatPrice(getTotal())}*\n\n`;
     message += `📱 Pedido realizado desde la tienda online`;
 
-    // Guardar orden y descontar stock
-    saveOrder(orderNumber, 'contraentrega');
+    // Save order and decrement stock
+    saveOrder(orderNumber, 'whatsapp');
     decrementStock();
 
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`, '_blank');
 
-    // Limpiar carrito después de enviar
+    // Clean up
+    closeOrderForm();
     clear();
     close();
     showToast(`Pedido ${orderNumber} enviado`, 'success');

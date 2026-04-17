@@ -359,6 +359,22 @@ const Auth = (() => {
       }
     });
 
+    // Mi Perfil
+    document.getElementById('btnMyProfile')?.addEventListener('click', e => {
+      e.preventDefault();
+      document.getElementById('userDropdown')?.classList.remove('active');
+      openProfileModal();
+    });
+
+    // Cerrar modal de perfil
+    document.getElementById('btnCloseProfile')?.addEventListener('click', closeProfileModal);
+    document.getElementById('profileModal')?.addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeProfileModal();
+    });
+
+    // Guardar perfil
+    document.getElementById('profileForm')?.addEventListener('submit', saveProfile);
+
     // Password visibility toggles
     document.querySelectorAll('.password-toggle').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -439,6 +455,72 @@ const Auth = (() => {
       toast.addEventListener('animationend', onEnd);
       setTimeout(onEnd, 400);
     }, duration || 3000);
+  }
+
+  // --- Mi Perfil ---
+  async function openProfileModal() {
+    const modal = document.getElementById('profileModal');
+    if (!modal || !currentUser) return;
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // Load profile from Supabase
+    if (typeof SB !== 'undefined' && SB.getCustomerProfile) {
+      try {
+        const profile = await SB.getCustomerProfile(currentUser.id);
+        if (profile) {
+          document.getElementById('profileName').value = profile.full_name || currentUser.name || '';
+          document.getElementById('profilePhone').value = profile.phone || '';
+          document.getElementById('profileDocType').value = profile.document_type || 'CC';
+          document.getElementById('profileDocNumber').value = profile.document_number || '';
+          document.getElementById('profileAddress').value = profile.address || '';
+          document.getElementById('profileNeighborhood').value = profile.neighborhood || '';
+          document.getElementById('profileCity').value = profile.city || '';
+          document.getElementById('profileDepartment').value = profile.department || '';
+          document.getElementById('profileZip').value = profile.zip_code || '';
+          document.getElementById('profileNotes').value = profile.notes || '';
+          return;
+        }
+      } catch (err) {
+        console.warn('[Auth] Load profile:', err);
+      }
+    }
+    // Default: fill name from auth
+    document.getElementById('profileName').value = currentUser.name || '';
+  }
+
+  function closeProfileModal() {
+    const modal = document.getElementById('profileModal');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  async function saveProfile(e) {
+    e.preventDefault();
+    if (!currentUser) return;
+
+    const data = {
+      full_name: document.getElementById('profileName')?.value?.trim() || '',
+      phone: document.getElementById('profilePhone')?.value?.trim() || '',
+      document_type: document.getElementById('profileDocType')?.value || 'CC',
+      document_number: document.getElementById('profileDocNumber')?.value?.trim() || '',
+      address: document.getElementById('profileAddress')?.value?.trim() || '',
+      neighborhood: document.getElementById('profileNeighborhood')?.value?.trim() || '',
+      city: document.getElementById('profileCity')?.value?.trim() || '',
+      department: document.getElementById('profileDepartment')?.value?.trim() || '',
+      zip_code: document.getElementById('profileZip')?.value?.trim() || '',
+      notes: document.getElementById('profileNotes')?.value?.trim() || ''
+    };
+
+    try {
+      await SB.upsertCustomerProfile(currentUser.id, data);
+      showToast('Perfil guardado correctamente', 'success');
+      closeProfileModal();
+    } catch (err) {
+      showToast('Error al guardar el perfil', 'error');
+      console.error('[Auth] Save profile:', err);
+    }
   }
 
   return { init, getUser, isLoggedIn, openLoginDropdown };

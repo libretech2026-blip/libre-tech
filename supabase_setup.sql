@@ -378,3 +378,91 @@ FROM auth.users
 ON CONFLICT (id) DO UPDATE SET
   email = EXCLUDED.email,
   last_sign_in_at = EXCLUDED.last_sign_in_at;
+
+-- ============================================================
+-- 8. site_config — Store banners, social links, and other settings
+--    key (text PK) → value (jsonb)
+--    Keys used: 'visual_banners', 'social_links'
+-- ============================================================
+CREATE TABLE IF NOT EXISTS site_config (
+  key text PRIMARY KEY,
+  value jsonb NOT NULL DEFAULT '{}',
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE site_config ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can read site config (public storefront needs banners/social)
+DROP POLICY IF EXISTS "Anyone can read site_config" ON site_config;
+CREATE POLICY "Anyone can read site_config"
+  ON site_config FOR SELECT
+  USING (true);
+
+-- Only admin can insert
+DROP POLICY IF EXISTS "Admin can insert site_config" ON site_config;
+CREATE POLICY "Admin can insert site_config"
+  ON site_config FOR INSERT
+  TO authenticated
+  WITH CHECK ( public.is_admin() );
+
+-- Only admin can update
+DROP POLICY IF EXISTS "Admin can update site_config" ON site_config;
+CREATE POLICY "Admin can update site_config"
+  ON site_config FOR UPDATE
+  TO authenticated
+  USING ( public.is_admin() );
+
+-- ============================================================
+-- 9. customer_profiles — User shipping/contact data for orders
+-- ============================================================
+CREATE TABLE IF NOT EXISTS customer_profiles (
+  user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name text DEFAULT '',
+  phone text DEFAULT '',
+  document_type text DEFAULT 'CC',
+  document_number text DEFAULT '',
+  address text DEFAULT '',
+  city text DEFAULT '',
+  department text DEFAULT '',
+  neighborhood text DEFAULT '',
+  zip_code text DEFAULT '',
+  notes text DEFAULT '',
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE customer_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Users can read their own profile
+DROP POLICY IF EXISTS "Users can read own customer_profile" ON customer_profiles;
+CREATE POLICY "Users can read own customer_profile"
+  ON customer_profiles FOR SELECT
+  TO authenticated
+  USING ( user_id = auth.uid() OR public.is_admin() );
+
+-- Users can insert their own profile
+DROP POLICY IF EXISTS "Users can insert own customer_profile" ON customer_profiles;
+CREATE POLICY "Users can insert own customer_profile"
+  ON customer_profiles FOR INSERT
+  TO authenticated
+  WITH CHECK ( user_id = auth.uid() );
+
+-- Users can update their own profile
+DROP POLICY IF EXISTS "Users can update own customer_profile" ON customer_profiles;
+CREATE POLICY "Users can update own customer_profile"
+  ON customer_profiles FOR UPDATE
+  TO authenticated
+  USING ( user_id = auth.uid() );
+
+-- Allow anon reads of site_config (for non-logged-in users to see banners)
+DROP POLICY IF EXISTS "Anon can read site_config" ON site_config;
+CREATE POLICY "Anon can read site_config"
+  ON site_config FOR SELECT
+  TO anon
+  USING (true);
+
+-- Allow anon orders (guest checkout)
+DROP POLICY IF EXISTS "Anon can insert orders" ON orders;
+CREATE POLICY "Anon can insert orders"
+  ON orders FOR INSERT
+  TO anon
+  WITH CHECK (true);

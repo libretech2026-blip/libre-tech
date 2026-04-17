@@ -43,12 +43,50 @@ const Store = (() => {
     renderSocialLinks();
     renderPromoPhotoBanners();
 
+    // Load banners and social links from Supabase, then re-render
+    loadSiteConfigFromDB();
+
     // Re-render wishlist hearts when auth state changes
     document.addEventListener('auth-changed', () => {
       updateWishlistVisibility();
       renderFeaturedProducts();
       renderTopCategories();
     });
+  }
+
+  async function loadSiteConfigFromDB() {
+    if (typeof SB === 'undefined' || !SB.getSiteConfig) return;
+    try {
+      const [bannersData, socialData] = await Promise.all([
+        SB.getSiteConfig('visual_banners'),
+        SB.getSiteConfig('social_links')
+      ]);
+      if (bannersData && Array.isArray(bannersData)) {
+        // Sync to legacy localStorage keys so existing render functions work
+        const heroBanners = bannersData.filter(b => b.position === 'hero-carousel' && b.active).map(b => ({
+          title: b.name, subtitle: b.subtitle, image: b.image, productId: b.productId || '',
+          startDate: b.startDate || '', endDate: b.endDate || '', active: true
+        }));
+        const sideBanners = bannersData.filter(b => (b.position === 'side-left' || b.position === 'side-right') && b.active !== false).map(b => ({
+          name: b.name, subtitle: b.subtitle, image: b.image, position: b.position,
+          productId: b.productId || '', height: b.height || '', active: b.active
+        }));
+        const promoPhotos = bannersData.filter(b => ['after-featured','after-categories','before-footer'].includes(b.position) && b.active).map(b => ({
+          title: b.name, image: b.image, position: b.position, link: b.productId ? `producto.html?id=${b.productId}` : '', active: true
+        }));
+        localStorage.setItem('libretech_banners', JSON.stringify(heroBanners));
+        localStorage.setItem('libretech_side_banners', JSON.stringify(sideBanners));
+        localStorage.setItem('libretech_promo_photos', JSON.stringify(promoPhotos));
+        // Re-render
+        renderPromoBanners();
+        initHeroCarousel();
+        renderPromoPhotoBanners();
+      }
+      if (socialData && typeof socialData === 'object') {
+        localStorage.setItem('libretech_social_links', JSON.stringify(socialData));
+        renderSocialLinks();
+      }
+    } catch (e) { console.warn('[App] loadSiteConfigFromDB:', e); }
   }
 
   function updateHeroStats() {
@@ -460,13 +498,13 @@ const Store = (() => {
       const now = new Date();
       if (b.startDate && new Date(b.startDate) > now) return;
       if (b.endDate && new Date(b.endDate) < now) return;
+      const link = b.productId ? `producto.html?id=${encodeURIComponent(b.productId)}` : '';
+      const tag = link ? 'a' : 'div';
+      const href = link ? ` href="${link}"` : '';
       slidesHTML += `
-      <div class="hero-slide hero-slide--banner">
-        <div class="hero-slide-image">
-          <img src="${Cart.escapeAttr(b.image)}" alt="${Cart.escapeAttr(b.title || 'Banner')}" loading="lazy">
-        </div>
+      <${tag}${href} class="hero-slide hero-slide--banner" style="background-image:url('${Cart.escapeAttr(b.image)}');background-size:cover;background-position:center;">
         ${b.subtitle ? `<div class="hero-slide-info"><h3 class="hero-slide-name">${Cart.escapeHTML(b.subtitle)}</h3></div>` : ''}
-      </div>`;
+      </${tag}>`;
     });
 
     slidesHTML += featured.map(p => {

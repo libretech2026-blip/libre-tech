@@ -480,6 +480,63 @@ const SB = (() => {
     if (error) throw error;
   }
 
+  /* ----------------------------------------------------------
+     SITE CONFIG — key/value store for banners, social links, etc.
+  ---------------------------------------------------------- */
+  async function getSiteConfig(key) {
+    if (!client) return null;
+    const { data, error } = await client
+      .from('site_config')
+      .select('value')
+      .eq('key', key)
+      .maybeSingle();
+    if (error) { console.warn('[SB] getSiteConfig error:', error.message); return null; }
+    return data ? data.value : null;
+  }
+
+  async function setSiteConfig(key, value) {
+    if (!client) throw new Error('Supabase not initialized');
+    const { error } = await client
+      .from('site_config')
+      .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error) throw error;
+  }
+
+  /* ----------------------------------------------------------
+     CUSTOMER PROFILES — shipping/contact data
+  ---------------------------------------------------------- */
+  async function getCustomerProfile(userId) {
+    if (!client || !userId) return null;
+    const { data, error } = await client
+      .from('customer_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) { console.warn('[SB] getCustomerProfile error:', error.message); return null; }
+    return data;
+  }
+
+  async function upsertCustomerProfile(userId, profile) {
+    if (!client || !userId) throw new Error('Missing client or userId');
+    const { error } = await client
+      .from('customer_profiles')
+      .upsert({
+        user_id: userId,
+        full_name: profile.full_name || '',
+        phone: profile.phone || '',
+        document_type: profile.document_type || 'CC',
+        document_number: profile.document_number || '',
+        address: profile.address || '',
+        city: profile.city || '',
+        department: profile.department || '',
+        neighborhood: profile.neighborhood || '',
+        zip_code: profile.zip_code || '',
+        notes: profile.notes || '',
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+    if (error) throw error;
+  }
+
   // --- Public API ---
   return {
     client,
@@ -518,6 +575,12 @@ const SB = (() => {
     // User management
     listUsers,
     deleteUser,
-    updateUserPassword
+    updateUserPassword,
+    // Site Config (banners, social links)
+    getSiteConfig,
+    setSiteConfig,
+    // Customer Profiles
+    getCustomerProfile,
+    upsertCustomerProfile
   };
 })();

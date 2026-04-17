@@ -1330,7 +1330,7 @@ const Admin = (() => {
 
     if (tabName === 'stats') renderStats();
 
-    if (tabName === 'visual') { renderVisualBannersTable(); updatePagePreview(); }
+    if (tabName === 'visual') { loadVisualBannersFromDB().then(() => { renderVisualBannersTable(); updatePagePreview(); }); }
 
     if (tabName === 'pqrs') renderPqrsTable();
 
@@ -2424,7 +2424,25 @@ const Admin = (() => {
 
   function getVisualBanners() { try { return JSON.parse(localStorage.getItem(VB_KEY) || '[]'); } catch { return []; } }
 
-  function saveVisualBanners(arr) { localStorage.setItem(VB_KEY, JSON.stringify(arr)); }
+  function saveVisualBanners(arr) {
+    localStorage.setItem(VB_KEY, JSON.stringify(arr));
+    // Persist to Supabase
+    if (typeof SB !== 'undefined' && SB.setSiteConfig) {
+      SB.setSiteConfig('visual_banners', arr).catch(e => console.warn('[Admin] SB banner save:', e));
+    }
+  }
+
+  // Load banners from Supabase on init
+  async function loadVisualBannersFromDB() {
+    if (typeof SB === 'undefined' || !SB.getSiteConfig) return;
+    try {
+      const data = await SB.getSiteConfig('visual_banners');
+      if (data && Array.isArray(data)) {
+        localStorage.setItem(VB_KEY, JSON.stringify(data));
+        syncToLegacyBanners(data);
+      }
+    } catch (e) { console.warn('[Admin] Load banners from DB:', e); }
+  }
 
   function getBanners() { try { return JSON.parse(localStorage.getItem(BANNERS_KEY) || '[]'); } catch { return []; } }
 
@@ -3244,6 +3262,20 @@ const Admin = (() => {
 
     document.getElementById('socialWhatsapp').value = links.whatsapp || '';
 
+    // Also try loading from Supabase
+    if (typeof SB !== 'undefined' && SB.getSiteConfig) {
+      SB.getSiteConfig('social_links').then(data => {
+        if (data && typeof data === 'object') {
+          localStorage.setItem(SOCIAL_KEY, JSON.stringify(data));
+          document.getElementById('socialInstagram').value = data.instagram || '';
+          document.getElementById('socialFacebook').value = data.facebook || '';
+          document.getElementById('socialTiktok').value = data.tiktok || '';
+          document.getElementById('socialTwitter').value = data.twitter || '';
+          document.getElementById('socialYoutube').value = data.youtube || '';
+          document.getElementById('socialWhatsapp').value = data.whatsapp || '';
+        }
+      }).catch(() => {});
+    }
   }
 
 
@@ -3264,7 +3296,17 @@ const Admin = (() => {
 
     localStorage.setItem(SOCIAL_KEY, JSON.stringify(links));
 
-    showToast('Redes sociales guardadas', 'success');
+    // Persist to Supabase
+    if (typeof SB !== 'undefined' && SB.setSiteConfig) {
+      SB.setSiteConfig('social_links', links).then(() => {
+        showToast('Redes sociales guardadas', 'success');
+      }).catch(e => {
+        console.warn('[Admin] SB social save:', e);
+        showToast('Guardado local, error al sincronizar con servidor', 'warning');
+      });
+    } else {
+      showToast('Redes sociales guardadas', 'success');
+    }
 
   }
 
