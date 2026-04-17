@@ -49,6 +49,47 @@ BEGIN
   END IF;
 END $$;
 
+-- 1b. Helper: check if current user is admin (SECURITY DEFINER so it can read auth.users)
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean AS $$
+DECLARE
+  user_email text;
+BEGIN
+  SELECT email INTO user_email FROM auth.users WHERE id = auth.uid();
+  RETURN user_email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+
+-- 1c. RLS policies for products table
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can READ products (public storefront)
+DROP POLICY IF EXISTS "Products are viewable by everyone" ON products;
+CREATE POLICY "Products are viewable by everyone"
+  ON products FOR SELECT
+  USING (true);
+
+-- Only admin can INSERT
+DROP POLICY IF EXISTS "Admin can insert products" ON products;
+CREATE POLICY "Admin can insert products"
+  ON products FOR INSERT
+  TO authenticated
+  WITH CHECK ( public.is_admin() );
+
+-- Only admin can UPDATE
+DROP POLICY IF EXISTS "Admin can update products" ON products;
+CREATE POLICY "Admin can update products"
+  ON products FOR UPDATE
+  TO authenticated
+  USING ( public.is_admin() );
+
+-- Only admin can DELETE
+DROP POLICY IF EXISTS "Admin can delete products" ON products;
+CREATE POLICY "Admin can delete products"
+  ON products FOR DELETE
+  TO authenticated
+  USING ( public.is_admin() );
+
 -- 2. Create profiles table (mirrors auth.users for admin queries)
 CREATE TABLE IF NOT EXISTS profiles (
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -60,6 +101,107 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 -- Enable RLS on profiles
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- 2b. Create orders table
+CREATE TABLE IF NOT EXISTS orders (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  customer_name text DEFAULT '',
+  customer_email text DEFAULT '',
+  customer_phone text DEFAULT '',
+  method text DEFAULT 'contraentrega',
+  status text DEFAULT 'pending',
+  total numeric DEFAULT 0,
+  items jsonb DEFAULT '[]'::jsonb,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
+-- Everyone authenticated can insert orders (placing an order)
+DROP POLICY IF EXISTS "Users can insert orders" ON orders;
+CREATE POLICY "Users can insert orders"
+  ON orders FOR INSERT
+  TO authenticated
+  WITH CHECK (true);
+
+-- Users can see their own orders
+DROP POLICY IF EXISTS "Users can view own orders" ON orders;
+CREATE POLICY "Users can view own orders"
+  ON orders FOR SELECT
+  TO authenticated
+  USING ( user_id = auth.uid() OR public.is_admin() );
+
+-- Admin can update orders (status changes)
+DROP POLICY IF EXISTS "Admin can update orders" ON orders;
+CREATE POLICY "Admin can update orders"
+  ON orders FOR UPDATE
+  TO authenticated
+  USING ( public.is_admin() );
+
+-- 2c. Create pqrs table
+CREATE TABLE IF NOT EXISTS pqrs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  user_email text DEFAULT '',
+  type text DEFAULT 'peticion',
+  subject text DEFAULT '',
+  message text DEFAULT '',
+  status text DEFAULT 'open',
+  admin_reply text DEFAULT '',
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE pqrs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can insert pqrs" ON pqrs;
+CREATE POLICY "Users can insert pqrs"
+  ON pqrs FOR INSERT
+  TO authenticated
+  WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS "Users can view own pqrs" ON pqrs;
+CREATE POLICY "Users can view own pqrs"
+  ON pqrs FOR SELECT
+  TO authenticated
+  USING ( user_id = auth.uid() OR public.is_admin() );
+
+DROP POLICY IF EXISTS "Admin can update pqrs" ON pqrs;
+CREATE POLICY "Admin can update pqrs"
+  ON pqrs FOR UPDATE
+  TO authenticated
+  USING ( public.is_admin() );
+
+-- 2d. Create reviews table
+CREATE TABLE IF NOT EXISTS reviews (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id uuid NOT NULL,
+  user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  user_name text DEFAULT '',
+  rating integer NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  comment text DEFAULT '',
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can read reviews" ON reviews;
+CREATE POLICY "Anyone can read reviews"
+  ON reviews FOR SELECT
+  USING (true);
+
+DROP POLICY IF EXISTS "Users can insert reviews" ON reviews;
+CREATE POLICY "Users can insert reviews"
+  ON reviews FOR INSERT
+  TO authenticated
+  WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS "Admin can delete reviews" ON reviews;
+CREATE POLICY "Admin can delete reviews"
+  ON reviews FOR DELETE
+  TO authenticated
+  USING ( public.is_admin() );
 
 -- Policy: anyone can read profiles (admin will use this)
 DROP POLICY IF EXISTS "Profiles are viewable by authenticated users" ON profiles;

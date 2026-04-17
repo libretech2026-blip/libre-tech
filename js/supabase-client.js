@@ -19,6 +19,9 @@ const SB = (() => {
 
   if (!client) console.error('[SB] Supabase JS library not loaded — include the CDN before this script.');
 
+  // UUID v4 regex to validate IDs (must be before migrateProductIds)
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   /* ----------------------------------------------------------
      MIGRATE — Convert all prod-xxx IDs to UUID at startup
   ---------------------------------------------------------- */
@@ -77,9 +80,6 @@ const SB = (() => {
     const m = errorMsg && errorMsg.match(/Could not find the '(\w+)' column/);
     return m ? m[1] : null;
   }
-
-  // UUID v4 regex to validate IDs
-  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   function ensureUUID(id) {
     if (UUID_RE.test(id)) return id;
@@ -236,15 +236,18 @@ const SB = (() => {
   ---------------------------------------------------------- */
   async function saveOrder(order) {
     const row = {
-      id:      order.id,
-      user_id: order.userId || null,
-      method:  order.method || 'contraentrega',
-      status:  order.status || 'pending',
-      total:   order.total  || 0,
-      items:   order.items  || []
+      user_id:        order.userId || null,
+      customer_name:  order.customerName || '',
+      customer_email: order.customerEmail || '',
+      customer_phone: order.customerPhone || '',
+      method:         order.method || 'contraentrega',
+      status:         order.status || 'pending',
+      total:          order.total  || 0,
+      items:          order.items  || []
     };
-    const { error } = await client.from('orders').insert(row);
+    const { data, error } = await client.from('orders').insert(row).select().single();
     if (error) console.error('[SB] saveOrder error:', error.message);
+    return data;
   }
 
   async function getOrders(userId) {
@@ -254,14 +257,7 @@ const SB = (() => {
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
     if (error) { console.error('[SB] getOrders:', error.message); return []; }
-    return (data || []).map(o => ({
-      id: o.id,
-      date: o.created_at,
-      method: o.method,
-      status: o.status,
-      total: o.total,
-      items: o.items || []
-    }));
+    return (data || []).map(mapOrder);
   }
 
   async function getAllOrders() {
@@ -270,20 +266,110 @@ const SB = (() => {
       .select('*')
       .order('created_at', { ascending: false });
     if (error) { console.error('[SB] getAllOrders:', error.message); return []; }
-    return (data || []).map(o => ({
+    return (data || []).map(mapOrder);
+  }
+
+  function mapOrder(o) {
+    return {
       id: o.id,
       date: o.created_at,
       userId: o.user_id,
+      customerName: o.customer_name || '',
+      customerEmail: o.customer_email || '',
+      customerPhone: o.customer_phone || '',
       method: o.method,
       status: o.status,
       total: o.total,
       items: o.items || []
-    }));
+    };
   }
 
   async function updateOrderStatus(orderId, status) {
     const { error } = await client.from('orders').update({ status }).eq('id', orderId);
     if (error) console.error('[SB] updateOrderStatus:', error.message);
+  }
+
+  /* ----------------------------------------------------------
+     PQRs
+  ---------------------------------------------------------- */
+  async function submitPqr(pqr) {
+    const row = {
+      user_id:    pqr.userId,
+      user_email: pqr.userEmail || '',
+      type:       pqr.type || 'peticion',
+      subject:    pqr.subject || '',
+      message:    pqr.message || '',
+      status:     'open'
+    };
+    const { data, error } = await client.from('pqrs').insert(row).select().single();
+    if (error) throw error;
+    return data;
+  }
+
+  async function getUserPqrs(userId) {
+    const { data, error } = await client
+      .from('pqrs')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) { console.error('[SB] getUserPqrs:', error.message); return []; }
+    return data || [];
+  }
+
+  async function getAllPqrs() {
+    const { data, error } = await client
+      .from('pqrs')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) { console.error('[SB] getAllPqrs:', error.message); return []; }
+    return data || [];
+  }
+
+  async function replyPqr(pqrId, reply) {
+    const { error } = await client.from('pqrs')
+      .update({ admin_reply: reply, status: 'answered', updated_at: new Date().toISOString() })
+      .eq('id', pqrId);
+    if (error) throw error;
+  }
+
+  /* ----------------------------------------------------------
+     REVIEWS
+  ---------------------------------------------------------- */
+  async function getProductReviews(productId) {
+    const { data, error } = await client
+      .from('reviews')
+      .select('*')
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false });
+    if (error) { console.error('[SB] getProductReviews:', error.message); return []; }
+    return data || [];
+  }
+
+  async function submitReview(review) {
+    const row = {
+      product_id: review.productId,
+      user_id:    review.userId,
+      user_name:  review.userName || '',
+      rating:     review.rating,
+      comment:    review.comment || ''
+    };
+    const { data, error } = await client.from('reviews').insert(row).select().single();
+    if (error) throw error;
+    return data;
+  }
+
+  async function deleteReview(reviewId) {
+    const { error } = await client.from('reviews').delete().eq('id', reviewId);
+    if (error) throw error;
+  }
+
+  async function getAllReviews() {
+    const { data, error } = await client
+      .from('reviews')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) { console.error('[SB] getAllReviews:', error.message); return []; }
+    return data || [];
   }
 
   /* ----------------------------------------------------------
@@ -412,6 +498,16 @@ const SB = (() => {
     getOrders,
     getAllOrders,
     updateOrderStatus,
+    // PQRs
+    submitPqr,
+    getUserPqrs,
+    getAllPqrs,
+    replyPqr,
+    // Reviews
+    getProductReviews,
+    submitReview,
+    deleteReview,
+    getAllReviews,
     // Storage
     uploadImage,
     // Auth

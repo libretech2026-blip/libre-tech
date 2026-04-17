@@ -90,10 +90,11 @@ const ProductDetail = (() => {
       });
     }
 
-    // Main image
+    // Main image (with zoom capability)
     const imgContainer = document.getElementById('pdMainImage');
     if (imgContainer && allImages.length > 0) {
-      imgContainer.innerHTML = `<img src="${Cart.escapeAttr(allImages[0])}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" id="pdMainImg">`;
+      imgContainer.innerHTML = `<img src="${Cart.escapeAttr(allImages[0])}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" id="pdMainImg" style="cursor:zoom-in;">`;
+      imgContainer.addEventListener('click', () => openImageZoom(document.getElementById('pdMainImg')?.src));
     }
 
     // Thumbnails
@@ -233,19 +234,33 @@ const ProductDetail = (() => {
     `).join('');
   }
 
-  // --- Rating UI ---
+  // --- Rating UI (Supabase reviews) ---
   function getRatings() {
     try { return JSON.parse(localStorage.getItem(RATINGS_KEY) || '{}'); }
     catch { return {}; }
   }
 
-  function renderRatingUI() {
+  async function renderRatingUI() {
     const container = document.getElementById('pdRating');
     if (!container || !currentProduct) return;
 
-    const ratings = getRatings();
-    const arr = ratings[currentProduct.id] || [];
-    const avg = arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+    // Load reviews from Supabase
+    let reviews = [];
+    try {
+      if (typeof SB !== 'undefined' && SB.getProductReviews) {
+        reviews = await SB.getProductReviews(currentProduct.id);
+      }
+    } catch (e) { console.warn('Reviews load:', e.message); }
+
+    // Fallback: also load from localStorage
+    const localRatings = getRatings();
+    const localArr = localRatings[currentProduct.id] || [];
+
+    // Combine: use Supabase reviews for avg if available, else localStorage
+    const sbAvg = reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
+    const localAvg = localArr.length > 0 ? localArr.reduce((a, b) => a + b, 0) / localArr.length : 0;
+    const avg = reviews.length > 0 ? sbAvg : localAvg;
+    const totalVotes = reviews.length > 0 ? reviews.length : localArr.length;
     const userRated = localStorage.getItem('libretech_user_rated_' + currentProduct.id);
 
     let html = '<div class="pd-rating-interactive">';
@@ -254,35 +269,70 @@ const ProductDetail = (() => {
       html += `<button class="pd-rate-star ${i <= Math.round(avg) ? 'active' : ''}" data-value="${i}" ${userRated ? 'disabled' : ''}>★</button>`;
     }
     html += '</div>';
-    html += `<span class="pd-rate-text">${avg > 0 ? avg.toFixed(1) + '/5' : 'Sin valoraciones'} (${arr.length} ${arr.length === 1 ? 'voto' : 'votos'})</span>`;
+    html += `<span class="pd-rate-text">${avg > 0 ? avg.toFixed(1) + '/5' : 'Sin valoraciones'} (${totalVotes} ${totalVotes === 1 ? 'voto' : 'votos'})</span>`;
     if (userRated) html += '<span class="pd-rate-text" style="color:var(--primary-blue)">¡Ya valoraste!</span>';
     html += '</div>';
 
-    // Show named reviews if available
-    try {
-      const reviews = JSON.parse(localStorage.getItem('libretech_reviews') || '{}');
-      const prodReviews = reviews[currentProduct.id] || [];
-      if (prodReviews.length > 0) {
-        html += '<div class="pd-reviews" style="margin-top:var(--spacing-lg)">';
-        html += '<h4 style="font-size:0.95rem;font-weight:700;margin-bottom:var(--spacing-md)">Reseñas de clientes</h4>';
-        prodReviews.forEach(r => {
-          const stars = '★'.repeat(r.star) + '☆'.repeat(5 - r.star);
-          html += `<div style="padding:var(--spacing-md);background:var(--bg-secondary);border-radius:var(--radius-md);margin-bottom:var(--spacing-sm)">
-            <div style="display:flex;align-items:center;gap:var(--spacing-sm);margin-bottom:4px">
-              <strong style="font-size:0.85rem">${Cart.escapeHTML(r.name)}</strong>
-              <span style="color:#f5a623;font-size:0.85rem">${stars}</span>
-            </div>
-            <p style="font-size:0.85rem;color:var(--text-secondary);margin:0">${Cart.escapeHTML(r.comment)}</p>
-          </div>`;
-        });
-        html += '</div>';
-      }
-    } catch { /* silent */ }
+    // Review submission form (if logged in)
+    const user = (typeof Auth !== 'undefined' && Auth.getUser) ? Auth.getUser() : null;
+    if (user && !userRated) {
+      html += `<div class="pd-review-form" style="margin-top:var(--spacing-md);padding:var(--spacing-md);background:var(--bg-secondary);border-radius:var(--radius-md);">
+        <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:var(--spacing-sm)">Escribe una reseña</h4>
+        <div class="pd-review-stars-input" style="margin-bottom:var(--spacing-sm);">
+          <span style="font-size:0.85rem;color:var(--text-secondary);">Tu calificación:</span>
+          <div id="reviewStarsInput" style="display:inline-flex;gap:2px;margin-left:8px;">
+            ${[1,2,3,4,5].map(i => `<button class="pd-rate-star" data-review-star="${i}" style="font-size:1.3rem;cursor:pointer;">☆</button>`).join('')}
+          </div>
+        </div>
+        <textarea id="reviewComment" placeholder="Cuéntanos tu experiencia con este producto..." style="width:100%;min-height:80px;padding:var(--spacing-sm);border:1px solid var(--border-color);border-radius:var(--radius-sm);resize:vertical;font-family:inherit;font-size:0.85rem;background:var(--bg-primary);color:var(--text-primary);"></textarea>
+        <button id="btnSubmitReview" class="btn btn-primary" style="margin-top:var(--spacing-sm);padding:8px 20px;font-size:0.85rem;">Enviar reseña</button>
+      </div>`;
+    }
+
+    // Show reviews
+    if (reviews.length > 0) {
+      html += '<div class="pd-reviews" style="margin-top:var(--spacing-lg)">';
+      html += `<h4 style="font-size:0.95rem;font-weight:700;margin-bottom:var(--spacing-md)">Reseñas de clientes (${reviews.length})</h4>`;
+      reviews.forEach(r => {
+        const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+        const date = r.created_at ? new Date(r.created_at).toLocaleDateString('es-CO') : '';
+        html += `<div style="padding:var(--spacing-md);background:var(--bg-secondary);border-radius:var(--radius-md);margin-bottom:var(--spacing-sm)">
+          <div style="display:flex;align-items:center;gap:var(--spacing-sm);margin-bottom:4px">
+            <strong style="font-size:0.85rem">${Cart.escapeHTML(r.user_name || 'Anónimo')}</strong>
+            <span style="color:#f5a623;font-size:0.85rem">${stars}</span>
+            <span style="font-size:0.75rem;color:var(--text-tertiary);margin-left:auto;">${date}</span>
+          </div>
+          ${r.comment ? `<p style="font-size:0.85rem;color:var(--text-secondary);margin:0">${Cart.escapeHTML(r.comment)}</p>` : ''}
+        </div>`;
+      });
+      html += '</div>';
+    } else {
+      // Fallback to localStorage reviews
+      try {
+        const lsReviews = JSON.parse(localStorage.getItem('libretech_reviews') || '{}');
+        const prodReviews = lsReviews[currentProduct.id] || [];
+        if (prodReviews.length > 0) {
+          html += '<div class="pd-reviews" style="margin-top:var(--spacing-lg)">';
+          html += '<h4 style="font-size:0.95rem;font-weight:700;margin-bottom:var(--spacing-md)">Reseñas de clientes</h4>';
+          prodReviews.forEach(r => {
+            const stars = '★'.repeat(r.star) + '☆'.repeat(5 - r.star);
+            html += `<div style="padding:var(--spacing-md);background:var(--bg-secondary);border-radius:var(--radius-md);margin-bottom:var(--spacing-sm)">
+              <div style="display:flex;align-items:center;gap:var(--spacing-sm);margin-bottom:4px">
+                <strong style="font-size:0.85rem">${Cart.escapeHTML(r.name)}</strong>
+                <span style="color:#f5a623;font-size:0.85rem">${stars}</span>
+              </div>
+              <p style="font-size:0.85rem;color:var(--text-secondary);margin:0">${Cart.escapeHTML(r.comment)}</p>
+            </div>`;
+          });
+          html += '</div>';
+        }
+      } catch { /* silent */ }
+    }
 
     container.innerHTML = html;
 
-    // Bind rating events
-    container.querySelectorAll('.pd-rate-star').forEach(star => {
+    // Bind star rating events (quick star-only vote without review form)
+    container.querySelectorAll('.pd-rate-star:not([data-review-star])').forEach(star => {
       star.addEventListener('click', () => {
         if (userRated) return;
         const value = parseInt(star.dataset.value);
@@ -295,6 +345,41 @@ const ProductDetail = (() => {
         Cart.showToast('¡Gracias por tu valoración!', 'success');
       });
     });
+
+    // Bind review form events
+    let selectedReviewRating = 0;
+    container.querySelectorAll('[data-review-star]').forEach(star => {
+      star.addEventListener('click', () => {
+        selectedReviewRating = parseInt(star.dataset.reviewStar);
+        container.querySelectorAll('[data-review-star]').forEach((s, i) => {
+          s.textContent = (i + 1) <= selectedReviewRating ? '★' : '☆';
+          s.classList.toggle('active', (i + 1) <= selectedReviewRating);
+        });
+      });
+    });
+
+    const submitBtn = container.querySelector('#btnSubmitReview');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', async () => {
+        if (selectedReviewRating === 0) { Cart.showToast('Selecciona una calificación', 'error'); return; }
+        const comment = (container.querySelector('#reviewComment')?.value || '').trim();
+        try {
+          const user = Auth.getUser();
+          await SB.submitReview({
+            productId: currentProduct.id,
+            userId: user.id,
+            userName: user.user_metadata?.full_name || user.email.split('@')[0],
+            rating: selectedReviewRating,
+            comment: comment
+          });
+          localStorage.setItem('libretech_user_rated_' + currentProduct.id, 'true');
+          Cart.showToast('¡Reseña enviada!', 'success');
+          renderRatingUI();
+        } catch (err) {
+          Cart.showToast('Error al enviar reseña: ' + err.message, 'error');
+        }
+      });
+    }
   }
 
   // --- Events ---
@@ -604,6 +689,87 @@ const ProductDetail = (() => {
       const safeName = Cart.escapeHTML(platform.charAt(0).toUpperCase() + platform.slice(1));
       return `<a href="${Cart.escapeAttr(url)}" target="_blank" rel="noopener" class="footer-social-link" title="${safeName}">${icon}<span>${safeName}</span></a>`;
     }).join('');
+  }
+
+  // ===================== IMAGE ZOOM =====================
+  function openImageZoom(src) {
+    if (!src) return;
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'image-zoom-overlay';
+    overlay.innerHTML = `
+      <button class="image-zoom-close" aria-label="Cerrar">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="image-zoom-container">
+        <img src="${Cart.escapeAttr(src)}" alt="Zoom" class="image-zoom-img" id="zoomImg">
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+
+    requestAnimationFrame(() => overlay.classList.add('active'));
+
+    const img = overlay.querySelector('.image-zoom-img');
+    let scale = 1;
+    let isDragging = false;
+    let startX = 0, startY = 0, translateX = 0, translateY = 0;
+
+    img.addEventListener('wheel', e => {
+      e.preventDefault();
+      scale = Math.min(4, Math.max(0.5, scale + (e.deltaY > 0 ? -0.2 : 0.2)));
+      img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    }, { passive: false });
+
+    img.addEventListener('mousedown', e => {
+      if (scale <= 1) return;
+      isDragging = true;
+      startX = e.clientX - translateX;
+      startY = e.clientY - translateY;
+      img.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      translateX = e.clientX - startX;
+      translateY = e.clientY - startY;
+      img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      if (img) img.style.cursor = scale > 1 ? 'grab' : 'zoom-in';
+    });
+
+    // Touch pinch zoom
+    let lastTouchDist = 0;
+    img.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        lastTouchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      }
+    }, { passive: true });
+
+    img.addEventListener('touchmove', e => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        const delta = (dist - lastTouchDist) * 0.01;
+        scale = Math.min(4, Math.max(0.5, scale + delta));
+        img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        lastTouchDist = dist;
+      }
+    }, { passive: false });
+
+    // Close
+    const closeZoom = () => {
+      overlay.classList.remove('active');
+      setTimeout(() => { overlay.remove(); document.body.style.overflow = ''; }, 200);
+    };
+    overlay.querySelector('.image-zoom-close').addEventListener('click', closeZoom);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeZoom(); });
+    document.addEventListener('keydown', function onEsc(e) {
+      if (e.key === 'Escape') { closeZoom(); document.removeEventListener('keydown', onEsc); }
+    });
   }
 
   return { init };
