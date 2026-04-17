@@ -47,6 +47,35 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='offer_percent') THEN
     ALTER TABLE products ADD COLUMN offer_percent numeric DEFAULT 0;
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='images') THEN
+    ALTER TABLE products ADD COLUMN images jsonb DEFAULT '[]'::jsonb;
+  END IF;
+END $$;
+
+-- 1a. Create Storage bucket for product images (if it doesn't exist)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('product-images', 'product-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage policies: anyone can read, only authenticated users can upload
+DO $$
+BEGIN
+  -- Public read
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'product-images-public-read' AND tablename = 'objects') THEN
+    CREATE POLICY "product-images-public-read" ON storage.objects FOR SELECT USING (bucket_id = 'product-images');
+  END IF;
+  -- Authenticated upload
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'product-images-auth-insert' AND tablename = 'objects') THEN
+    CREATE POLICY "product-images-auth-insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'product-images' AND auth.role() = 'authenticated');
+  END IF;
+  -- Authenticated update
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'product-images-auth-update' AND tablename = 'objects') THEN
+    CREATE POLICY "product-images-auth-update" ON storage.objects FOR UPDATE USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
+  END IF;
+  -- Authenticated delete
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'product-images-auth-delete' AND tablename = 'objects') THEN
+    CREATE POLICY "product-images-auth-delete" ON storage.objects FOR DELETE USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
+  END IF;
 END $$;
 
 -- 1b. Helper: check if current user is admin (SECURITY DEFINER so it can read auth.users)

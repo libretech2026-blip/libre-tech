@@ -3445,6 +3445,11 @@ input, select, textarea {
   z-index: 1;
 }
 
+/* Keep discount badge absolutely positioned even over a background image */
+.hero-carousel[style*="background-image"] .hero-slide > .hero-slide-discount-badge {
+  position: absolute;
+}
+
 .hero-slide-image {
   background: transparent;
   border-radius: var(--radius-lg);

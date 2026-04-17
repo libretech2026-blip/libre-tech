@@ -501,9 +501,18 @@ const Cart = (() => {
     });
 
     message += `--------------------------------\n`;
-    message += `*TOTAL: ${formatPrice(getTotal()).replace(/\s/g, '')}*\n`;
-    message += `Metodo de pago: Contraentrega\n\n`;
-    message += `Pedido generado desde libretechtienda.com`;
+    message += `*TOTAL: ${formatPrice(getTotal()).replace(/\s/g, '')}*\n\n`;
+
+    // Date and time
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('es-CO', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const timeStr = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
+    message += `Fecha: ${dateStr} - ${timeStr}\n\n`;
+
+    message += `\u26A0\uFE0F IMPORTANTE:\n`;
+    message += `Por favor confirmar disponibilidad y tiempo de entrega.\n\n`;
+    message += `\uD83D\uDE9A Estado: Pendiente de confirmacion\n\n`;
+    message += `Gracias por comprar en LIBRE TECH \uD83D\uDE4C`;
 
     // Save order and decrement stock
     saveOrder(orderNumber, 'whatsapp');

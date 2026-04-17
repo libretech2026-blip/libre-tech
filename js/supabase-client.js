@@ -66,6 +66,7 @@ const SB = (() => {
       createdAt:    row.created_at   || '',
       colors:       row.colors       || [],
       specs:        row.specs        || [],
+      images:       row.images       || [],
       offerActive:  row.offer_active === true,
       offerPrice:   row.offer_price  || null,
       offerPercent: row.offer_percent|| null
@@ -96,6 +97,7 @@ const SB = (() => {
       category:      p.category      || '',
       brand:         p.brand         || '',
       image_url:     p.image         || '',
+      images:        p.images        || [],
       stock:         p.stock         ?? 0,
       active:        p.active        !== false,
       featured:      p.featured      === true,
@@ -178,6 +180,7 @@ const SB = (() => {
     if ('category'    in updates) partial.category     = updates.category;
     if ('brand'       in updates) partial.brand        = updates.brand;
     if ('image'       in updates) partial.image_url    = updates.image;
+    if ('images'      in updates) partial.images       = updates.images;
     if ('stock'       in updates) partial.stock        = updates.stock;
     if ('active'      in updates) partial.active       = updates.active;
     if ('featured'    in updates) partial.featured     = updates.featured;
