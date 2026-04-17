@@ -3446,7 +3446,7 @@ input, select, textarea {
 }
 
 .hero-slide-image {
-  background: var(--bg-secondary);
+  background: transparent;
   border-radius: var(--radius-lg);
   width: 300px;
   height: 260px;
@@ -3456,14 +3456,6 @@ input, select, textarea {
   justify-content: center;
   overflow: hidden;
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* When hero has a bg image, give the product image a frosted backdrop */
-.hero-carousel[style*="background-image"] .hero-slide-image {
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
 }
 
 .hero-slide:hover .hero-slide-image {
@@ -3544,17 +3536,10 @@ input, select, textarea {
   padding: 12px 20px;
   border-radius: 16px;
   z-index: 2;
-  box-shadow: 0 6px 24px rgba(213, 0, 0, 0.5), 0 0 0 3px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.3);
-  animation: pulseBadge 2s ease-in-out infinite;
+  box-shadow: 0 6px 24px rgba(213, 0, 0, 0.45), 0 0 0 3px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.3);
   line-height: 1;
   letter-spacing: -0.03em;
   text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  transform-origin: center;
-}
-
-@keyframes pulseBadge {
-  0%, 100% { transform: scale(1); box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5); }
-  50% { transform: scale(1.06); box-shadow: 0 6px 28px rgba(239, 68, 68, 0.65); }
 }
 
 .hero-slide-prices {
@@ -4604,9 +4589,7 @@ input, select, textarea {
   background: rgba(99, 102, 241, 0.15);
 }
 
-[data-theme="dark"] .hero-carousel[style*="background-image"] .hero-slide-image {
-  background: rgba(0,0,0,0.7);
-}
+
 
 [data-theme="dark"] .product-card {
   border-color: var(--border-color);

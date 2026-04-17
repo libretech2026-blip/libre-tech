@@ -2429,12 +2429,17 @@ const Admin = (() => {
     try { return JSON.parse(localStorage.getItem(VB_KEY) || '[]'); } catch { return []; }
   }
 
-  function saveVisualBanners(arr) {
+  async function saveVisualBanners(arr) {
     _vbInMemory = arr;
     try { localStorage.setItem(VB_KEY, JSON.stringify(arr)); } catch (e) { /* quota ok — Supabase is source of truth */ }
-    // Persist to Supabase (source of truth)
+    // Persist to Supabase (source of truth) — await to prevent race conditions
     if (typeof SB !== 'undefined' && SB.setSiteConfig) {
-      SB.setSiteConfig('visual_banners', arr).catch(e => console.warn('[Admin] SB banner save:', e));
+      try {
+        await SB.setSiteConfig('visual_banners', arr);
+      } catch(e) {
+        console.warn('[Admin] SB banner save:', e);
+        showToast('Error guardando banner en la nube', 'error');
+      }
     }
   }
 
@@ -2729,7 +2734,7 @@ const Admin = (() => {
 
 
 
-  function saveVisualBannerForm() {
+  async function saveVisualBannerForm() {
 
     const name = document.getElementById('vbName').value.trim();
 
@@ -2765,7 +2770,7 @@ const Admin = (() => {
 
     if (editingVBIndex >= 0) { banners[editingVBIndex] = data; } else { banners.push(data); }
 
-    saveVisualBanners(banners);
+    await saveVisualBanners(banners);
 
     syncToLegacyBanners(banners);
 

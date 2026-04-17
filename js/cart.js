@@ -477,32 +477,33 @@ const Cart = (() => {
       }
     }
 
-    // Build WhatsApp message
-    let message = `🛒 *Pedido ${orderNumber} - LIBRE TECH*\n\n`;
-    message += `👤 *Datos del cliente:*\n`;
+    // Build WhatsApp message — clean, professional format
+    let message = `*PEDIDO ${orderNumber}*\n`;
+    message += `LIBRE TECH - Tienda Online\n`;
+    message += `--------------------------------\n\n`;
+    message += `*DATOS DEL CLIENTE*\n`;
     message += `Nombre: ${name}\n`;
-    message += `Teléfono: ${phone}\n`;
-    message += `Dirección: ${address}`;
+    message += `Telefono: ${phone}\n`;
+    message += `Direccion: ${address}`;
     if (neighborhood) message += `, ${neighborhood}`;
     message += `\nCiudad: ${city}`;
-    if (department) message += `, ${department}`;
+    if (department) message += ` - ${department}`;
     message += `\n`;
     if (notes) message += `Observaciones: ${notes}\n`;
-    message += `\n📋 *Productos:*\n\n`;
+    message += `\n*PRODUCTOS*\n\n`;
 
     items.forEach((item, i) => {
       const product = products.find(p => p.id === item.productId);
       if (!product) return;
-      message += `${i + 1}. *${product.name}*\n`;
-      message += `   Cantidad: ${item.quantity}\n`;
       const ep = getEffectivePrice(product);
-      message += `   Precio unitario: ${formatPrice(ep)}\n`;
-      message += `   Subtotal: ${formatPrice(ep * item.quantity)}\n\n`;
+      message += `${i + 1}. ${product.name}\n`;
+      message += `   Cant: ${item.quantity} x ${formatPrice(ep).replace(/\s/g, '')} = ${formatPrice(ep * item.quantity).replace(/\s/g, '')}\n\n`;
     });
 
-    message += `———————————————\n`;
-    message += `*TOTAL: ${formatPrice(getTotal())}*\n\n`;
-    message += `Pedido realizado desde la tienda online`;
+    message += `--------------------------------\n`;
+    message += `*TOTAL: ${formatPrice(getTotal()).replace(/\s/g, '')}*\n`;
+    message += `Metodo de pago: Contraentrega\n\n`;
+    message += `Pedido generado desde libretechtienda.com`;
 
     // Save order and decrement stock
     saveOrder(orderNumber, 'whatsapp');
