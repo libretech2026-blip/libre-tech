@@ -1,3 +1,52 @@
+<!--
+  ============================================================
+  LIBRE TECH — Tienda de Tecnología (E-commerce)
+  ============================================================
+  Stack: HTML5 / CSS3 / Vanilla JS / Supabase (Auth + DB)
+
+  == FEATURES ==
+  - Catálogo de productos con filtros por categoría y marca
+  - Carrito de compras con sidebar
+  - Pedido vía WhatsApp con formulario previo (datos cliente + resumen)
+  - Autenticación (email/password + Google OAuth via Supabase)
+  - Perfil de usuario (Mi Perfil) con datos de envío guardados en Supabase
+  - Historial de pedidos
+  - Lista de deseos (wishlist)
+  - Sistema de banners configurables desde admin:
+      * Hero Carrusel (imagen como fondo del slide)
+      * Laterales izquierdo/derecho (múltiples por lado)
+      * Completo (después de destacados, categorías, antes del footer)
+      * Opciones de enlace: producto, sección de página o URL personalizada
+  - Redes sociales configurables desde admin (guardadas en Supabase)
+  - Páginas estáticas (Nosotros, Garantía, etc.)
+  - PQRs y reseñas de productos
+  - Búsqueda con dropdown de resultados
+
+  == MÓDULOS JS ==
+  - supabase-client.js — Cliente Supabase + helpers (getSiteConfig, setSiteConfig, getCustomerProfile, upsertCustomerProfile)
+  - app.js   — Renderizado de productos, banners, carrusel hero, wishlist, redes sociales
+  - cart.js  — Carrito, formulario de pedido WhatsApp, checkout
+  - auth.js  — Autenticación, perfil de usuario, historial de pedidos
+
+  == SUPABASE TABLES ==
+  - products, orders, order_items, pqrs, reviews
+  - site_config (key/value para banners y redes sociales)
+  - customer_profiles (datos de envío del usuario)
+
+  == ÚLTIMA ACTUALIZACIÓN ==
+  Abril 2026 — v3.0:
+  - Banners y redes sociales persistidos en Supabase (site_config)
+  - Hero carrusel: imagen como fondo (background-image)
+  - Banners con enlaces a productos, secciones o URLs
+  - Múltiples banners laterales izquierdo/derecho
+  - Formulario de pedido WhatsApp con auto llenado de perfil
+  - Mi Perfil: datos de envío guardados en Supabase
+  - Checkout como invitado con opción de login/registro
+  - Estadísticas excluyen pedidos cancelados
+  - Fix: QuotaExceededError en localStorage (Supabase es fuente de verdad)
+  - Fix: Encoding en mensajes WhatsApp y textos de estadísticas
+  ============================================================
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>

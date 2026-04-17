@@ -500,9 +500,9 @@ const Cart = (() => {
       message += `   Subtotal: ${formatPrice(ep * item.quantity)}\n\n`;
     });
 
-    message += `━━━━━━━━━━━━━━━\n`;
+    message += `———————————————\n`;
     message += `*TOTAL: ${formatPrice(getTotal())}*\n\n`;
-    message += `📱 Pedido realizado desde la tienda online`;
+    message += `Pedido realizado desde la tienda online`;
 
     // Save order and decrement stock
     saveOrder(orderNumber, 'whatsapp');

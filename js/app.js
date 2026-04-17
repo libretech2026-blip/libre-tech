@@ -69,14 +69,16 @@ const Store = (() => {
         }));
         const sideBanners = bannersData.filter(b => (b.position === 'side-left' || b.position === 'side-right') && b.active !== false).map(b => ({
           name: b.name, subtitle: b.subtitle, image: b.image, position: b.position,
-          productId: b.productId || '', height: b.height || '', active: b.active
+          productId: b.productId || '', linkSection: b.linkSection || '', linkUrl: b.linkUrl || '', height: b.height || '', active: b.active
         }));
         const promoPhotos = bannersData.filter(b => ['after-featured','after-categories','before-footer'].includes(b.position) && b.active).map(b => ({
-          title: b.name, image: b.image, position: b.position, link: b.productId ? `producto.html?id=${b.productId}` : '', active: true
+          title: b.name, image: b.image, position: b.position,
+          link: b.productId ? `producto.html?id=${b.productId}` : '',
+          linkSection: b.linkSection || '', linkUrl: b.linkUrl || '', active: true
         }));
-        localStorage.setItem('libretech_banners', JSON.stringify(heroBanners));
-        localStorage.setItem('libretech_side_banners', JSON.stringify(sideBanners));
-        localStorage.setItem('libretech_promo_photos', JSON.stringify(promoPhotos));
+        try { localStorage.setItem('libretech_banners', JSON.stringify(heroBanners)); } catch (e) { /* quota */ }
+        try { localStorage.setItem('libretech_side_banners', JSON.stringify(sideBanners)); } catch (e) { /* quota */ }
+        try { localStorage.setItem('libretech_promo_photos', JSON.stringify(promoPhotos)); } catch (e) { /* quota */ }
         // Re-render
         renderPromoBanners();
         initHeroCarousel();
@@ -459,10 +461,13 @@ const Store = (() => {
       if (!container) return;
       if (banners.length > 0) {
         container.innerHTML = banners.map(b => {
-          const link = b.productId ? `producto.html?id=${encodeURIComponent(b.productId)}` : '';
+          let link = '';
+          if (b.productId) link = `producto.html?id=${encodeURIComponent(b.productId)}`;
+          else if (b.linkSection) link = b.linkSection;
+          else if (b.linkUrl) link = b.linkUrl;
           const h = b.height ? `style="height:${parseInt(b.height)}px"` : '';
           const tag = link ? 'a' : 'div';
-          const href = link ? ` href="${link}"` : '';
+          const href = link ? ` href="${Cart.escapeAttr(link)}"` : '';
           return `<${tag}${href} class="promo-banner-link promo-banner--image-only" ${h}>
             ${b.image ? `<img src="${Cart.escapeAttr(b.image)}" alt="${Cart.escapeAttr(b.name)}" loading="lazy">` : ''}
           </${tag}>`;
@@ -919,8 +924,10 @@ const Store = (() => {
       if (!slot) return;
       const wrapper = document.createElement('div');
       wrapper.className = 'promo-photo-banner';
-      if (p.link) {
-        wrapper.innerHTML = `<a href="${Cart.escapeAttr(p.link)}" target="_blank" rel="noopener"><img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeHTML(p.title || 'Promoción')}" loading="lazy"></a>`;
+      const link = p.link || p.linkSection || p.linkUrl || '';
+      if (link) {
+        const isExternal = link.startsWith('http');
+        wrapper.innerHTML = `<a href="${Cart.escapeAttr(link)}"${isExternal ? ' target="_blank" rel="noopener"' : ''}><img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeHTML(p.title || 'Promoción')}" loading="lazy"></a>`;
       } else {
         wrapper.innerHTML = `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeHTML(p.title || 'Promoción')}" loading="lazy">`;
       }

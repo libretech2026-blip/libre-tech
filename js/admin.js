@@ -1032,7 +1032,7 @@ const Admin = (() => {
 
       if (csvParsedData.length === 0) {
 
-        showToast('No se encontraron productos vÃ¡lidos en el archivo Excel', 'error');
+        showToast('No se encontraron productos v\u00e1lidos en el archivo Excel', 'error');
 
         return;
 
@@ -1246,7 +1246,7 @@ const Admin = (() => {
 
         <input type="text" class="form-input spec-value" value="${escapeAttr(s.value)}" placeholder="Valor (ej: 250g)">
 
-        <button type="button" class="btn-icon btn-remove-spec" data-index="${i}" aria-label="Eliminar especificaciÃ³n">
+        <button type="button" class="btn-icon btn-remove-spec" data-index="${i}" aria-label="Eliminar especificaci\u00f3n">
 
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 
@@ -2046,7 +2046,7 @@ const Admin = (() => {
 
         ${order.customer ? `<strong>Cliente:</strong> ${escapeHTML(order.customer)}<br>` : ''}
 
-        ${order.phone ? `<strong>TelÃ©fono:</strong> ${escapeHTML(order.phone)}<br>` : ''}
+        ${order.phone ? `<strong>Tel\u00e9fono:</strong> ${escapeHTML(order.phone)}<br>` : ''}
 
       </div>
 
@@ -2170,7 +2170,7 @@ const Admin = (() => {
 
               </button>
 
-              <a href="pagina.html?page=${encodeURIComponent(slug)}" target="_blank" class="table-btn" title="Ver pÃ¡gina">
+              <a href="pagina.html?page=${encodeURIComponent(slug)}" target="_blank" class="table-btn" title="Ver p\u00e1gina">
 
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
 
@@ -2252,7 +2252,7 @@ const Admin = (() => {
 
     if (!slug || !title) {
 
-      showToast('El tÃ­tulo es requerido', 'error');
+      showToast('El t\u00edtulo es requerido', 'error');
 
       return;
 
@@ -2272,7 +2272,7 @@ const Admin = (() => {
 
     renderPagesTable();
 
-    showToast('PÃ¡gina actualizada', 'success');
+    showToast('P\u00e1gina actualizada', 'success');
 
   }
 
@@ -2302,13 +2302,14 @@ const Admin = (() => {
 
   function renderStats() {
 
-    const orders = getOrders();
+    const allOrders = getOrders();
 
     const products = getProducts();
 
     const views = getViews();
 
-
+    // Exclude cancelled orders from statistics
+    const orders = allOrders.filter(o => (o.status || 'pending') !== 'cancelled');
 
     const totalRevenue = orders.reduce((s, o) => s + (o.total || 0), 0);
 
@@ -2338,7 +2339,7 @@ const Admin = (() => {
 
     if (mvEl) {
 
-      if (viewEntries.length === 0) { mvEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos aÃºn</p>'; }
+      if (viewEntries.length === 0) { mvEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos a\u00fan</p>'; }
 
       else { mvEl.innerHTML = viewEntries.map(([pid, count], i) => {
 
@@ -2364,7 +2365,7 @@ const Admin = (() => {
 
     if (tsEl) {
 
-      if (topSelling.length === 0) { tsEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos aÃºn</p>'; }
+      if (topSelling.length === 0) { tsEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos a\u00fan</p>'; }
 
       else { tsEl.innerHTML = topSelling.map(([name, qty], i) =>
 
@@ -2396,7 +2397,7 @@ const Admin = (() => {
 
     if (scEl) {
 
-      if (catEntries.length === 0) { scEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos aÃºn</p>'; }
+      if (catEntries.length === 0) { scEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos a\u00fan</p>'; }
 
       else { scEl.innerHTML = catEntries.map(([cat, total]) =>
 
@@ -2425,8 +2426,8 @@ const Admin = (() => {
   function getVisualBanners() { try { return JSON.parse(localStorage.getItem(VB_KEY) || '[]'); } catch { return []; } }
 
   function saveVisualBanners(arr) {
-    localStorage.setItem(VB_KEY, JSON.stringify(arr));
-    // Persist to Supabase
+    try { localStorage.setItem(VB_KEY, JSON.stringify(arr)); } catch (e) { console.warn('[Admin] localStorage quota exceeded, using Supabase only:', e.message); }
+    // Persist to Supabase (source of truth)
     if (typeof SB !== 'undefined' && SB.setSiteConfig) {
       SB.setSiteConfig('visual_banners', arr).catch(e => console.warn('[Admin] SB banner save:', e));
     }
@@ -2438,7 +2439,7 @@ const Admin = (() => {
     try {
       const data = await SB.getSiteConfig('visual_banners');
       if (data && Array.isArray(data)) {
-        localStorage.setItem(VB_KEY, JSON.stringify(data));
+        try { localStorage.setItem(VB_KEY, JSON.stringify(data)); } catch (e) { console.warn('[Admin] localStorage quota, skipping cache:', e.message); }
         syncToLegacyBanners(data);
       }
     } catch (e) { console.warn('[Admin] Load banners from DB:', e); }
@@ -2446,7 +2447,7 @@ const Admin = (() => {
 
   function getBanners() { try { return JSON.parse(localStorage.getItem(BANNERS_KEY) || '[]'); } catch { return []; } }
 
-  function saveBanners(banners) { localStorage.setItem(BANNERS_KEY, JSON.stringify(banners)); }
+  function saveBanners(banners) { try { localStorage.setItem(BANNERS_KEY, JSON.stringify(banners)); } catch (e) { console.warn('[Admin] localStorage quota (banners):', e.message); } }
 
 
 
@@ -2489,6 +2490,7 @@ const Admin = (() => {
     tbody.innerHTML = banners.map((b, i) => {
 
       const prod = b.productId ? products.find(p => p.id === b.productId) : null;
+      const linkLabel = prod ? escapeHTML(prod.name) : (b.linkSection ? b.linkSection : (b.linkUrl ? 'URL' : '—'));
 
       return `<tr draggable="true" data-vb-index="${i}">
 
@@ -2510,7 +2512,7 @@ const Admin = (() => {
 
         <td style="font-size:0.8rem">${POSITION_LABELS[b.position] || b.position}</td>
 
-        <td style="font-size:0.8rem">${prod ? escapeHTML(prod.name) : '—'}</td>
+        <td style="font-size:0.8rem">${linkLabel}</td>
 
         <td><span class="table-status ${b.active ? 'active' : 'inactive'}"><span class="table-status-dot"></span>${b.active ? 'Activo' : 'Inactivo'}</span></td>
 
@@ -2626,6 +2628,24 @@ const Admin = (() => {
 
 
 
+  function toggleBannerFormFields() {
+    const pos = document.getElementById('vbPosition').value;
+    const linkType = document.getElementById('vbLinkType').value;
+    const isHero = pos === 'hero-carousel';
+    const isSide = pos === 'side-left' || pos === 'side-right';
+
+    // Hero: hide subtitle, link type, height — only image + name/dates/active
+    document.getElementById('vbSubtitleGroup').style.display = isHero ? 'none' : '';
+    document.getElementById('vbHeightGroup').style.display = isSide ? '' : 'none';
+    document.getElementById('vbLinkTypeGroup').style.display = isHero ? 'none' : '';
+    document.getElementById('vbHeroHint').style.display = isHero ? 'block' : 'none';
+
+    // Link type sub-fields (only for non-hero)
+    document.getElementById('vbProductGroup').style.display = (!isHero && linkType === 'product') ? '' : 'none';
+    document.getElementById('vbSectionGroup').style.display = (!isHero && linkType === 'section') ? '' : 'none';
+    document.getElementById('vbUrlGroup').style.display = (!isHero && linkType === 'url') ? '' : 'none';
+  }
+
   function openVisualBannerForm(indexOrSlot) {
 
     editingVBIndex = typeof indexOrSlot === 'number' ? indexOrSlot : -1;
@@ -2640,6 +2660,9 @@ const Admin = (() => {
 
     populateVBProductSelect();
 
+    // Reset link type
+    document.getElementById('vbLinkType').value = 'none';
+
     if (editingVBIndex >= 0) {
 
       const b = getVisualBanners()[editingVBIndex];
@@ -2652,8 +2675,6 @@ const Admin = (() => {
 
       document.getElementById('vbPosition').value = b.position || 'after-featured';
 
-      document.getElementById('vbProduct').value = b.productId || '';
-
       document.getElementById('vbSubtitle').value = b.subtitle || '';
 
       document.getElementById('vbStartDate').value = b.startDate || '';
@@ -2663,6 +2684,18 @@ const Admin = (() => {
       if (document.getElementById('vbHeight')) document.getElementById('vbHeight').value = b.height || '';
 
       document.getElementById('vbActive').checked = b.active !== false;
+
+      // Restore link type
+      if (b.productId) {
+        document.getElementById('vbLinkType').value = 'product';
+        document.getElementById('vbProduct').value = b.productId;
+      } else if (b.linkSection) {
+        document.getElementById('vbLinkType').value = 'section';
+        document.getElementById('vbSection').value = b.linkSection;
+      } else if (b.linkUrl) {
+        document.getElementById('vbLinkType').value = 'url';
+        document.getElementById('vbUrl').value = b.linkUrl;
+      }
 
       vbCurrentImage = b.image || '';
 
@@ -2675,6 +2708,8 @@ const Admin = (() => {
       if (typeof indexOrSlot === 'string') document.getElementById('vbPosition').value = indexOrSlot;
 
     }
+
+    toggleBannerFormFields();
 
     document.getElementById('visualBannerOverlay').classList.add('active');
 
@@ -2698,22 +2733,26 @@ const Admin = (() => {
 
     const image = preview.style.display !== 'none' ? preview.src : vbCurrentImage;
 
+    const position = document.getElementById('vbPosition').value;
+    const linkType = document.getElementById('vbLinkType').value;
+    const isHero = position === 'hero-carousel';
+
+    // Determine link fields based on link type
+    let productId = '', linkSection = '', linkUrl = '';
+    if (!isHero) {
+      if (linkType === 'product') productId = document.getElementById('vbProduct').value || '';
+      else if (linkType === 'section') linkSection = document.getElementById('vbSection').value || '';
+      else if (linkType === 'url') linkUrl = document.getElementById('vbUrl').value.trim() || '';
+    }
+
     const data = {
-
-      name, position: document.getElementById('vbPosition').value,
-
-      productId: document.getElementById('vbProduct').value || '',
-
-      subtitle: document.getElementById('vbSubtitle').value.trim(),
-
+      name, position,
+      productId, linkSection, linkUrl,
+      subtitle: isHero ? '' : document.getElementById('vbSubtitle').value.trim(),
       startDate: document.getElementById('vbStartDate').value,
-
       endDate: document.getElementById('vbEndDate').value,
-
       height: document.getElementById('vbHeight') ? document.getElementById('vbHeight').value : '',
-
       active: document.getElementById('vbActive').checked, image
-
     };
 
     const banners = getVisualBanners();
@@ -2736,20 +2775,20 @@ const Admin = (() => {
 
     const heroBanners = allBanners.filter(b => b.position === 'hero-carousel').map(b => ({ title: b.name, subtitle: b.subtitle, image: b.image, startDate: b.startDate, endDate: b.endDate, active: b.active }));
 
-    saveBanners(heroBanners);
+    try { saveBanners(heroBanners); } catch (e) { console.warn('[Admin] localStorage quota (hero):', e.message); }
 
     const photoPositions = ['after-featured','after-categories','before-footer'];
 
-    const promoPhotos = allBanners.filter(b => photoPositions.includes(b.position)).map(b => ({ title: b.name, image: b.image, position: b.position, link: b.productId ? `producto.html?id=${b.productId}` : '', active: b.active }));
+    const promoPhotos = allBanners.filter(b => photoPositions.includes(b.position)).map(b => ({ title: b.name, image: b.image, position: b.position, link: b.productId ? `producto.html?id=${b.productId}` : '', linkSection: b.linkSection || '', linkUrl: b.linkUrl || '', active: b.active }));
 
-    localStorage.setItem('libretech_promo_photos', JSON.stringify(promoPhotos));
+    try { localStorage.setItem('libretech_promo_photos', JSON.stringify(promoPhotos)); } catch (e) { console.warn('[Admin] localStorage quota (promo):', e.message); }
 
     // Sync side banners (left and right)
     const sideBanners = allBanners.filter(b => b.position === 'side-left' || b.position === 'side-right').map(b => ({
       name: b.name, subtitle: b.subtitle, image: b.image, position: b.position,
-      productId: b.productId || '', height: b.height || '', active: b.active
+      productId: b.productId || '', linkUrl: b.linkUrl || '', height: b.height || '', active: b.active
     }));
-    localStorage.setItem('libretech_side_banners', JSON.stringify(sideBanners));
+    try { localStorage.setItem('libretech_side_banners', JSON.stringify(sideBanners)); } catch (e) { console.warn('[Admin] localStorage quota (side):', e.message); }
 
   }
 
@@ -2790,6 +2829,10 @@ const Admin = (() => {
     const form = document.getElementById('visualBannerForm');
 
     if (form) form.addEventListener('submit', e => { e.preventDefault(); saveVisualBannerForm(); });
+
+    // Toggle fields based on position and link type
+    document.getElementById('vbPosition')?.addEventListener('change', toggleBannerFormFields);
+    document.getElementById('vbLinkType')?.addEventListener('change', toggleBannerFormFields);
 
     const imageArea = document.getElementById('vbImageArea');
 

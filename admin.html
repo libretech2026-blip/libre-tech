@@ -1,3 +1,30 @@
+<!--
+  ============================================================
+  LIBRE TECH — Panel de Administración
+  ============================================================
+
+  == PESTAÑAS ==
+  1. Dashboard   — Resumen rápido
+  2. Productos   — CRUD, carga CSV/Excel, imágenes, especificaciones, ofertas
+  3. Pedidos     — Gestión de estados (pendiente, procesando, enviado, entregado, cancelado)
+  4. PQRs        — Peticiones, quejas, reclamos, sugerencias
+  5. Reseñas     — Moderación de reseñas de productos
+  6. Páginas     — Editor de páginas estáticas (Nosotros, Garantía, etc.)
+  7. Estadísticas — Ingresos, ventas, productos más vistos/vendidos, ventas por categoría
+                    (pedidos cancelados no se cuentan)
+  8. Usuarios    — Listado de usuarios registrados
+  9. Visualización — Gestión de banners del sitio:
+      * Hero Carrusel (solo imagen de fondo)
+      * Laterales izquierdo/derecho (múltiples banners por lado)
+      * Completo (después de destacados, categorías, antes del footer)
+      * Opciones de enlace: producto enlazado, sección de página o URL personalizada
+      * Banners se guardan en Supabase (site_config), localStorage como caché
+  10. Redes Sociales — Links configurables (guardados en Supabase)
+
+  == ÚLTIMA ACTUALIZACIÓN ==
+  Abril 2026 — v3.0
+  ============================================================
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -840,7 +867,7 @@
             <div class="form-group">
               <label class="form-label" for="vbPosition">Posición en la página *</label>
               <select class="form-select" id="vbPosition">
-                <option value="hero-carousel">Hero Carrusel</option>
+                <option value="hero-carousel">Hero Carrusel (solo fondo)</option>
                 <option value="side-left">Lateral Izquierdo (junto a destacados)</option>
                 <option value="after-featured">Completo — Después de destacados</option>
                 <option value="side-right">Lateral Derecho (junto a categorías)</option>
@@ -848,14 +875,37 @@
                 <option value="before-footer">Completo — Antes del footer</option>
               </select>
             </div>
-            <div class="form-group">
-              <label class="form-label" for="vbProduct">Producto enlazado</label>
-              <select class="form-select" id="vbProduct">
-                <option value="">— Ninguno —</option>
+            <div class="form-group" id="vbLinkTypeGroup">
+              <label class="form-label" for="vbLinkType">Tipo de enlace</label>
+              <select class="form-select" id="vbLinkType">
+                <option value="none">— Sin enlace —</option>
+                <option value="product">Producto enlazado</option>
+                <option value="section">Sección de la página</option>
+                <option value="url">URL personalizada</option>
               </select>
             </div>
           </div>
-          <div class="form-group">
+          <div class="form-group" id="vbProductGroup" style="display:none">
+            <label class="form-label" for="vbProduct">Producto enlazado</label>
+            <select class="form-select" id="vbProduct">
+              <option value="">— Ninguno —</option>
+            </select>
+          </div>
+          <div class="form-group" id="vbSectionGroup" style="display:none">
+            <label class="form-label" for="vbSection">Sección de la página</label>
+            <select class="form-select" id="vbSection">
+              <option value="">— Ninguna —</option>
+              <option value="#productos">Productos Destacados</option>
+              <option value="#topCategoriesSection">Top por Categoría</option>
+              <option value="#heroCarousel">Carrusel principal</option>
+              <option value="#footer">Footer / Contacto</option>
+            </select>
+          </div>
+          <div class="form-group" id="vbUrlGroup" style="display:none">
+            <label class="form-label" for="vbUrl">URL personalizada</label>
+            <input type="url" class="form-input" id="vbUrl" maxlength="500" placeholder="https://...">
+          </div>
+          <div class="form-group" id="vbSubtitleGroup">
             <label class="form-label" for="vbSubtitle">Texto / Subtítulo (opcional)</label>
             <input type="text" class="form-input" id="vbSubtitle" maxlength="300" placeholder="Ej: Hasta 50% de descuento">
           </div>
@@ -869,7 +919,7 @@
               <input type="date" class="form-input" id="vbEndDate">
             </div>
           </div>
-          <div class="form-group">
+          <div class="form-group" id="vbHeightGroup">
             <label class="form-label" for="vbHeight">Altura del banner en px (solo laterales, opcional)</label>
             <input type="number" class="form-input" id="vbHeight" min="50" max="800" placeholder="Ej: 300 (vacío = automática)">
           </div>
@@ -887,6 +937,7 @@
               <img id="vbImagePreview" src="" alt="Vista previa" style="display:none;max-height:180px;border-radius:8px">
               <input type="file" id="vbImageInput" accept="image/*" style="display:none">
             </div>
+            <p id="vbHeroHint" style="display:none;font-size:0.78rem;color:var(--primary-blue);margin-top:4px">ℹ️ En el Hero Carrusel, esta imagen se usará como fondo del slide.</p>
           </div>
           <div class="form-group">
             <label style="display:flex;align-items:center;gap:var(--spacing-sm);cursor:pointer">
