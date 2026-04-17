@@ -180,6 +180,10 @@ const Admin = (() => {
 
     initUserManagement();
 
+    initCouponsEvents();
+
+    initAnalyticsEvents();
+
   }
 
 
@@ -1316,7 +1320,7 @@ const Admin = (() => {
 
 
 
-    const tabMap = { products: 'tabProducts', csv: 'tabCsv', orders: 'tabOrders', pages: 'tabPages', stats: 'tabStats', visual: 'tabVisual', pqrs: 'tabPqrs', social: 'tabSocial', users: 'tabUsers', reviews: 'tabReviews' };
+    const tabMap = { products: 'tabProducts', csv: 'tabCsv', orders: 'tabOrders', pages: 'tabPages', stats: 'tabStats', visual: 'tabVisual', pqrs: 'tabPqrs', social: 'tabSocial', users: 'tabUsers', reviews: 'tabReviews', coupons: 'tabCoupons', analytics: 'tabAnalytics' };
 
     const tabEl = document.getElementById(tabMap[tabName]);
 
@@ -1339,6 +1343,10 @@ const Admin = (() => {
     if (tabName === 'users') renderUsersTable();
 
     if (tabName === 'reviews') renderReviewsTable();
+
+    if (tabName === 'coupons') renderCouponsTable();
+
+    if (tabName === 'analytics') renderAnalytics();
 
   }
 
@@ -3354,6 +3362,312 @@ const Admin = (() => {
 
 
 
+  /* ----------------------------------------------------------
+     COUPONS MANAGEMENT
+  ---------------------------------------------------------- */
+  let editingCouponId = null;
+
+  async function renderCouponsTable() {
+    const tbody = document.getElementById('couponsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-secondary);">Cargando...</td></tr>';
+    try {
+      const coupons = await SB.getCoupons();
+      if (coupons.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-secondary);">No hay cupones creados.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = coupons.map(c => {
+        const isExpired = c.expires_at && new Date(c.expires_at) < new Date();
+        const usesText = c.max_uses > 0 ? `${c.current_uses || 0} / ${c.max_uses}` : `${c.current_uses || 0} / Ilimitado`;
+        const expiry = c.expires_at ? new Date(c.expires_at).toLocaleDateString('es-CO') : 'Sin vencimiento';
+        const statusClass = !c.active ? 'color:#ef4444' : isExpired ? 'color:#f59e0b' : 'color:#22c55e';
+        const statusText = !c.active ? 'Inactivo' : isExpired ? 'Expirado' : 'Activo';
+        const valueText = c.type === 'percentage' ? `${c.value}%` : `$${Number(c.value).toLocaleString('es-CO')}`;
+        const minText = c.min_purchase > 0 ? `$${Number(c.min_purchase).toLocaleString('es-CO')}` : 'Sin minimo';
+        return `<tr>
+          <td><code style="font-weight:700;font-size:0.9rem">${escapeHTML(c.code)}</code></td>
+          <td>${c.type === 'percentage' ? 'Porcentaje' : 'Fijo'}</td>
+          <td>${valueText}</td>
+          <td>${minText}</td>
+          <td>${usesText}</td>
+          <td>${expiry}</td>
+          <td><span style="${statusClass};font-weight:600">${statusText}</span></td>
+          <td>
+            <div style="display:flex;gap:4px">
+              <button class="table-btn" onclick="Admin._editCoupon('${c.id}')" title="Editar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="table-btn" onclick="Admin._deleteCoupon('${c.id}')" title="Eliminar" style="color:#ef4444">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-secondary);">Error: ${escapeHTML(e.message)}</td></tr>`;
+    }
+  }
+
+  function openCouponForm(coupon) {
+    editingCouponId = coupon ? coupon.id : null;
+    document.getElementById('couponFormTitle').textContent = coupon ? 'Editar cupón' : 'Nuevo cupón';
+    document.getElementById('couponCode').value = coupon ? coupon.code : '';
+    document.getElementById('couponType').value = coupon ? coupon.type : 'percentage';
+    document.getElementById('couponValue').value = coupon ? coupon.value : '';
+    document.getElementById('couponMinPurchase').value = coupon ? (coupon.min_purchase || 0) : 0;
+    document.getElementById('couponMaxUses').value = coupon ? (coupon.max_uses || 0) : 0;
+    document.getElementById('couponExpiry').value = coupon && coupon.expires_at ? coupon.expires_at.split('T')[0] : '';
+    document.getElementById('couponActive').checked = coupon ? coupon.active !== false : true;
+    document.getElementById('couponFormOverlay').style.display = 'flex';
+  }
+
+  function closeCouponForm() {
+    document.getElementById('couponFormOverlay').style.display = 'none';
+    editingCouponId = null;
+  }
+
+  async function saveCoupon(e) {
+    e.preventDefault();
+    const code = document.getElementById('couponCode').value.toUpperCase().trim();
+    const type = document.getElementById('couponType').value;
+    const value = parseFloat(document.getElementById('couponValue').value) || 0;
+    const min_purchase = parseFloat(document.getElementById('couponMinPurchase').value) || 0;
+    const max_uses = parseInt(document.getElementById('couponMaxUses').value) || 0;
+    const expiry = document.getElementById('couponExpiry').value;
+    const active = document.getElementById('couponActive').checked;
+
+    if (!code || value <= 0) { showToast('Codigo y valor son requeridos', 'error'); return; }
+    if (type === 'percentage' && value > 100) { showToast('El porcentaje no puede ser mayor a 100', 'error'); return; }
+
+    try {
+      const couponData = { code, type, value, min_purchase, max_uses, active, expires_at: expiry ? new Date(expiry + 'T23:59:59').toISOString() : null };
+      if (editingCouponId) couponData.id = editingCouponId;
+      await SB.upsertCoupon(couponData);
+      showToast(editingCouponId ? 'Cupon actualizado' : 'Cupon creado', 'success');
+      closeCouponForm();
+      renderCouponsTable();
+    } catch (e) {
+      showToast('Error: ' + e.message, 'error');
+    }
+  }
+
+  async function editCoupon(id) {
+    try {
+      const coupons = await SB.getCoupons();
+      const coupon = coupons.find(c => c.id === id);
+      if (coupon) openCouponForm(coupon);
+    } catch (e) { showToast('Error al cargar cupon', 'error'); }
+  }
+
+  async function deleteCouponById(id) {
+    if (!confirm('¿Eliminar este cupon?')) return;
+    try {
+      await SB.deleteCoupon(id);
+      showToast('Cupon eliminado', 'info');
+      renderCouponsTable();
+    } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  }
+
+  function initCouponsEvents() {
+    document.getElementById('btnAddCoupon')?.addEventListener('click', () => openCouponForm(null));
+    document.getElementById('btnCloseCouponForm')?.addEventListener('click', closeCouponForm);
+    document.getElementById('btnCancelCoupon')?.addEventListener('click', closeCouponForm);
+    document.getElementById('couponForm')?.addEventListener('submit', saveCoupon);
+    document.getElementById('couponFormOverlay')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeCouponForm(); });
+  }
+
+
+  /* ----------------------------------------------------------
+     ADVANCED ANALYTICS
+  ---------------------------------------------------------- */
+  async function renderAnalytics() {
+    const kpisEl = document.getElementById('analyticsKpis');
+    const salesEl = document.getElementById('analyticsSalesChart');
+    const topEl = document.getElementById('analyticsTopProducts');
+    const catEl = document.getElementById('analyticsCategoryChart');
+    const statusEl = document.getElementById('analyticsOrderStatus');
+    const activityEl = document.getElementById('analyticsRecentActivity');
+    if (!kpisEl) return;
+
+    const rangeDays = document.getElementById('analyticsDateRange')?.value || '30';
+    let orders = [];
+    try { orders = await SB.getAllOrders(); } catch (e) { console.warn('Analytics orders:', e); }
+
+    const products = JSON.parse(localStorage.getItem('libretech_products') || '[]');
+    const now = new Date();
+    const rangeMs = rangeDays === 'all' ? Infinity : parseInt(rangeDays) * 86400000;
+    const filtered = orders.filter(o => {
+      if (o.status === 'cancelled') return false;
+      if (rangeMs === Infinity) return true;
+      return (now - new Date(o.created_at)) <= rangeMs;
+    });
+
+    // KPI calculations
+    const totalRevenue = filtered.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+    const totalOrders = filtered.length;
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    const pendingOrders = filtered.filter(o => o.status === 'pending').length;
+    const completedOrders = filtered.filter(o => o.status === 'completed' || o.status === 'delivered').length;
+    const totalProducts = products.filter(p => p.active !== false).length;
+
+    const fmtPrice = (v) => '$' + Math.round(v).toLocaleString('es-CO');
+
+    kpisEl.innerHTML = [
+      { label: 'Ingresos totales', value: fmtPrice(totalRevenue), color: '#22c55e' },
+      { label: 'Pedidos', value: totalOrders, color: '#3b82f6' },
+      { label: 'Ticket promedio', value: fmtPrice(avgOrderValue), color: '#8b5cf6' },
+      { label: 'Pendientes', value: pendingOrders, color: '#f59e0b' },
+      { label: 'Completados', value: completedOrders, color: '#22c55e' },
+      { label: 'Productos activos', value: totalProducts, color: '#06b6d4' }
+    ].map(k => `
+      <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:var(--spacing-lg);border-left:4px solid ${k.color}">
+        <div style="font-size:0.8rem;color:var(--text-tertiary);margin-bottom:4px">${k.label}</div>
+        <div style="font-size:1.5rem;font-weight:800;color:var(--text-primary)">${k.value}</div>
+      </div>
+    `).join('');
+
+    // Sales by day (bar chart via CSS)
+    if (salesEl) {
+      const dayMap = {};
+      filtered.forEach(o => {
+        const day = new Date(o.created_at).toLocaleDateString('es-CO', { month: 'short', day: 'numeric' });
+        dayMap[day] = (dayMap[day] || 0) + (parseFloat(o.total) || 0);
+      });
+      const entries = Object.entries(dayMap).slice(-15);
+      const maxVal = Math.max(...entries.map(e => e[1]), 1);
+      if (entries.length === 0) {
+        salesEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos</p>';
+      } else {
+        salesEl.innerHTML = `<div style="display:flex;align-items:flex-end;gap:4px;height:180px">
+          ${entries.map(([day, val]) => `
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+              <span style="font-size:0.65rem;color:var(--text-tertiary)">${fmtPrice(val)}</span>
+              <div style="width:100%;background:var(--primary-blue);border-radius:4px 4px 0 0;height:${Math.max(4, (val / maxVal) * 150)}px;transition:height 0.3s"></div>
+              <span style="font-size:0.6rem;color:var(--text-tertiary);white-space:nowrap">${day}</span>
+            </div>
+          `).join('')}
+        </div>`;
+      }
+    }
+
+    // Top selling products
+    if (topEl) {
+      const productSales = {};
+      filtered.forEach(o => {
+        const items = o.items || [];
+        items.forEach(item => {
+          const pid = item.productId || item.product_id;
+          productSales[pid] = (productSales[pid] || 0) + (item.quantity || 1);
+        });
+      });
+      const sorted = Object.entries(productSales)
+        .map(([pid, qty]) => ({ product: products.find(p => p.id === pid), qty }))
+        .filter(e => e.product)
+        .sort((a, b) => b.qty - a.qty)
+        .slice(0, 10);
+
+      if (sorted.length === 0) {
+        topEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos</p>';
+      } else {
+        const maxQty = sorted[0].qty;
+        topEl.innerHTML = sorted.map((e, i) => `
+          <div style="display:flex;align-items:center;gap:var(--spacing-sm);margin-bottom:8px">
+            <span style="font-size:0.75rem;font-weight:700;color:var(--text-tertiary);width:20px">${i + 1}</span>
+            <div style="flex:1">
+              <div style="font-size:0.8rem;font-weight:600;margin-bottom:2px">${escapeHTML(e.product.name)}</div>
+              <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden">
+                <div style="height:100%;width:${(e.qty / maxQty) * 100}%;background:var(--primary-blue);border-radius:3px"></div>
+              </div>
+            </div>
+            <span style="font-size:0.8rem;font-weight:700;color:var(--text-primary)">${e.qty}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Sales by category
+    if (catEl) {
+      const catSales = {};
+      filtered.forEach(o => {
+        (o.items || []).forEach(item => {
+          const p = products.find(pr => pr.id === (item.productId || item.product_id));
+          if (p) {
+            const cat = p.category || 'Sin categoria';
+            catSales[cat] = (catSales[cat] || 0) + (parseFloat(item.quantity || 1) * parseFloat(p.offerActive && p.offerPrice ? p.offerPrice : p.price));
+          }
+        });
+      });
+      const catEntries = Object.entries(catSales).sort((a, b) => b[1] - a[1]);
+      const catTotal = catEntries.reduce((s, [, v]) => s + v, 0) || 1;
+      const colors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
+
+      if (catEntries.length === 0) {
+        catEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos</p>';
+      } else {
+        catEl.innerHTML = catEntries.map(([cat, val], i) => `
+          <div style="display:flex;align-items:center;gap:var(--spacing-sm);margin-bottom:8px">
+            <div style="width:12px;height:12px;border-radius:50%;background:${colors[i % colors.length]};flex-shrink:0"></div>
+            <span style="font-size:0.8rem;flex:1">${escapeHTML(cat)}</span>
+            <span style="font-size:0.8rem;font-weight:700">${fmtPrice(val)}</span>
+            <span style="font-size:0.7rem;color:var(--text-tertiary)">${Math.round((val / catTotal) * 100)}%</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Orders by status
+    if (statusEl) {
+      const statusMap = {};
+      filtered.forEach(o => { statusMap[o.status || 'pending'] = (statusMap[o.status || 'pending'] || 0) + 1; });
+      const statusLabels = { pending: 'Pendiente', confirmed: 'Confirmado', shipped: 'Enviado', delivered: 'Entregado', completed: 'Completado', cancelled: 'Cancelado' };
+      const statusColors = { pending: '#f59e0b', confirmed: '#3b82f6', shipped: '#8b5cf6', delivered: '#22c55e', completed: '#22c55e', cancelled: '#ef4444' };
+      const statusEntries = Object.entries(statusMap).sort((a, b) => b[1] - a[1]);
+      const maxStatus = Math.max(...statusEntries.map(e => e[1]), 1);
+
+      if (statusEntries.length === 0) {
+        statusEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos</p>';
+      } else {
+        statusEl.innerHTML = statusEntries.map(([status, count]) => `
+          <div style="display:flex;align-items:center;gap:var(--spacing-sm);margin-bottom:8px">
+            <span style="font-size:0.8rem;width:90px;color:${statusColors[status] || '#666'};font-weight:600">${statusLabels[status] || status}</span>
+            <div style="flex:1;height:20px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden">
+              <div style="height:100%;width:${(count / maxStatus) * 100}%;background:${statusColors[status] || '#666'};border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px">
+                <span style="font-size:0.7rem;color:#fff;font-weight:700">${count}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Recent activity
+    if (activityEl) {
+      const recent = [...orders].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 15);
+      if (recent.length === 0) {
+        activityEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin actividad</p>';
+      } else {
+        activityEl.innerHTML = recent.map(o => {
+          const date = new Date(o.created_at).toLocaleString('es-CO', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          const statusLabels2 = { pending: 'Pendiente', confirmed: 'Confirmado', shipped: 'Enviado', delivered: 'Entregado', completed: 'Completado', cancelled: 'Cancelado' };
+          return `<div style="display:flex;align-items:center;gap:var(--spacing-sm);padding:8px 0;border-bottom:1px solid var(--border-light)">
+            <span style="font-size:0.75rem;color:var(--text-tertiary);width:100px;flex-shrink:0">${date}</span>
+            <span style="font-size:0.8rem;flex:1">${escapeHTML(o.customer_name || 'Cliente')} - $${Math.round(parseFloat(o.total) || 0).toLocaleString('es-CO')}</span>
+            <span style="font-size:0.7rem;font-weight:600;color:var(--primary-blue)">${statusLabels2[o.status] || o.status}</span>
+          </div>`;
+        }).join('');
+      }
+    }
+  }
+
+  function initAnalyticsEvents() {
+    document.getElementById('analyticsDateRange')?.addEventListener('change', renderAnalytics);
+    document.getElementById('btnRefreshAnalytics')?.addEventListener('click', renderAnalytics);
+  }
+
+
+
   return {
 
     init,
@@ -3366,7 +3680,11 @@ const Admin = (() => {
 
     _changeUserPw: openUserPasswordModal,
 
-    _deleteUser: handleDeleteUser
+    _deleteUser: handleDeleteUser,
+
+    _editCoupon: editCoupon,
+
+    _deleteCoupon: deleteCouponById
 
   };
 

@@ -1,0 +1,27 @@
+{
+  "name": "LIBRE TECH - Tienda de Tecnologia",
+  "short_name": "LIBRE TECH",
+  "description": "Tu tienda de tecnologia en Colombia. Celulares, audifonos, accesorios y mas.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a4b8c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "LOGO_LIBRETECH.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "LOGO_LIBRETECH.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "lifestyle"],
+  "lang": "es",
+  "dir": "ltr"
+}

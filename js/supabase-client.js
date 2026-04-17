@@ -540,6 +540,58 @@ const SB = (() => {
     if (error) throw error;
   }
 
+  /* ----------------------------------------------------------
+     COUPONS CRUD
+  ---------------------------------------------------------- */
+  async function getCoupons() {
+    if (!client) return [];
+    const { data, error } = await client.from('coupons').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function upsertCoupon(coupon) {
+    if (!client) throw new Error('No Supabase client');
+    const row = {
+      code: (coupon.code || '').toUpperCase().trim(),
+      type: coupon.type || 'percentage',
+      value: coupon.value || 0,
+      min_purchase: coupon.min_purchase || 0,
+      max_uses: coupon.max_uses || 0,
+      current_uses: coupon.current_uses || 0,
+      expires_at: coupon.expires_at || null,
+      active: coupon.active !== false
+    };
+    if (coupon.id) row.id = coupon.id;
+    const { data, error } = await client.from('coupons').upsert(row, { onConflict: 'id' }).select().single();
+    if (error) throw error;
+    return data;
+  }
+
+  async function deleteCoupon(id) {
+    if (!client) throw new Error('No Supabase client');
+    const { error } = await client.from('coupons').delete().eq('id', id);
+    if (error) throw error;
+  }
+
+  async function validateCoupon(code, cartTotal) {
+    if (!client) throw new Error('No Supabase client');
+    const { data, error } = await client.from('coupons').select('*').eq('code', code.toUpperCase().trim()).eq('active', true).single();
+    if (error || !data) throw new Error('Cupon no encontrado o inactivo');
+    if (data.expires_at && new Date(data.expires_at) < new Date()) throw new Error('Este cupon ha expirado');
+    if (data.max_uses > 0 && data.current_uses >= data.max_uses) throw new Error('Este cupon ha alcanzado su limite de usos');
+    if (data.min_purchase > 0 && cartTotal < data.min_purchase) throw new Error('La compra minima para este cupon es $' + data.min_purchase.toLocaleString('es-CO'));
+    return data;
+  }
+
+  async function incrementCouponUse(id) {
+    if (!client) return;
+    const { data } = await client.from('coupons').select('current_uses').eq('id', id).single();
+    if (data) {
+      await client.from('coupons').update({ current_uses: (data.current_uses || 0) + 1 }).eq('id', id);
+    }
+  }
+
   // --- Public API ---
   return {
     client,
@@ -584,6 +636,12 @@ const SB = (() => {
     setSiteConfig,
     // Customer Profiles
     getCustomerProfile,
-    upsertCustomerProfile
+    upsertCustomerProfile,
+    // Coupons
+    getCoupons,
+    upsertCoupon,
+    deleteCoupon,
+    validateCoupon,
+    incrementCouponUse
   };
 })();

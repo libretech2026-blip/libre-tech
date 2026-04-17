@@ -495,3 +495,55 @@ CREATE POLICY "Anon can insert orders"
   ON orders FOR INSERT
   TO anon
   WITH CHECK (true);
+
+-- ============================================================
+-- 10. coupons — Discount coupons management
+-- ============================================================
+CREATE TABLE IF NOT EXISTS coupons (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  code text NOT NULL UNIQUE,
+  type text NOT NULL DEFAULT 'percentage',
+  value numeric NOT NULL DEFAULT 0,
+  min_purchase numeric DEFAULT 0,
+  max_uses integer DEFAULT 0,
+  current_uses integer DEFAULT 0,
+  expires_at timestamptz,
+  active boolean DEFAULT true,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE coupons ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can read coupons (for validation at checkout)
+DROP POLICY IF EXISTS "Anyone can read coupons" ON coupons;
+CREATE POLICY "Anyone can read coupons"
+  ON coupons FOR SELECT
+  USING (true);
+
+-- Only admin can insert coupons
+DROP POLICY IF EXISTS "Admin can insert coupons" ON coupons;
+CREATE POLICY "Admin can insert coupons"
+  ON coupons FOR INSERT
+  TO authenticated
+  WITH CHECK ( public.is_admin() );
+
+-- Only admin can update coupons
+DROP POLICY IF EXISTS "Admin can update coupons" ON coupons;
+CREATE POLICY "Admin can update coupons"
+  ON coupons FOR UPDATE
+  TO authenticated
+  USING ( public.is_admin() );
+
+-- Only admin can delete coupons
+DROP POLICY IF EXISTS "Admin can delete coupons" ON coupons;
+CREATE POLICY "Admin can delete coupons"
+  ON coupons FOR DELETE
+  TO authenticated
+  USING ( public.is_admin() );
+
+-- Anon can read coupons for guest validation
+DROP POLICY IF EXISTS "Anon can read coupons" ON coupons;
+CREATE POLICY "Anon can read coupons"
+  ON coupons FOR SELECT
+  TO anon
+  USING (true);

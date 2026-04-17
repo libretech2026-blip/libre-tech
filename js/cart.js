@@ -11,6 +11,7 @@ const Cart = (() => {
   const WHATSAPP_NUMBER = '573116488816';
 
   let items = [];
+  let appliedCoupon = null; // { id, code, type, value, discount }
 
   function getStorageKey() {
     const user = (typeof Auth !== 'undefined') && Auth.getUser && Auth.getUser();
@@ -372,6 +373,28 @@ const Cart = (() => {
   }
 
   // --- Open WhatsApp Order Form ---
+  /* --- Coupon handling --- */
+  async function applyCouponFromInput() {
+    const input = document.getElementById('couponInput');
+    const statusEl = document.getElementById('couponStatus');
+    if (!input || !input.value.trim()) { if (statusEl) statusEl.innerHTML = '<span style="color:#ef4444">Ingresa un codigo</span>'; return; }
+    if (typeof SB === 'undefined' || !SB.validateCoupon) { if (statusEl) statusEl.innerHTML = '<span style="color:#ef4444">Servicio no disponible</span>'; return; }
+    try {
+      const total = getTotal();
+      const coupon = await SB.validateCoupon(input.value, total);
+      const discount = coupon.type === 'percentage' ? Math.round(total * coupon.value / 100) : Math.min(coupon.value, total);
+      appliedCoupon = { id: coupon.id, code: coupon.code, type: coupon.type, value: coupon.value, discount };
+      openOrderForm(); // refresh summary
+    } catch (e) {
+      if (statusEl) statusEl.innerHTML = `<span style="color:#ef4444">${escapeHTML(e.message)}</span>`;
+    }
+  }
+
+  function removeCoupon() {
+    appliedCoupon = null;
+    openOrderForm(); // refresh summary
+  }
+
   async function openOrderForm() {
     const modal = document.getElementById('orderFormModal');
     if (!modal) return;
@@ -426,9 +449,44 @@ const Cart = (() => {
         </div>`;
       });
       html += `<div style="border-top:1px solid var(--border-color);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;font-weight:700;color:var(--text-primary)">
-        <span>Total</span><span>${formatPrice(getTotal())}</span>
+        <span>Subtotal</span><span>${formatPrice(getTotal())}</span>
       </div>`;
+
+      // Coupon input
+      html += `<div style="margin-top:10px">
+        <div style="display:flex;gap:6px">
+          <input type="text" id="couponInput" placeholder="Codigo de cupon" style="flex:1;padding:6px 10px;border:1px solid var(--border-color);border-radius:var(--radius-md);font-size:0.8rem;text-transform:uppercase" />
+          <button type="button" id="btnApplyCoupon" style="padding:6px 12px;background:var(--primary-blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;cursor:pointer;font-weight:600">Aplicar</button>
+        </div>
+        <div id="couponStatus" style="font-size:0.8rem;margin-top:4px"></div>
+      </div>`;
+
+      // Show discount if coupon applied
+      if (appliedCoupon) {
+        html += `<div style="display:flex;justify-content:space-between;font-size:0.85rem;padding:4px 0;color:#22c55e;font-weight:600">
+          <span>Cupon (${escapeHTML(appliedCoupon.code)})</span><span>-${formatPrice(appliedCoupon.discount)}</span>
+        </div>`;
+        html += `<div style="display:flex;justify-content:space-between;font-weight:700;color:var(--text-primary);font-size:1rem;padding-top:4px">
+          <span>Total</span><span>${formatPrice(getTotal() - appliedCoupon.discount)}</span>
+        </div>`;
+      } else {
+        html += `<div style="display:flex;justify-content:space-between;font-weight:700;color:var(--text-primary);font-size:1rem;padding-top:4px">
+          <span>Total</span><span>${formatPrice(getTotal())}</span>
+        </div>`;
+      }
+
       summaryEl.innerHTML = html;
+
+      // Bind coupon button
+      setTimeout(() => {
+        document.getElementById('btnApplyCoupon')?.addEventListener('click', applyCouponFromInput);
+        if (appliedCoupon) {
+          const inp = document.getElementById('couponInput');
+          if (inp) { inp.value = appliedCoupon.code; inp.disabled = true; }
+          document.getElementById('btnApplyCoupon').textContent = 'Quitar';
+          document.getElementById('btnApplyCoupon').onclick = removeCoupon;
+        }
+      }, 0);
     }
 
     modal.classList.add('active');
@@ -501,7 +559,14 @@ const Cart = (() => {
     });
 
     message += `--------------------------------\n`;
-    message += `*TOTAL: ${formatPrice(getTotal()).replace(/\s/g, '')}*\n\n`;
+    const subtotal = getTotal();
+    if (appliedCoupon) {
+      message += `Subtotal: ${formatPrice(subtotal).replace(/\s/g, '')}\n`;
+      message += `Cupon ${appliedCoupon.code}: -${formatPrice(appliedCoupon.discount).replace(/\s/g, '')}\n`;
+      message += `*TOTAL: ${formatPrice(subtotal - appliedCoupon.discount).replace(/\s/g, '')}*\n\n`;
+    } else {
+      message += `*TOTAL: ${formatPrice(subtotal).replace(/\s/g, '')}*\n\n`;
+    }
 
     // Date and time
     const now = new Date();
@@ -509,19 +574,25 @@ const Cart = (() => {
     const timeStr = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true });
     message += `Fecha: ${dateStr} - ${timeStr}\n\n`;
 
-    message += `\u26A0\uFE0F IMPORTANTE:\n`;
+    message += `IMPORTANTE:\n`;
     message += `Por favor confirmar disponibilidad y tiempo de entrega.\n\n`;
-    message += `\uD83D\uDE9A Estado: Pendiente de confirmacion\n\n`;
-    message += `Gracias por comprar en LIBRE TECH \uD83D\uDE4C`;
+    message += `Estado: Pendiente de confirmacion\n\n`;
+    message += `Gracias por comprar en LIBRE TECH`;
 
     // Save order and decrement stock
     saveOrder(orderNumber, 'whatsapp');
     decrementStock();
 
+    // Increment coupon usage
+    if (appliedCoupon && typeof SB !== 'undefined' && SB.incrementCouponUse) {
+      SB.incrementCouponUse(appliedCoupon.id).catch(err => console.warn('[Cart] Coupon use:', err));
+    }
+
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`, '_blank');
 
     // Clean up
+    appliedCoupon = null;
     closeOrderForm();
     clear();
     close();

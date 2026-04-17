@@ -52,9 +52,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="LIBRE TECH - Tu tienda de tecnología. Los mejores productos tech al mejor precio.">
+  <meta name="description" content="LIBRE TECH - Tu tienda de tecnologia en Colombia. Celulares, audifonos, accesorios tech y mas al mejor precio con envio a todo el pais.">
+  <meta name="keywords" content="tienda tecnologia, celulares, audifonos, accesorios tech, Colombia, envio contraentrega, LIBRE TECH">
+  <meta name="author" content="LIBRE TECH">
+  <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#1a4b8c">
-  <title>LIBRE TECH | Tienda de Tecnología</title>
+  <link rel="canonical" href="https://libretechtienda.com/">
+  <title>LIBRE TECH | Tienda de Tecnologia en Colombia</title>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="LIBRE TECH | Tienda de Tecnologia en Colombia">
+  <meta property="og:description" content="Los mejores productos tech al mejor precio. Celulares, audifonos, accesorios y mas con envio a todo Colombia.">
+  <meta property="og:url" content="https://libretechtienda.com/">
+  <meta property="og:image" content="https://libretechtienda.com/LOGO_LIBRETECH.png">
+  <meta property="og:site_name" content="LIBRE TECH">
+  <meta property="og:locale" content="es_CO">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="LIBRE TECH | Tienda de Tecnologia en Colombia">
+  <meta name="twitter:description" content="Los mejores productos tech al mejor precio. Envio a todo Colombia.">
+  <meta name="twitter:image" content="https://libretechtienda.com/LOGO_LIBRETECH.png">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -66,6 +85,8 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="LOGO_LIBRETECH.png">
+  <link rel="apple-touch-icon" href="LOGO_LIBRETECH.png">
+  <link rel="manifest" href="manifest.json">
 
   <!-- Styles -->
   <link rel="stylesheet" href="css/styles.css">
@@ -781,6 +802,11 @@
         searchWrapper.appendChild(closeBtn);
         mobileSearchBtn.addEventListener('click', () => { closeBtn.style.display = searchWrapper.classList.contains('mobile-active') ? 'flex' : 'none'; });
         closeBtn.addEventListener('click', () => { searchWrapper.classList.remove('mobile-active'); closeBtn.style.display = 'none'; });
+      }
+
+      // Register Service Worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration:', err));
       }
     });
   </script>

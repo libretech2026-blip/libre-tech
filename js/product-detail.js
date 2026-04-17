@@ -81,6 +81,41 @@ const ProductDetail = (() => {
     const bc = document.getElementById('breadcrumbProduct');
     if (bc) bc.textContent = p.name;
 
+    // Update meta description and Open Graph tags
+    const metaDesc = `${p.name} - Compra en LIBRE TECH al mejor precio. ${p.description || ''}`.substring(0, 160);
+    document.querySelector('meta[name="description"]')?.setAttribute('content', metaDesc);
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', `${p.name} | LIBRE TECH`);
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content', metaDesc);
+    if (p.image) {
+      document.querySelector('meta[property="og:image"]')?.setAttribute('content', p.image);
+      document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', p.image);
+    }
+
+    // JSON-LD structured data
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: p.name,
+      description: p.description || '',
+      image: p.image || '',
+      brand: { '@type': 'Brand', name: p.brand || 'LIBRE TECH' },
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'COP',
+        price: p.offerActive && p.offerPrice ? p.offerPrice : p.price,
+        availability: (p.stock ?? 0) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        seller: { '@type': 'Organization', name: 'LIBRE TECH' }
+      }
+    };
+    let ldScript = document.getElementById('productJsonLd');
+    if (!ldScript) {
+      ldScript = document.createElement('script');
+      ldScript.type = 'application/ld+json';
+      ldScript.id = 'productJsonLd';
+      document.head.appendChild(ldScript);
+    }
+    ldScript.textContent = JSON.stringify(jsonLd);
+
     // Build images list: combine image + images array
     const allImages = [];
     if (p.image) allImages.push(p.image);
