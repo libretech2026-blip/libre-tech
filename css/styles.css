@@ -2021,19 +2021,14 @@ input, select, textarea {
 /* Admin Tabs */
 .admin-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   background: var(--bg-primary);
   border-radius: var(--radius-lg);
-  padding: 4px;
+  padding: 6px;
   margin-bottom: var(--spacing-xl);
-  overflow-x: auto;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-light);
-  scrollbar-width: none;
-}
-
-.admin-tabs::-webkit-scrollbar {
-  display: none;
 }
 
 .admin-tab {
@@ -4926,10 +4921,10 @@ input, select, textarea {
     padding: 2px 7px;
   }
 
-  /* Tabs: horizontal scroll, smaller */
+  /* Tabs: wrap on mobile, smaller */
   .admin-tabs {
-    gap: 2px;
-    padding: 3px;
+    gap: 3px;
+    padding: 4px;
     margin-bottom: var(--spacing-md);
   }
 

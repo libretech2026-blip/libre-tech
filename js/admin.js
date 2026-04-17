@@ -3420,11 +3420,11 @@ const Admin = (() => {
     document.getElementById('couponMaxUses').value = coupon ? (coupon.max_uses || 0) : 0;
     document.getElementById('couponExpiry').value = coupon && coupon.expires_at ? coupon.expires_at.split('T')[0] : '';
     document.getElementById('couponActive').checked = coupon ? coupon.active !== false : true;
-    document.getElementById('couponFormOverlay').style.display = 'flex';
+    document.getElementById('couponFormOverlay').classList.add('active');
   }
 
   function closeCouponForm() {
-    document.getElementById('couponFormOverlay').style.display = 'none';
+    document.getElementById('couponFormOverlay').classList.remove('active');
     editingCouponId = null;
   }
 

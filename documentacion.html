@@ -242,7 +242,7 @@
   <div class="doc-header">
     <h1>📘 LIBRE TECH - Documentación</h1>
     <p>Documentación técnica y registro de cambios del proyecto</p>
-    <span class="version">v2.0.0 — Última actualización: 16 de abril de 2026</span>
+    <span class="version">v2.1.0 — Última actualización: 17 de abril de 2026</span>
   </div>
 
   <div class="doc-container">
@@ -397,13 +397,13 @@
         <li><strong>Productos relacionados</strong> — Sugerencias por categoría</li>
       </ul>
 
-      <h3>4.6 Admin (<code>admin.js</code>) — 10 Módulos</h3>
-      <p>Panel de administración con 10 pestañas:</p>
+      <h3>4.6 Admin (<code>admin.js</code>) — 12 Módulos</h3>
+      <p>Panel de administración con 12 pestañas:</p>
       <table>
         <thead><tr><th>Pestaña</th><th>Función</th></tr></thead>
         <tbody>
           <tr><td><strong>Productos</strong></td><td>CRUD completo con formulario, imágenes, colores, specs, ofertas</td></tr>
-          <tr><td><strong>CSV</strong></td><td>Importación masiva desde archivos CSV/TXT</td></tr>
+          <tr><td><strong>CSV/Excel</strong></td><td>Importación masiva desde archivos CSV/TXT/Excel</td></tr>
           <tr><td><strong>Pedidos</strong></td><td>Gestión de pedidos (pendiente/procesando/enviado/entregado/cancelado)</td></tr>
           <tr><td><strong>Páginas</strong></td><td>Editor de páginas estáticas personalizadas</td></tr>
           <tr><td><strong>Estadísticas</strong></td><td>Métricas: productos, pedidos, usuarios, ingresos</td></tr>
@@ -412,6 +412,8 @@
           <tr><td><strong>Redes Sociales</strong></td><td>Configuración de enlaces a redes sociales del footer</td></tr>
           <tr><td><strong>Usuarios</strong></td><td>Listado, cambio de contraseña y eliminación de usuarios (via RPCs)</td></tr>
           <tr><td><strong>Reseñas</strong></td><td>Moderación de todas las reseñas del sitio (Supabase)</td></tr>
+          <tr><td><strong>Cupones</strong></td><td>Gestión de cupones de descuento: código, tipo (% o fijo), valor, compra mínima, límite de usos, fecha vencimiento, estado</td></tr>
+          <tr><td><strong>Analíticas</strong></td><td>Dashboard avanzado: KPIs, gráficos de ventas, top productos, ventas por categoría, pedidos por estado, filtro por fechas</td></tr>
         </tbody>
       </table>
     </section>
@@ -419,6 +421,38 @@
     <!-- 5. CHANGELOG -->
     <section class="doc-section" id="changelog">
       <h2>5. Registro de cambios (Changelog)</h2>
+
+      <div class="changelog-entry">
+        <span class="date">17 de abril de 2026</span>
+        <h4>v2.1.0 — Cupones, Analíticas avanzadas, PWA y correcciones</h4>
+        <p>Nuevas funcionalidades y correcciones:</p>
+        <ul>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Sistema de cupones de descuento</strong> — CRUD completo desde admin (pestaña Cupones): código único, tipo porcentaje o monto fijo, compra mínima, límite de usos, fecha de vencimiento, estado activo/inactivo. Integrado con carrito y Supabase (tabla coupons).
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Dashboard de analíticas avanzado</strong> — KPIs (ingresos, pedidos, ticket promedio, pendientes, completados, productos activos), gráfico de ventas por día, top 10 productos más vendidos, ventas por categoría con porcentajes, pedidos por estado, actividad reciente, filtro por rango de fechas.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>PWA con Service Worker</strong> — Cache-first para assets estáticos, network-first para navegación. Instalable como app. Manifest configurado.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Service Worker</strong> — Corregido error de sintaxis que impedía el registro del SW (brackets duplicados).
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Formulario de registro en producto.html</strong> — Se añadió el panel de registro que faltaba en la página de detalle de producto. Los usuarios ahora pueden crear cuenta desde cualquier página.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Navegación admin (tabs)</strong> — Las pestañas del panel admin ahora hacen wrap y son todas visibles sin necesidad de scroll horizontal oculto.
+          </li>
+        </ul>
+      </div>
 
       <div class="changelog-entry">
         <span class="date">16 de abril de 2026</span>
@@ -447,7 +481,7 @@
           </li>
           <li>
             <span class="badge-status badge-done">Nuevo</span>
-            <strong>Admin: 10 módulos</strong> — El panel creció de 4 a 10 pestañas: Productos, CSV, Pedidos, Páginas, Estadísticas, Visualización, PQRs, Redes Sociales, Usuarios, Reseñas.
+            <strong>Admin: 12 módulos</strong> — El panel creció de 4 a 12 pestañas: Productos, CSV/Excel, Pedidos, Páginas, Estadísticas, Visualización, PQRs, Redes Sociales, Usuarios, Reseñas, Cupones, Analíticas.
           </li>
           <li>
             <span class="badge-status badge-done">Nuevo</span>
@@ -619,6 +653,8 @@
           <tr><td><code>orders</code></td><td>Pedidos de clientes</td><td>INSERT autenticados, SELECT propio + admin, UPDATE admin</td></tr>
           <tr><td><code>pqrs</code></td><td>Peticiones, Quejas, Reclamos, Sugerencias</td><td>INSERT propio, SELECT propio + admin, UPDATE admin</td></tr>
           <tr><td><code>reviews</code></td><td>Reseñas y calificaciones</td><td>SELECT público, INSERT propio, DELETE admin</td></tr>
+          <tr><td><code>coupons</code></td><td>Cupones de descuento</td><td>SELECT público, INSERT/UPDATE/DELETE solo admin</td></tr>
+          <tr><td><code>site_config</code></td><td>Configuración del sitio (banners, redes sociales)</td><td>SELECT público, UPDATE solo admin</td></tr>
         </tbody>
       </table>
       <p>RPCs de seguridad (SECURITY DEFINER):</p>
@@ -635,6 +671,42 @@
         Las notificaciones tipo toast aparecen en la esquina inferior derecha. Soportan tres tipos:
         <code>success</code>, <code>error</code>, <code>info</code>. Se eliminan automáticamente después de
         3 segundos con fallback de eliminación por <code>setTimeout</code>.
+      </p>
+
+      <h3>6.10 Cupones de descuento</h3>
+      <p>
+        Sistema completo de cupones gestionado desde la pestaña "Cupones" del panel admin.
+        Permite crear códigos de descuento con las siguientes opciones:
+      </p>
+      <ul>
+        <li><strong>Código único</strong> — Texto alfanumérico (se convierte a mayúsculas automáticamente)</li>
+        <li><strong>Tipo de descuento</strong> — Porcentaje (%) o monto fijo ($COP)</li>
+        <li><strong>Compra mínima</strong> — Monto mínimo del carrito para aplicar el cupón</li>
+        <li><strong>Límite de usos</strong> — Máximo de veces que se puede usar (0 = ilimitado)</li>
+        <li><strong>Fecha de vencimiento</strong> — Expiración automática</li>
+        <li><strong>Estado</strong> — Activo/inactivo con conteo de usos actual</li>
+      </ul>
+      <p>Persistencia en Supabase (tabla <code>coupons</code>). Integrado con el formulario de pedido del carrito.</p>
+
+      <h3>6.11 Analíticas avanzadas</h3>
+      <p>
+        Dashboard de analíticas en la pestaña "Analíticas" del panel admin con:
+      </p>
+      <ul>
+        <li><strong>KPIs</strong> — Ingresos totales, total pedidos, ticket promedio, pedidos pendientes, completados, productos activos</li>
+        <li><strong>Gráfico de ventas</strong> — Ventas por día con barras CSS responsivas</li>
+        <li><strong>Top 10 productos</strong> — Los productos más vendidos con cantidad</li>
+        <li><strong>Ventas por categoría</strong> — Distribución con porcentajes</li>
+        <li><strong>Pedidos por estado</strong> — Pendiente, procesando, enviado, entregado, cancelado</li>
+        <li><strong>Actividad reciente</strong> — Últimos 15 pedidos con estado</li>
+        <li><strong>Filtro por fechas</strong> — 7, 30, 90, 365 días o todo el historial</li>
+      </ul>
+
+      <h3>6.12 PWA (Progressive Web App)</h3>
+      <p>
+        El sitio es instalable como aplicación gracias al Service Worker (<code>sw.js</code>) y el manifiesto (<code>manifest.json</code>).
+        Estrategia de caché: cache-first para assets estáticos (CSS, JS, imágenes), network-first para páginas HTML.
+        Los assets se actualizan en background (stale-while-revalidate). Las peticiones cross-origin (Supabase, CDN) se excluyen del caché.
       </p>
     </section>
 
@@ -693,17 +765,17 @@
           </tr>
           <tr>
             <td>PWA (Progressive Web App) con Service Worker</td>
-            <td><span class="badge-status badge-planned">Pendiente</span></td>
+            <td><span class="badge-status badge-done">Completado</span></td>
             <td>Baja</td>
           </tr>
           <tr>
             <td>Cupones de descuento</td>
-            <td><span class="badge-status badge-planned">Pendiente</span></td>
+            <td><span class="badge-status badge-done">Completado</span></td>
             <td>Media</td>
           </tr>
           <tr>
             <td>Dashboard de analíticas avanzado</td>
-            <td><span class="badge-status badge-planned">Pendiente</span></td>
+            <td><span class="badge-status badge-done">Completado</span></td>
             <td>Baja</td>
           </tr>
         </tbody>
