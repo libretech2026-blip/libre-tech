@@ -2422,11 +2422,16 @@ const Admin = (() => {
   // ===== VISUALIZACIÓN (unified banners) =====
 
   const VB_KEY = 'libretech_visual_banners';
+  let _vbInMemory = null; // In-memory cache to avoid localStorage quota issues with base64 images
 
-  function getVisualBanners() { try { return JSON.parse(localStorage.getItem(VB_KEY) || '[]'); } catch { return []; } }
+  function getVisualBanners() {
+    if (_vbInMemory) return _vbInMemory;
+    try { return JSON.parse(localStorage.getItem(VB_KEY) || '[]'); } catch { return []; }
+  }
 
   function saveVisualBanners(arr) {
-    try { localStorage.setItem(VB_KEY, JSON.stringify(arr)); } catch (e) { console.warn('[Admin] localStorage quota exceeded, using Supabase only:', e.message); }
+    _vbInMemory = arr;
+    try { localStorage.setItem(VB_KEY, JSON.stringify(arr)); } catch (e) { /* quota ok — Supabase is source of truth */ }
     // Persist to Supabase (source of truth)
     if (typeof SB !== 'undefined' && SB.setSiteConfig) {
       SB.setSiteConfig('visual_banners', arr).catch(e => console.warn('[Admin] SB banner save:', e));
@@ -2439,7 +2444,8 @@ const Admin = (() => {
     try {
       const data = await SB.getSiteConfig('visual_banners');
       if (data && Array.isArray(data)) {
-        try { localStorage.setItem(VB_KEY, JSON.stringify(data)); } catch (e) { console.warn('[Admin] localStorage quota, skipping cache:', e.message); }
+        _vbInMemory = data;
+        try { localStorage.setItem(VB_KEY, JSON.stringify(data)); } catch (e) { /* quota ok */ }
         syncToLegacyBanners(data);
       }
     } catch (e) { console.warn('[Admin] Load banners from DB:', e); }
@@ -2772,24 +2778,12 @@ const Admin = (() => {
 
 
   function syncToLegacyBanners(allBanners) {
-
-    const heroBanners = allBanners.filter(b => b.position === 'hero-carousel').map(b => ({ title: b.name, subtitle: b.subtitle, image: b.image, startDate: b.startDate, endDate: b.endDate, active: b.active }));
-
-    try { saveBanners(heroBanners); } catch (e) { console.warn('[Admin] localStorage quota (hero):', e.message); }
-
-    const photoPositions = ['after-featured','after-categories','before-footer'];
-
-    const promoPhotos = allBanners.filter(b => photoPositions.includes(b.position)).map(b => ({ title: b.name, image: b.image, position: b.position, link: b.productId ? `producto.html?id=${b.productId}` : '', linkSection: b.linkSection || '', linkUrl: b.linkUrl || '', active: b.active }));
-
-    try { localStorage.setItem('libretech_promo_photos', JSON.stringify(promoPhotos)); } catch (e) { console.warn('[Admin] localStorage quota (promo):', e.message); }
-
-    // Sync side banners (left and right)
-    const sideBanners = allBanners.filter(b => b.position === 'side-left' || b.position === 'side-right').map(b => ({
-      name: b.name, subtitle: b.subtitle, image: b.image, position: b.position,
-      productId: b.productId || '', linkUrl: b.linkUrl || '', height: b.height || '', active: b.active
-    }));
-    try { localStorage.setItem('libretech_side_banners', JSON.stringify(sideBanners)); } catch (e) { console.warn('[Admin] localStorage quota (side):', e.message); }
-
+    // No longer write large base64 images to localStorage — app.js loads directly from Supabase.
+    // Only write minimal metadata (without images) for backward compatibility / admin preview.
+    try {
+      const heroBanners = allBanners.filter(b => b.position === 'hero-carousel').map(b => ({ title: b.name, subtitle: b.subtitle, startDate: b.startDate, endDate: b.endDate, active: b.active }));
+      saveBanners(heroBanners);
+    } catch (e) { /* ok */ }
   }
 
 

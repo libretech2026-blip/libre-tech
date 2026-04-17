@@ -8,7 +8,7 @@ const Cart = (() => {
 
   const STORAGE_KEY_BASE = 'libretech_cart';
   const ORDERS_KEY = 'libretech_orders';
-  const WHATSAPP_NUMBER = '573005606287';
+  const WHATSAPP_NUMBER = '573116488816';
 
   let items = [];
 

@@ -26,6 +26,9 @@ const Store = (() => {
   let carouselInterval = null;
   let carouselIndex = 0;
 
+  // In-memory banner data loaded from Supabase (avoids localStorage quota issues with base64 images)
+  let _bannersFromDB = null;
+
   // --- Inicialización ---
   function init() {
     // Products already synced from Supabase before init() is called
@@ -62,30 +65,15 @@ const Store = (() => {
         SB.getSiteConfig('social_links')
       ]);
       if (bannersData && Array.isArray(bannersData)) {
-        // Sync to legacy localStorage keys so existing render functions work
-        const heroBanners = bannersData.filter(b => b.position === 'hero-carousel' && b.active).map(b => ({
-          title: b.name, subtitle: b.subtitle, image: b.image, productId: b.productId || '',
-          startDate: b.startDate || '', endDate: b.endDate || '', active: true
-        }));
-        const sideBanners = bannersData.filter(b => (b.position === 'side-left' || b.position === 'side-right') && b.active !== false).map(b => ({
-          name: b.name, subtitle: b.subtitle, image: b.image, position: b.position,
-          productId: b.productId || '', linkSection: b.linkSection || '', linkUrl: b.linkUrl || '', height: b.height || '', active: b.active
-        }));
-        const promoPhotos = bannersData.filter(b => ['after-featured','after-categories','before-footer'].includes(b.position) && b.active).map(b => ({
-          title: b.name, image: b.image, position: b.position,
-          link: b.productId ? `producto.html?id=${b.productId}` : '',
-          linkSection: b.linkSection || '', linkUrl: b.linkUrl || '', active: true
-        }));
-        try { localStorage.setItem('libretech_banners', JSON.stringify(heroBanners)); } catch (e) { /* quota */ }
-        try { localStorage.setItem('libretech_side_banners', JSON.stringify(sideBanners)); } catch (e) { /* quota */ }
-        try { localStorage.setItem('libretech_promo_photos', JSON.stringify(promoPhotos)); } catch (e) { /* quota */ }
-        // Re-render
+        // Store in memory — no localStorage needed (base64 images exceed quota)
+        _bannersFromDB = bannersData;
+        // Re-render all banner areas from memory
         renderPromoBanners();
         initHeroCarousel();
         renderPromoPhotoBanners();
       }
       if (socialData && typeof socialData === 'object') {
-        localStorage.setItem('libretech_social_links', JSON.stringify(socialData));
+        try { localStorage.setItem('libretech_social_links', JSON.stringify(socialData)); } catch(e) { /* ok */ }
         renderSocialLinks();
       }
     } catch (e) { console.warn('[App] loadSiteConfigFromDB:', e); }
@@ -451,11 +439,15 @@ const Store = (() => {
   // --- Hero carousel ---
   // --- Render promo banners alongside sections ---
   function renderPromoBanners() {
-    // Load admin-configured side banners
+    // Read from in-memory Supabase data, fallback to localStorage
     let sideBanners = [];
-    try { sideBanners = JSON.parse(localStorage.getItem('libretech_side_banners') || '[]'); } catch {}
-    const leftAdminBanners = sideBanners.filter(b => b.position === 'side-left' && b.active);
-    const rightAdminBanners = sideBanners.filter(b => b.position === 'side-right' && b.active);
+    if (_bannersFromDB) {
+      sideBanners = _bannersFromDB.filter(b => (b.position === 'side-left' || b.position === 'side-right') && b.active !== false);
+    } else {
+      try { sideBanners = JSON.parse(localStorage.getItem('libretech_side_banners') || '[]'); } catch {}
+    }
+    const leftAdminBanners = sideBanners.filter(b => b.position === 'side-left');
+    const rightAdminBanners = sideBanners.filter(b => b.position === 'side-right');
 
     function renderSideBannerStack(banners, container) {
       if (!container) return;
@@ -486,33 +478,44 @@ const Store = (() => {
     const dotsC = document.getElementById('heroCarouselDots');
     if (!track || !dotsC) return;
 
-    // Hero banners from admin Visualización tab
-    let heroBanners = [];
-    try { heroBanners = JSON.parse(localStorage.getItem('libretech_banners') || '[]').filter(b => b.active && b.image); } catch {}
+    // Hero background image from admin Visualización tab (hero-carousel position = background only)
+    let heroBgImage = '';
+    if (_bannersFromDB) {
+      const heroBanner = _bannersFromDB.find(b => b.position === 'hero-carousel' && b.active !== false && b.image);
+      if (heroBanner) {
+        const now = new Date();
+        const validStart = !heroBanner.startDate || new Date(heroBanner.startDate) <= now;
+        const validEnd = !heroBanner.endDate || new Date(heroBanner.endDate) >= now;
+        if (validStart && validEnd) heroBgImage = heroBanner.image;
+      }
+    } else {
+      try {
+        const stored = JSON.parse(localStorage.getItem('libretech_banners') || '[]');
+        const b = stored.find(b => b.active && b.image);
+        if (b) heroBgImage = b.image;
+      } catch {}
+    }
 
     const featured = getActiveProducts().filter(p => p.featured === true).slice(0, 6);
     if (featured.length === 0) {
       featured.push(...getActiveProducts().slice(0, 4));
     }
-    if (featured.length === 0 && heroBanners.length === 0) return;
+    if (featured.length === 0) return;
 
-    // Build slides: custom banners first, then featured products
-    let slidesHTML = '';
+    // Apply hero background image to the carousel container
+    const carousel = document.getElementById('heroCarousel');
+    if (carousel) {
+      if (heroBgImage) {
+        carousel.style.backgroundImage = `url('${Cart.escapeAttr(heroBgImage)}')`;
+        carousel.style.backgroundSize = 'cover';
+        carousel.style.backgroundPosition = 'center';
+      } else {
+        carousel.style.backgroundImage = '';
+      }
+    }
 
-    heroBanners.forEach(b => {
-      const now = new Date();
-      if (b.startDate && new Date(b.startDate) > now) return;
-      if (b.endDate && new Date(b.endDate) < now) return;
-      const link = b.productId ? `producto.html?id=${encodeURIComponent(b.productId)}` : '';
-      const tag = link ? 'a' : 'div';
-      const href = link ? ` href="${link}"` : '';
-      slidesHTML += `
-      <${tag}${href} class="hero-slide hero-slide--banner" style="background-image:url('${Cart.escapeAttr(b.image)}');background-size:cover;background-position:center;">
-        ${b.subtitle ? `<div class="hero-slide-info"><h3 class="hero-slide-name">${Cart.escapeHTML(b.subtitle)}</h3></div>` : ''}
-      </${tag}>`;
-    });
-
-    slidesHTML += featured.map(p => {
+    // Build slides: ONLY featured products
+    const slidesHTML = featured.map(p => {
       const hasOffer = p.offerActive && p.offerPrice;
       const discountPercent = hasOffer ? Math.round((1 - p.offerPrice / p.price) * 100) : 0;
       return `
@@ -541,7 +544,7 @@ const Store = (() => {
     `}).join('');
 
     track.innerHTML = slidesHTML;
-    const totalSlides = heroBanners.length + featured.length;
+    const totalSlides = featured.length;
 
     // Dots
     dotsC.innerHTML = Array.from({ length: totalSlides }, (_, i) =>
@@ -906,7 +909,17 @@ const Store = (() => {
 
   // ===== PROMO PHOTO BANNERS =====
   const PROMO_PHOTOS_KEY = 'libretech_promo_photos';
-  function getPromoPhotos() { try { return JSON.parse(localStorage.getItem(PROMO_PHOTOS_KEY) || '[]'); } catch { return []; } }
+  function getPromoPhotos() {
+    // Read from in-memory Supabase data first, fallback to localStorage
+    if (_bannersFromDB) {
+      return _bannersFromDB.filter(b => ['after-featured','after-categories','before-footer'].includes(b.position) && b.active !== false).map(b => ({
+        title: b.name, image: b.image, position: b.position,
+        link: b.productId ? `producto.html?id=${b.productId}` : '',
+        linkSection: b.linkSection || '', linkUrl: b.linkUrl || '', active: true
+      }));
+    }
+    try { return JSON.parse(localStorage.getItem(PROMO_PHOTOS_KEY) || '[]'); } catch { return []; }
+  }
 
   function renderPromoPhotoBanners() {
     const slotMap = {
