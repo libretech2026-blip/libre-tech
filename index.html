@@ -343,7 +343,7 @@
     </div>
   </section>
 
-  <!-- ==================== CATEGORÍAS (CARRUSEL 5 EN 5) ==================== -->
+  <!-- ==================== CATEGORÍAS (CARRUSEL 4 EN 4) ==================== -->
   <section class="category-bubbles-section container" id="categoryBubblesSection">
     <div class="category-bubbles-header">
       <div class="category-bubbles-dots" id="categoryBubblesDots"></div>
@@ -359,8 +359,13 @@
   <main class="products-section container" id="productos">
     <h2 class="section-heading">Productos Destacados</h2>
     <div class="section-with-banner">
-      <!-- Left promo banner -->
-      <aside class="promo-banner promo-banner--left" id="promoBannerFeatured">
+      <!-- Hero Banner as Left Promo (200x350) -->
+      <aside class="promo-banner promo-banner--left promo-banner--hero" id="heroBannerCompact">
+        <!-- Rendered by JS -->
+      </aside>
+
+      <!-- Left featured products banner (hidden if hero is present) -->
+      <aside class="promo-banner promo-banner--left" id="promoBannerFeatured" style="display:none">
         <!-- Rendered by JS -->
       </aside>
 
@@ -383,8 +388,8 @@
       </section>
 
       <div class="section-main-content">
-        <!-- Filtros por categoría -->
-        <div class="filters-bar" id="filtersBar">
+        <!-- Filtros por categoría (rendered by JS only if no bubbles selected) -->
+        <div class="filters-bar" id="filtersBar" style="display:none">
           <button class="filter-chip active" data-category="all">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             Todos

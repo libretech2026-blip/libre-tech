@@ -587,10 +587,41 @@ const Store = (() => {
     // Read from in-memory Supabase data, fallback to localStorage
     let sideBanners = [];
     if (_bannersFromDB) {
-      sideBanners = _bannersFromDB.filter(b => (b.position === 'side-left' || b.position === 'side-right') && b.active !== false);
+      sideBanners = _bannersFromDB.filter(b => (b.position === 'side-left' || b.position === 'side-right' || b.position === 'hero-carousel') && b.active !== false);
     } else {
       try { sideBanners = JSON.parse(localStorage.getItem('libretech_side_banners') || '[]'); } catch {}
     }
+    
+    // Hero banner (small 200x350)
+    const heroCarouselBanners = sideBanners.filter(b => b.position === 'hero-carousel');
+    const heroBannerContainer = document.getElementById('heroBannerCompact');
+    if (heroBannerContainer && heroCarouselBanners.length > 0) {
+      const hb = heroCarouselBanners[0];
+      const now = new Date();
+      const validStart = !hb.startDate || new Date(hb.startDate) <= now;
+      const validEnd = !hb.endDate || new Date(hb.endDate) >= now;
+      if (validStart && validEnd) {
+        let link = '';
+        if (hb.productId) link = `producto.html?id=${encodeURIComponent(hb.productId)}`;
+        else if (hb.linkSection) link = hb.linkSection;
+        else if (hb.linkUrl) link = hb.linkUrl;
+        const tag = link ? 'a' : 'div';
+        const href = link ? ` href="${Cart.escapeAttr(link)}"` : '';
+        heroBannerContainer.innerHTML = `<${tag}${href} class="promo-banner-link">
+          <div class="promo-banner-img">
+            ${hb.image ? `<img src="${Cart.escapeAttr(hb.image)}" alt="${Cart.escapeAttr(hb.name)}" loading="lazy">` : ''}
+          </div>
+          <div class="promo-banner-body">
+            <div class="promo-banner-title">${Cart.escapeHTML(hb.name || '')}</div>
+          </div>
+        </${tag}>`;
+      } else {
+        heroBannerContainer.innerHTML = '';
+      }
+    } else if (heroBannerContainer) {
+      heroBannerContainer.innerHTML = '';
+    }
+    
     const leftAdminBanners = sideBanners.filter(b => b.position === 'side-left');
     const rightAdminBanners = sideBanners.filter(b => b.position === 'side-right');
 

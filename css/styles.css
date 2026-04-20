@@ -691,14 +691,7 @@ input, select, textarea {
 
 /* --- HERO BANNER --- */
 .hero {
-  position: relative;
-  overflow: hidden;
-  background: var(--gradient-brand);
-  padding: var(--spacing-lg) 0;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: none;
 }
 
 /* Static ambient glow — no animation, no flicker */
@@ -4246,6 +4239,32 @@ input, select, textarea {
   font-size: 0.8rem;
   color: rgba(255,255,255,0.4);
   text-decoration: line-through;
+}
+
+/* Hero Banner as small promo (200x350) */
+.promo-banner--hero {
+  height: 350px;
+  display: flex;
+  flex-direction: column;
+}
+
+.promo-banner--hero .promo-banner-link {
+  height: 100%;
+  flex-direction: column;
+}
+
+.promo-banner--hero .promo-banner-img {
+  flex: 1;
+  aspect-ratio: auto;
+}
+
+.promo-banner--hero .promo-banner-body {
+  padding: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.promo-banner--hero .promo-banner-title {
+  font-size: 0.75rem;
 }
 
 .promo-banner-price {
