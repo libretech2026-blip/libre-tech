@@ -466,7 +466,7 @@
               <!-- TOP CATEGORÍAS con banner lateral derecho -->
               <div class="pv-row">
                 <div class="pv-section pv-main-area">
-                  <span>⭐ Top Categorías por Valoraciones</span>
+                  <span>🫧 Categorías (carrusel 5 en 5)</span>
                 </div>
                 <div class="pv-section pv-sidebar-banner pv-banner-slot" data-slot="side-right" title="Editar banner lateral derecho">
                   <div class="pv-slot-label">📌 Banner Lateral Der</div>
@@ -499,6 +499,34 @@
                 <span>📋 FOOTER</span>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div class="admin-panel" style="margin-top:var(--spacing-lg)">
+          <div class="admin-panel-header">
+            <h3>Header y Categorías</h3>
+            <p style="font-size:0.8rem;color:var(--text-tertiary);margin:0">Configura color del header y burbujas de categorías de la tienda</p>
+          </div>
+          <div class="admin-panel-body">
+            <form id="visualUiForm" autocomplete="off">
+              <div style="display:grid;grid-template-columns:220px 1fr;gap:var(--spacing-md);align-items:end;margin-bottom:var(--spacing-lg)">
+                <div class="form-group" style="margin:0">
+                  <label class="form-label" for="visualHeaderColor">Color de header-inner</label>
+                  <input type="color" id="visualHeaderColor" class="form-input" value="#e87722" style="height:44px;padding:6px;cursor:pointer">
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label" for="visualHeaderColorText">Hex color</label>
+                  <input type="text" id="visualHeaderColorText" class="form-input" maxlength="7" placeholder="#e87722">
+                </div>
+              </div>
+
+              <h4 style="font-size:0.9rem;margin-bottom:var(--spacing-sm)">Burbujas de categorías (incluye "Todos")</h4>
+              <div id="visualCategoryBubblesList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--spacing-md)"></div>
+
+              <div style="display:flex;justify-content:flex-end;margin-top:var(--spacing-lg)">
+                <button type="submit" class="btn btn-primary">Guardar personalización</button>
+              </div>
+            </form>
           </div>
         </div>
 

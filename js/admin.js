@@ -1334,7 +1334,13 @@ const Admin = (() => {
 
     if (tabName === 'stats') renderStats();
 
-    if (tabName === 'visual') { loadVisualBannersFromDB().then(() => { renderVisualBannersTable(); updatePagePreview(); }); }
+    if (tabName === 'visual') {
+      Promise.all([loadVisualBannersFromDB(), loadVisualUiFromDB()]).then(() => {
+        renderVisualBannersTable();
+        updatePagePreview();
+        renderVisualUiForm();
+      });
+    }
 
     if (tabName === 'pqrs') renderPqrsTable();
 
@@ -1727,6 +1733,7 @@ const Admin = (() => {
     // Visualización (banners unificados)
 
     initVisualBanners();
+    initVisualUiEvents();
 
 
 
@@ -2430,7 +2437,9 @@ const Admin = (() => {
   // ===== VISUALIZACIÓN (unified banners) =====
 
   const VB_KEY = 'libretech_visual_banners';
+  const VUI_KEY = 'libretech_visual_ui';
   let _vbInMemory = null; // In-memory cache to avoid localStorage quota issues with base64 images
+  let _visualUiInMemory = null;
 
   function getVisualBanners() {
     if (_vbInMemory) return _vbInMemory;
@@ -2462,6 +2471,167 @@ const Admin = (() => {
         syncToLegacyBanners(data);
       }
     } catch (e) { console.warn('[Admin] Load banners from DB:', e); }
+  }
+
+  function getVisualUiConfig() {
+    if (_visualUiInMemory && typeof _visualUiInMemory === 'object') return _visualUiInMemory;
+    try {
+      const parsed = JSON.parse(localStorage.getItem(VUI_KEY) || '{}');
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  async function loadVisualUiFromDB() {
+    if (typeof SB === 'undefined' || !SB.getSiteConfig) return;
+    try {
+      const data = await SB.getSiteConfig('visual_ui');
+      if (data && typeof data === 'object') {
+        _visualUiInMemory = data;
+        try { localStorage.setItem(VUI_KEY, JSON.stringify(data)); } catch (e) { /* quota ok */ }
+      }
+    } catch (e) {
+      console.warn('[Admin] Load visual_ui from DB:', e);
+    }
+  }
+
+  async function saveVisualUiConfig(config) {
+    _visualUiInMemory = config;
+    try { localStorage.setItem(VUI_KEY, JSON.stringify(config)); } catch (e) { /* quota ok */ }
+    if (typeof SB !== 'undefined' && SB.setSiteConfig) {
+      await SB.setSiteConfig('visual_ui', config);
+    }
+  }
+
+  function normalizeCategoryKey(name) {
+    return String(name || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function getStoreCategoriesWithAll() {
+    const categories = [...new Set(getProducts().map(p => p.category).filter(Boolean))];
+    return ['Todos', ...categories];
+  }
+
+  function renderCategoryBubblePreviewImage(image, label) {
+    if (image) {
+      return `<img src="${escapeAttr(image)}" alt="${escapeAttr(label)}" style="width:58px;height:58px;border-radius:50%;object-fit:cover;border:2px solid var(--border-light)">`;
+    }
+    return `<div style="width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(26,75,140,0.16),rgba(232,119,34,0.18));font-weight:800;color:var(--primary-blue-dark)">${escapeHTML(label.charAt(0).toUpperCase())}</div>`;
+  }
+
+  function renderVisualUiForm() {
+    const colorInput = document.getElementById('visualHeaderColor');
+    const colorText = document.getElementById('visualHeaderColorText');
+    const list = document.getElementById('visualCategoryBubblesList');
+    if (!colorInput || !colorText || !list) return;
+
+    const cfg = getVisualUiConfig();
+    const safeColor = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test((cfg.headerInnerColor || '').trim()) ? cfg.headerInnerColor.trim() : '#e87722';
+    const images = cfg.categoryBubbleImages && typeof cfg.categoryBubbleImages === 'object' ? cfg.categoryBubbleImages : {};
+
+    colorInput.value = safeColor;
+    colorText.value = safeColor;
+
+    const categories = getStoreCategoriesWithAll();
+    list.innerHTML = categories.map(cat => {
+      const key = normalizeCategoryKey(cat === 'Todos' ? 'all' : cat);
+      const saved = images[key] || '';
+      return `
+        <div class="admin-panel" style="padding:var(--spacing-md)">
+          <div style="display:flex;align-items:center;gap:var(--spacing-sm);margin-bottom:var(--spacing-sm)">
+            ${renderCategoryBubblePreviewImage(saved, cat)}
+            <div>
+              <div style="font-weight:700;font-size:0.88rem">${escapeHTML(cat)}</div>
+              <div style="font-size:0.75rem;color:var(--text-tertiary)">Clave: ${escapeHTML(key)}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:var(--spacing-sm)">
+            <input type="file" accept="image/*" class="form-input vui-cat-file" data-cat-key="${escapeAttr(key)}" style="font-size:0.78rem;padding:8px">
+            <button type="button" class="btn btn-secondary vui-cat-clear" data-cat-key="${escapeAttr(key)}">Quitar</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function collectVisualUiConfigFromForm() {
+    const colorInput = document.getElementById('visualHeaderColor');
+    const colorText = document.getElementById('visualHeaderColorText');
+    const base = getVisualUiConfig();
+    const colorRaw = (colorText?.value || colorInput?.value || '').trim();
+    const safeColor = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(colorRaw) ? colorRaw : '#e87722';
+    return {
+      ...base,
+      headerInnerColor: safeColor,
+      categoryBubbleImages: { ...(base.categoryBubbleImages || {}) }
+    };
+  }
+
+  function initVisualUiEvents() {
+    const colorInput = document.getElementById('visualHeaderColor');
+    const colorText = document.getElementById('visualHeaderColorText');
+    const form = document.getElementById('visualUiForm');
+    const list = document.getElementById('visualCategoryBubblesList');
+
+    colorInput?.addEventListener('input', () => {
+      if (colorText) colorText.value = colorInput.value;
+    });
+
+    colorText?.addEventListener('input', () => {
+      const val = colorText.value.trim();
+      if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(val) && colorInput) {
+        colorInput.value = val;
+      }
+    });
+
+    list?.addEventListener('change', e => {
+      const input = e.target.closest('.vui-cat-file');
+      if (!input || !input.files || !input.files[0]) return;
+      const file = input.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('Imagen máx. 5MB', 'error');
+        input.value = '';
+        return;
+      }
+      const key = input.dataset.catKey;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const cfg = collectVisualUiConfigFromForm();
+        cfg.categoryBubbleImages[key] = reader.result;
+        _visualUiInMemory = cfg;
+        try { localStorage.setItem(VUI_KEY, JSON.stringify(cfg)); } catch (e) { /* quota ok */ }
+        renderVisualUiForm();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    list?.addEventListener('click', e => {
+      const btn = e.target.closest('.vui-cat-clear');
+      if (!btn) return;
+      const key = btn.dataset.catKey;
+      const cfg = collectVisualUiConfigFromForm();
+      if (cfg.categoryBubbleImages[key]) delete cfg.categoryBubbleImages[key];
+      _visualUiInMemory = cfg;
+      try { localStorage.setItem(VUI_KEY, JSON.stringify(cfg)); } catch (e) { /* quota ok */ }
+      renderVisualUiForm();
+    });
+
+    form?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const cfg = collectVisualUiConfigFromForm();
+      try {
+        await saveVisualUiConfig(cfg);
+        showToast('Personalización visual guardada', 'success');
+      } catch (err) {
+        showToast('Error guardando visual: ' + (err.message || err), 'error');
+      }
+    });
   }
 
   function getBanners() { try { return JSON.parse(localStorage.getItem(BANNERS_KEY) || '[]'); } catch { return []; } }

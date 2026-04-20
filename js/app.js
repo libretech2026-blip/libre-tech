@@ -25,21 +25,26 @@ const Store = (() => {
   let showAll = false;
   let carouselInterval = null;
   let carouselIndex = 0;
+  let categoryCarouselInterval = null;
+  let categoryCarouselPage = 0;
 
   // In-memory banner data loaded from Supabase (avoids localStorage quota issues with base64 images)
   let _bannersFromDB = null;
+  let _uiConfigFromDB = null;
 
   // --- Inicialización ---
   function init() {
     // Products already synced from Supabase before init() is called
     seedReviews();
     renderCategories();
+    renderCategoryBubbleCarousel();
     renderFeaturedProducts();
     renderTopCategories();
     renderPromoBanners();
     initHeroCarousel();
     bindEvents();
     initHeaderScroll();
+    applyHeaderInnerCustomization();
     updateHeroStats();
     updateWishlistBadge();
     updateWishlistVisibility();
@@ -54,15 +59,17 @@ const Store = (() => {
       updateWishlistVisibility();
       renderFeaturedProducts();
       renderTopCategories();
+      renderCategoryBubbleCarousel();
     });
   }
 
   async function loadSiteConfigFromDB() {
     if (typeof SB === 'undefined' || !SB.getSiteConfig) return;
     try {
-      const [bannersData, socialData] = await Promise.all([
+      const [bannersData, socialData, uiData] = await Promise.all([
         SB.getSiteConfig('visual_banners'),
-        SB.getSiteConfig('social_links')
+        SB.getSiteConfig('social_links'),
+        SB.getSiteConfig('visual_ui')
       ]);
       if (bannersData && Array.isArray(bannersData)) {
         // Store in memory — no localStorage needed (base64 images exceed quota)
@@ -76,7 +83,150 @@ const Store = (() => {
         try { localStorage.setItem('libretech_social_links', JSON.stringify(socialData)); } catch(e) { /* ok */ }
         renderSocialLinks();
       }
+      if (uiData && typeof uiData === 'object') {
+        _uiConfigFromDB = uiData;
+        try { localStorage.setItem('libretech_visual_ui', JSON.stringify(uiData)); } catch(e) { /* ok */ }
+        applyHeaderInnerCustomization();
+        renderCategoryBubbleCarousel();
+      }
     } catch (e) { console.warn('[App] loadSiteConfigFromDB:', e); }
+  }
+
+  function getVisualUiConfig() {
+    if (_uiConfigFromDB && typeof _uiConfigFromDB === 'object') return _uiConfigFromDB;
+    try {
+      const cfg = JSON.parse(localStorage.getItem('libretech_visual_ui') || '{}');
+      return cfg && typeof cfg === 'object' ? cfg : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function applyHeaderInnerCustomization() {
+    const cfg = getVisualUiConfig();
+    const color = (cfg.headerInnerColor || '').trim();
+    const safe = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color) ? color : '#e87722';
+    document.documentElement.style.setProperty('--header-inner-bg', safe);
+  }
+
+  function normalizeCategoryKey(name) {
+    return String(name || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function syncCategoryBubbleState() {
+    document.querySelectorAll('.category-bubble-item').forEach(btn => {
+      const cat = btn.dataset.category || 'all';
+      btn.classList.toggle('active', cat === currentCategory);
+    });
+  }
+
+  function setActiveCategory(category, sourceChip) {
+    const safeCategory = category || 'all';
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    const selectedChip = Array.from(document.querySelectorAll('.filter-chip')).find(c => (c.dataset.category || '') === safeCategory);
+    if (selectedChip) selectedChip.classList.add('active');
+
+    currentCategory = safeCategory;
+    currentBrand = 'all';
+    showBrandDropdown(currentCategory, sourceChip || selectedChip);
+    showAll = currentCategory !== 'all';
+    renderFeaturedProducts();
+    syncCategoryBubbleState();
+  }
+
+  function renderCategoryBubbleCarousel() {
+    const track = document.getElementById('categoryBubblesTrack');
+    const dots = document.getElementById('categoryBubblesDots');
+    if (!track || !dots) return;
+
+    const products = getActiveProducts();
+    const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
+    const allCategories = ['all', ...categories];
+    const uiCfg = getVisualUiConfig();
+    const bubbleImages = uiCfg.categoryBubbleImages || {};
+
+    if (allCategories.length === 0) {
+      track.innerHTML = '';
+      dots.innerHTML = '';
+      clearInterval(categoryCarouselInterval);
+      return;
+    }
+
+    const pageSize = 5;
+    const pages = [];
+    for (let i = 0; i < allCategories.length; i += pageSize) {
+      pages.push(allCategories.slice(i, i + pageSize));
+    }
+
+    track.innerHTML = pages.map(page => {
+      const cards = page.map(cat => {
+        const isAll = cat === 'all';
+        const label = isAll ? 'Todos' : cat;
+        const key = normalizeCategoryKey(cat);
+        const img = bubbleImages[key] || '';
+        return `
+          <button class="category-bubble-item" data-category="${Cart.escapeAttr(cat)}" aria-label="Filtrar por ${Cart.escapeAttr(label)}">
+            <span class="category-bubble-avatar${img ? ' has-image' : ''}">
+              ${img
+                ? `<img src="${Cart.escapeAttr(img)}" alt="${Cart.escapeAttr(label)}" loading="lazy">`
+                : `<span class="category-bubble-fallback">${Cart.escapeHTML(label.charAt(0).toUpperCase())}</span>`
+              }
+            </span>
+            <span class="category-bubble-label">${Cart.escapeHTML(label)}</span>
+          </button>
+        `;
+      }).join('');
+      return `<div class="category-bubbles-page">${cards}</div>`;
+    }).join('');
+
+    dots.innerHTML = pages.map((_, i) => `
+      <button class="category-bubbles-dot${i === 0 ? ' active' : ''}" data-page="${i}" aria-label="Ir al grupo ${i + 1}"></button>
+    `).join('');
+
+    categoryCarouselPage = 0;
+    const pageCount = pages.length;
+
+    function updateCategoryCarousel() {
+      track.style.transform = `translateX(-${categoryCarouselPage * 100}%)`;
+      dots.querySelectorAll('.category-bubbles-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === categoryCarouselPage);
+      });
+    }
+
+    track.onclick = e => {
+      const btn = e.target.closest('.category-bubble-item');
+      if (!btn) return;
+      setActiveCategory(btn.dataset.category || 'all');
+    };
+
+    dots.onclick = e => {
+      const dot = e.target.closest('.category-bubbles-dot');
+      if (!dot) return;
+      categoryCarouselPage = parseInt(dot.dataset.page, 10) || 0;
+      updateCategoryCarousel();
+      startCategoryAutoRotate();
+    };
+
+    function nextPage() {
+      if (pageCount <= 1) return;
+      categoryCarouselPage = (categoryCarouselPage + 1) % pageCount;
+      updateCategoryCarousel();
+    }
+
+    function startCategoryAutoRotate() {
+      clearInterval(categoryCarouselInterval);
+      if (pageCount <= 1) return;
+      categoryCarouselInterval = setInterval(nextPage, 4500);
+    }
+
+    updateCategoryCarousel();
+    syncCategoryBubbleState();
+    startCategoryAutoRotate();
   }
 
   function updateHeroStats() {
@@ -246,6 +396,7 @@ const Store = (() => {
     count.id = 'productsCount';
     bar.appendChild(count);
     updateProductsCount();
+    syncCategoryBubbleState();
   }
 
   // --- Brand dropdown (replaces old fixed sub-bar) ---
@@ -639,13 +790,7 @@ const Store = (() => {
     document.getElementById('filtersBar')?.addEventListener('click', e => {
       const chip = e.target.closest('.filter-chip');
       if (!chip) return;
-      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      currentCategory = chip.dataset.category;
-      currentBrand = 'all';
-      showBrandDropdown(currentCategory, chip);
-      showAll = currentCategory !== 'all';
-      renderFeaturedProducts();
+      setActiveCategory(chip.dataset.category, chip);
     });
 
     // Brand dropdown items
