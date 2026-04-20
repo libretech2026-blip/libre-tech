@@ -679,7 +679,7 @@ input, select, textarea {
   position: relative;
   overflow: hidden;
   background: var(--gradient-brand);
-  padding: calc(var(--spacing-3xl) * 0.45) 0 calc(var(--spacing-2xl) * 0.45);
+  padding: calc(var(--spacing-xl) * 0.8) 0 calc(var(--spacing-lg) * 0.8);
 }
 
 /* Static ambient glow — no animation, no flicker */

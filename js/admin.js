@@ -2514,8 +2514,8 @@ const Admin = (() => {
   }
 
   function getStoreCategoriesWithAll() {
-    const categories = [...new Set(getProducts().map(p => p.category).filter(Boolean))];
-    return ['Todos', ...categories];
+    // Categorías fijas según especificación
+    return ['Todos', 'Accesorios', 'Audio'];
   }
 
   function renderCategoryBubblePreviewImage(image, label) {
@@ -2627,6 +2627,9 @@ const Admin = (() => {
       const cfg = collectVisualUiConfigFromForm();
       try {
         await saveVisualUiConfig(cfg);
+        // Aplicar cambios inmediatamente
+        const safeColor = cfg.headerInnerColor || '#e87722';
+        document.documentElement.style.setProperty('--header-inner-bg', safeColor);
         showToast('Personalización visual guardada', 'success');
       } catch (err) {
         showToast('Error guardando visual: ' + (err.message || err), 'error');

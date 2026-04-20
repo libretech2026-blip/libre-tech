@@ -144,18 +144,12 @@ const Store = (() => {
     const dots = document.getElementById('categoryBubblesDots');
     if (!track || !dots) return;
 
-    const products = getActiveProducts();
-    const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
-    const allCategories = ['all', ...categories];
+    // Categorías fijas según especificación
+    const fixedCategories = ['all', 'accesorios', 'audio'];
     const uiCfg = getVisualUiConfig();
     const bubbleImages = uiCfg.categoryBubbleImages || {};
 
-    if (allCategories.length === 0) {
-      track.innerHTML = '';
-      dots.innerHTML = '';
-      clearInterval(categoryCarouselInterval);
-      return;
-    }
+    const allCategories = fixedCategories;
 
     const pageSize = 5;
     const pages = [];
@@ -166,7 +160,7 @@ const Store = (() => {
     track.innerHTML = pages.map(page => {
       const cards = page.map(cat => {
         const isAll = cat === 'all';
-        const label = isAll ? 'Todos' : cat;
+        const label = isAll ? 'Todos' : cat.charAt(0).toUpperCase() + cat.slice(1);
         const key = normalizeCategoryKey(cat);
         const img = bubbleImages[key] || '';
         return `
