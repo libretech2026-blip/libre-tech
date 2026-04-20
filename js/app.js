@@ -151,7 +151,7 @@ const Store = (() => {
 
     const allCategories = fixedCategories;
 
-    const pageSize = 5;
+    const pageSize = 4;
     const pages = [];
     for (let i = 0; i < allCategories.length; i += pageSize) {
       pages.push(allCategories.slice(i, i + pageSize));
