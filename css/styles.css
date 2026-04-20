@@ -160,10 +160,10 @@ input, select, textarea {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid var(--border-light);
+  background: var(--header-inner-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: none;
   height: var(--header-height);
   transition: box-shadow var(--transition-base);
 }
@@ -177,12 +177,13 @@ input, select, textarea {
   align-items: center;
   gap: var(--spacing-lg);
   height: 100%;
-  max-width: var(--max-width);
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
   padding: 0 var(--spacing-lg);
   background: var(--header-inner-bg);
-  border-radius: 0 0 14px 14px;
-  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.16);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .header-inner .logo-text {
@@ -195,6 +196,20 @@ input, select, textarea {
 .header-inner .theme-toggle,
 .header-inner .btn-mobile-search {
   color: #fff;
+}
+
+.header-inner .search-wrapper .search-input {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.header-inner .search-wrapper .search-icon {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.header-inner .search-wrapper .search-input::placeholder {
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .logo-link {
@@ -770,6 +785,15 @@ input, select, textarea {
   line-height: 1.05;
   letter-spacing: -0.03em;
   margin-bottom: var(--spacing-lg);
+  max-width: 90vw;
+}
+
+@media (max-width: 640px) {
+  .hero-title {
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    margin-bottom: var(--spacing-md);
+    max-width: 85vw;
+  }
 }
 
 .hero-title-line {
@@ -884,18 +908,34 @@ input, select, textarea {
    SHOWCASE SECTION (Separated carousel)
    ============================================================ */
 .showcase-section {
-  margin-top: var(--spacing-xl);
-  margin-bottom: var(--spacing-2xl);
-  padding: var(--spacing-xl) var(--spacing-lg);
-  position: relative;
-  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
   background: linear-gradient(135deg, rgba(26, 75, 140, 0.06) 0%, rgba(99, 102, 241, 0.04) 50%, rgba(232, 119, 34, 0.05) 100%);
   border-radius: var(--radius-xl);
   border: 1px solid rgba(26, 75, 140, 0.08);
+  flex: 0 0 200px;
+  position: sticky;
+  top: calc(var(--header-height) + var(--spacing-lg));
 }
 
 .products-section .showcase-section {
-  margin-top: 0;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .showcase-section {
+    display: none;
+  }
+}
+
+.showcase-section .hero-carousel {
+  max-height: 300px;
+}
+
+.showcase-section .hero-slide {
+  height: 120px;
 }
 
 .category-bubbles-section {
@@ -954,31 +994,29 @@ input, select, textarea {
   flex: 0 0 100%;
   min-width: 0;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--spacing-md);
 }
 
 .category-bubble-item {
-  border: 1px solid rgba(26, 75, 140, 0.14);
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.85);
+  border: none;
+  border-radius: 0;
+  background: transparent;
   padding: var(--spacing-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   transition: all var(--transition-fast);
+  cursor: pointer;
 }
 
 .category-bubble-item:hover {
-  transform: translateY(-2px);
-  border-color: var(--primary-blue);
+  transform: scale(1.05);
 }
 
-.category-bubble-item.active {
-  border-color: var(--primary-orange);
-  background: rgba(232, 119, 34, 0.12);
-  box-shadow: 0 6px 20px rgba(232, 119, 34, 0.22);
+.category-bubble-item.active .category-bubble-avatar {
+  box-shadow: 0 0 0 2px var(--primary-orange);
 }
 
 .category-bubble-avatar {
@@ -1023,30 +1061,37 @@ input, select, textarea {
 
 .showcase-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-md);
+  justify-content: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
 }
 
 .showcase-title {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  font-size: 1.2rem;
+  gap: var(--spacing-xs);
+  font-size: 0.85rem;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.01em;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .showcase-title svg {
   color: var(--primary-orange);
   filter: drop-shadow(0 0 4px rgba(232, 119, 34, 0.3));
+  flex-shrink: 0;
 }
 
 .showcase-nav {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  justify-content: center;
+  gap: var(--spacing-xs);
+  width: 100%;
 }
 
 /* --- CATEGORÍAS / FILTROS --- */
@@ -3784,20 +3829,22 @@ input, select, textarea {
 @media (max-width: 480px) {
   .category-bubbles-section {
     padding: var(--spacing-md);
+    margin: var(--spacing-lg) var(--spacing-sm);
   }
 
   .category-bubbles-page {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--spacing-sm);
+    grid-template-columns: repeat(3, minmax(60px, 1fr));
+    gap: var(--spacing-xs);
   }
 
   .category-bubble-avatar {
-    width: 56px;
-    height: 56px;
+    width: 52px;
+    height: 52px;
+    border-width: 2px;
   }
 
   .category-bubble-label {
-    font-size: 0.76rem;
+    font-size: 0.7rem;
   }
 
   .hero-slide {
@@ -4261,22 +4308,22 @@ input, select, textarea {
   gap: var(--spacing-md);
 }
 
-/* Responsive: stack banners on smaller screens */
+/* Responsive: keep banners visible on smaller screens */
 @media (max-width: 1024px) {
   .section-with-banner {
-    grid-template-columns: 1fr;
+    grid-template-columns: 120px 1fr;
+    gap: var(--spacing-md);
   }
   .section-with-banner--right {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 120px;
   }
   .promo-banner {
     position: static;
   }
   .promo-banner--left,
   .promo-banner--right {
-    flex-direction: row;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    flex-direction: column;
+    overflow-x: visible;
     scroll-snap-type: x mandatory;
     gap: var(--spacing-sm);
     padding-bottom: var(--spacing-xs);
