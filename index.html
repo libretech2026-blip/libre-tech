@@ -343,8 +343,11 @@
     </div>
   </section>
 
-  <!-- ==================== LO MAS VENDIDO (mobile slot — hidden on desktop) ==================== -->
-  <div id="mostSoldMobileSlot" class="most-sold-mobile-slot container"></div>
+  <!-- ==================== MOBILE SLOTS (above categories) ==================== -->
+  <!-- Lo Más Vendido slot (mobile only) -->
+  <div id="mostSoldMobileSlot" class="mobile-top-slot container"></div>
+  <!-- Left admin banners slot (mobile only — horizontal auto-scroll carousel) -->
+  <div id="leftBannersMobileSlot" class="mobile-top-slot mobile-top-slot--banners container"></div>
 
   <!-- ==================== CATEGORÍAS (CARRUSEL 4 EN 4) ==================== -->
   <section class="category-bubbles-section container" id="categoryBubblesSection">
@@ -826,28 +829,49 @@
         navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration:', err));
       }
 
-      // Move "Lo Más Vendido" above category bubbles on mobile
-      (function moveMostSoldOnMobile() {
+      // Move elements above categories on mobile
+      (function mobileSlotsLayout() {
         const showcase = document.querySelector('#promoBannerLeft .showcase-section');
-        const mobileSlot = document.getElementById('mostSoldMobileSlot');
+        const adminStack = document.getElementById('promoBannerLeftAdminStack');
+        const mobileSlotSold = document.getElementById('mostSoldMobileSlot');
+        const mobileSlotBanners = document.getElementById('leftBannersMobileSlot');
         const desktopParent = document.getElementById('promoBannerLeft');
-        if (!showcase || !mobileSlot || !desktopParent) return;
+        if (!desktopParent) return;
 
         let isMobile = null;
+        let cloneNode = null;
 
-        function syncPosition() {
+        function syncLayout() {
           const nowMobile = window.innerWidth <= 768;
           if (nowMobile === isMobile) return;
           isMobile = nowMobile;
+
           if (nowMobile) {
-            mobileSlot.appendChild(showcase);
+            if (showcase && mobileSlotSold) mobileSlotSold.appendChild(showcase);
+            // Move admin banners into the slot and duplicate for seamless scroll
+            if (adminStack && mobileSlotBanners) {
+              mobileSlotBanners.appendChild(adminStack);
+              // Duplicate for infinite marquee if not already done
+              if (!cloneNode && adminStack.children.length > 0) {
+                cloneNode = adminStack.cloneNode(true);
+                cloneNode.setAttribute('aria-hidden', 'true');
+                cloneNode.id = 'promoBannerLeftAdminStackClone';
+                mobileSlotBanners.appendChild(cloneNode);
+              }
+            }
           } else {
-            desktopParent.insertBefore(showcase, desktopParent.firstChild);
+            // Remove clone
+            if (cloneNode && cloneNode.parentNode) {
+              cloneNode.parentNode.removeChild(cloneNode);
+              cloneNode = null;
+            }
+            if (showcase && desktopParent) desktopParent.insertBefore(showcase, desktopParent.firstChild);
+            if (adminStack && desktopParent) desktopParent.appendChild(adminStack);
           }
         }
 
-        syncPosition();
-        window.addEventListener('resize', syncPosition, { passive: true });
+        syncLayout();
+        window.addEventListener('resize', syncLayout, { passive: true });
       })();
     });
   </script>

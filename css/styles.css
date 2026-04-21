@@ -1296,6 +1296,11 @@ input, select, textarea {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes bannerAutoScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
 .brand-chip {
   display: inline-flex;
   align-items: center;
@@ -4830,6 +4835,7 @@ input, select, textarea {
   align-items: stretch;
   position: sticky;
   top: calc(var(--header-height) + 0.5rem);
+  align-self: flex-start;
   z-index: 50;
 }
 
@@ -4869,6 +4875,7 @@ input, select, textarea {
   align-items: stretch;
   position: sticky;
   top: calc(var(--header-height) + var(--spacing-lg));
+  align-self: flex-start;
 }
 
 .promo-banner--right .promo-hero-placeholder,
@@ -4882,7 +4889,9 @@ input, select, textarea {
 }
 
 .promo-banner--left .promo-side-placeholder {
-  margin-top: 2.5rem;
+  margin-top: 0;
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-light);
 }
 
 /* Promo banner vertical */
@@ -5744,53 +5753,123 @@ input, select, textarea {
   box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
 }
 
-/* ==================== LO MAS VENDIDO MOBILE SLOT ==================== */
-.most-sold-mobile-slot {
+/* ==================== MOBILE TOP SLOTS (above categories) ==================== */
+
+/* Hidden on desktop — JS moves content here on mobile */
+.mobile-top-slot {
   display: none;
 }
 
 @media (max-width: 768px) {
-  .most-sold-mobile-slot {
+  .mobile-top-slot {
     display: block;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
   }
 
-  .most-sold-mobile-slot .showcase-section,
-  .most-sold-mobile-slot .showcase-section--compact {
+  /* --- Lo Más Vendido slot --- */
+  #mostSoldMobileSlot .showcase-section,
+  #mostSoldMobileSlot .showcase-section--compact {
     width: 100% !important;
     flex: none;
     margin-bottom: 0;
   }
 
-  .most-sold-mobile-slot .showcase-section--compact .showcase-header {
+  #mostSoldMobileSlot .showcase-section--compact .showcase-header {
     padding: var(--spacing-xs) var(--spacing-sm);
   }
 
-  .most-sold-mobile-slot .hero-carousel {
-    max-height: none !important;
+  /* Show the carousel horizontally */
+  #mostSoldMobileSlot .showcase-section--compact .hero-carousel {
+    display: block !important;
     height: auto !important;
-  }
-
-  .most-sold-mobile-slot .hero-carousel-track {
-    display: flex;
-    flex-direction: row;
-    gap: var(--spacing-sm);
+    max-height: none !important;
     overflow-x: auto;
+    overflow-y: hidden;
     scrollbar-width: none;
-    padding-bottom: var(--spacing-xs);
   }
 
-  .most-sold-mobile-slot .hero-carousel-track::-webkit-scrollbar {
+  #mostSoldMobileSlot .showcase-section--compact .hero-carousel::-webkit-scrollbar {
     display: none;
   }
 
-  .most-sold-mobile-slot .hero-slide {
-    flex: 0 0 140px;
-    width: 140px;
-    min-width: 140px;
+  #mostSoldMobileSlot .showcase-section--compact .hero-carousel-track {
+    display: flex !important;
+    flex-direction: row !important;
+    height: auto !important;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    overflow: visible;
   }
 
-  .most-sold-mobile-slot .showcase-nav {
+  #mostSoldMobileSlot .showcase-section--compact .hero-slide {
+    flex: 0 0 150px;
+    width: 150px;
+    min-width: 150px;
+    min-height: auto;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+  }
+
+  #mostSoldMobileSlot .showcase-nav {
+    display: none !important;
+  }
+
+  /* --- Left admin banners slot — horizontal auto-scroll carousel --- */
+  .mobile-top-slot--banners {
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    animation: bannerAutoScroll 22s linear infinite;
+    animation-play-state: running;
+  }
+
+  .mobile-top-slot--banners:hover {
+    animation-play-state: paused;
+  }
+
+  .mobile-top-slot--banners #promoBannerLeftAdminStack,
+  .mobile-top-slot--banners #promoBannerLeftAdminStackClone {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: var(--spacing-sm);
+    flex-shrink: 0;
+    padding-right: var(--spacing-sm);
+  }
+
+  .mobile-top-slot--banners .promo-banner-link,
+  .mobile-top-slot--banners .promo-side-placeholder > *,
+  .mobile-top-slot--banners .promo-banner-link img {
+    flex: 0 0 auto;
+    width: 44vw;
+    max-width: 180px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    height: auto;
+    aspect-ratio: 3/5;
+    object-fit: cover;
+  }
+
+  /* Hide the left banner aside on mobile — content moved to slots above */
+  #promoBannerLeft {
+    display: none !important;
+  }
+
+  /* Products take full width on mobile */
+  .section-with-banner {
+    grid-template-columns: 1fr !important;
+    gap: 0;
+  }
+
+  /* Hide banner slot if empty */
+  .mobile-top-slot--banners:empty {
+    display: none;
+  }
+
+  /* Also hide if only contains empty stack */
+  #leftBannersMobileSlot #promoBannerLeftAdminStack:empty {
     display: none !important;
   }
 }
