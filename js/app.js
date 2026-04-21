@@ -534,7 +534,6 @@ const Store = (() => {
         <div class="product-card-image">
           ${isOutOfStock ? '<span class="product-badge out-of-stock">Agotado</span>' : ''}
           ${!isOutOfStock && isNew ? '<span class="product-badge new">Nuevo</span>' : ''}
-          ${product.featured ? '<span class="product-badge featured">★ Destacado</span>' : ''}
           ${product.offerActive && product.offerPrice ? '<span class="product-badge sale">Oferta</span>' : ''}
           ${isOutOfStock ? '<div class="product-sold-out-overlay"></div>' : ''}
           ${product.image

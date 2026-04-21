@@ -1088,10 +1088,24 @@ input, select, textarea {
   line-height: 1.2;
 }
 
+@media (max-width: 768px) {
+  .showcase-title {
+    font-size: 0.7rem;
+    gap: var(--spacing-xs);
+  }
+}
+
 .showcase-title svg {
   color: var(--primary-orange);
   filter: drop-shadow(0 0 4px rgba(232, 119, 34, 0.3));
   flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .showcase-title svg {
+    width: 14px;
+    height: 14px;
+  }
 }
 
 .showcase-nav {
@@ -3473,7 +3487,7 @@ input, select, textarea {
   }
 
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-md);
   }
 
@@ -4114,10 +4128,39 @@ input, select, textarea {
   align-items: start;
 }
 
+@media (max-width: 768px) {
+  .top-categories-section .section-with-banner {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
 .top-categories-section .promo-banner--right {
   position: sticky;
   top: calc(var(--header-height) + var(--spacing-lg));
-  width: 100%;
+  width: 200px;
+  margin-right: -50px;
+  padding-right: 50px;
+}
+
+@media (max-width: 768px) {
+  .top-categories-section .promo-banner--right {
+    position: static;
+    width: 100%;
+    margin-right: 0;
+    padding-right: 0;
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-categories-section .promo-banner--right {
+    position: static;
+    width: 100%;
+    margin-right: 0;
+    padding-right: 0;
+    display: none;
+  }
 }
 
 @media (max-width: 480px) {
@@ -4206,7 +4249,7 @@ input, select, textarea {
 .showcase-section--compact {
   border-radius: var(--radius-lg);
   overflow: visible;
-  display: block;
+  display: flex;
   flex-direction: column;
   height: auto;
   min-height: auto;
@@ -4216,6 +4259,11 @@ input, select, textarea {
   background-attachment: local;
   margin-top: 0;
   align-self: flex-start;
+  margin-bottom: var(--spacing-lg);
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
 }
 
 @media (max-width: 768px) {
@@ -4226,7 +4274,8 @@ input, select, textarea {
     border-radius: 0;
     border: none;
     box-shadow: none;
-    margin-bottom: 0;
+    margin-bottom: var(--spacing-md);
+    padding: 0;
   }
 }
 
@@ -4234,7 +4283,7 @@ input, select, textarea {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(26, 75, 140, 0.15), rgba(232, 119, 34, 0.15));
+  background: transparent;
   pointer-events: none;
   z-index: 1;
 }
@@ -4253,8 +4302,9 @@ input, select, textarea {
 
 @media (max-width: 768px) {
   .showcase-section--compact .showcase-header {
-    padding: var(--spacing-md) 0;
+    padding: var(--spacing-xs) 0;
     background: transparent;
+    margin-bottom: 0;
   }
 }
 
@@ -4265,15 +4315,16 @@ input, select, textarea {
   display: none;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 100%);
-  border-top: 1px solid rgba(26, 75, 140, 0.2);
+  background: transparent;
+  border-top: none;
 }
 
 @media (max-width: 768px) {
   .showcase-section--compact .showcase-nav {
-    background: var(--bg-secondary);
-    border-top: 1px solid var(--border-light);
-    padding: var(--spacing-xs) var(--spacing-sm);
+    background: transparent;
+    border-top: none;
+    padding: 0;
+    display: none;
   }
 }
 
@@ -4311,29 +4362,30 @@ input, select, textarea {
 .showcase-section--compact .hero-carousel-track {
   flex-direction: row;
   padding: 0;
-  height: 100%;
+  height: 0;
   overflow: hidden;
+  display: none;
 }
 
 @media (max-width: 768px) {
   .showcase-section--compact .hero-carousel-track {
-    height: auto;
-    overflow-x: auto;
+    height: 0;
+    overflow-x: hidden;
     overflow-y: hidden;
     scroll-behavior: smooth;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm);
+    gap: 0;
+    padding: 0;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
+    scrollbar-width: none;
+    display: none;
   }
   
   .showcase-section--compact .hero-carousel-track::-webkit-scrollbar {
-    height: 3px;
+    display: none;
   }
   
   .showcase-section--compact .hero-carousel-track::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 2px;
+    display: none;
   }
 }
 
@@ -4517,6 +4569,7 @@ input, select, textarea {
     max-width: 100%;
     z-index: 50;
     gap: 1.5rem;
+    margin-top: var(--spacing-lg);
   }
 }
 
