@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
 
    LIBRE TECH - Admin Panel (admin.js)
 
@@ -2995,8 +2995,10 @@ const Admin = (() => {
     });
 
     const addBtn = document.getElementById('btnAddVisualBanner');
-
     if (addBtn) addBtn.addEventListener('click', () => openVisualBannerForm(-1));
+
+    const addBtnTop = document.getElementById('btnAddVisualBannerTop');
+    if (addBtnTop) addBtnTop.addEventListener('click', () => openVisualBannerForm(-1));
 
     const closeBtn = document.getElementById('btnCloseVisualBanner');
 

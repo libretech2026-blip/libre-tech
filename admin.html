@@ -426,82 +426,150 @@
       <div class="admin-tab-content" id="tabVisual" style="display:none">
         <div class="admin-panel">
           <div class="admin-panel-header">
-            <h3>Visualización de Página</h3>
-            <p style="font-size:0.8rem;color:var(--text-tertiary);margin:0">Haz clic en cualquier zona de banner para editarla</p>
+            <div>
+              <h3 style="margin:0 0 2px">Mapa de la Página</h3>
+              <p style="font-size:0.8rem;color:var(--text-tertiary);margin:0">Vista completa del layout. Haz clic en cualquier zona de banner para editarla.</p>
+            </div>
+            <button class="btn btn-secondary" id="btnAddVisualBannerTop" style="flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nuevo banner
+            </button>
           </div>
           <div class="admin-panel-body" style="padding:var(--spacing-md)">
+
+            <!-- Legend -->
+            <div class="pv-legend">
+              <span class="pv-legend-item pv-legend-hero">Hero / Carrusel</span>
+              <span class="pv-legend-item pv-legend-side">Banner lateral</span>
+              <span class="pv-legend-item pv-legend-full">Banner completo</span>
+              <span class="pv-legend-item pv-legend-content">Contenido</span>
+            </div>
+
             <!-- Page Preview Minimap -->
             <div class="page-preview">
-              <!-- HEADER mock -->
+
+              <!-- HEADER -->
               <div class="pv-section pv-header">
-                <span>🏠 HEADER — Logo, búsqueda, menú</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
+                <span>Header — Logo, búsqueda, carrito, menú</span>
               </div>
 
-              <!-- HERO -->
+              <!-- HERO CAROUSEL -->
               <div class="pv-section pv-hero pv-banner-slot" data-slot="hero-carousel" title="Editar carrusel hero">
-                <div class="pv-slot-label">🎠 Hero Carrusel ("La tech que te libera")</div>
-                <div class="pv-slot-status" id="pvStatusHeroCarousel">Sin banners</div>
-                <button class="pv-edit-btn">Editar</button>
+                <div class="pv-slot-inner">
+                  <div class="pv-slot-icon pv-icon-hero">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                  </div>
+                  <div class="pv-slot-info">
+                    <div class="pv-slot-label">Hero Carrusel</div>
+                    <div class="pv-slot-desc">Imagen principal de la tienda</div>
+                  </div>
+                </div>
+                <div class="pv-slot-right">
+                  <span class="pv-slot-status" id="pvStatusHeroCarousel">Sin banners</span>
+                  <button class="pv-edit-btn">Editar</button>
+                </div>
               </div>
 
-              <!-- CATEGORÍAS (sin banners a su lado) -->
-              <div class="pv-section pv-main-area">
-                <span>🫧 Categorías (carrusel dinámico)</span>
+              <!-- CATEGORÍAS -->
+              <div class="pv-section pv-main-area pv-cats">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+                <span>Burbujas de Categorías (carrusel dinámico)</span>
               </div>
 
-              <!-- PRODUCTOS DESTACADOS con banner lateral izquierdo -->
+              <!-- PRODUCTOS + BANNER IZQUIERDO -->
               <div class="pv-row">
                 <div class="pv-section pv-sidebar-banner pv-banner-slot" data-slot="side-left" title="Editar banner lateral izquierdo">
-                  <div class="pv-slot-label">📌 Banner Lateral Izquierdo</div>
-                  <div class="pv-slot-status" id="pvStatusSideLeft">Auto</div>
+                  <div class="pv-slot-icon pv-icon-side">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/></svg>
+                  </div>
+                  <div class="pv-slot-label">Lateral<br>Izquierdo</div>
+                  <span class="pv-slot-status" id="pvStatusSideLeft">Auto</span>
                   <button class="pv-edit-btn">Editar</button>
                 </div>
                 <div class="pv-section pv-main-area">
-                  <span>🛍️ Productos Destacados (filtrados por categorías)</span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+                  <span>Productos Destacados</span>
                 </div>
               </div>
 
-              <!-- BANNER FULL-WIDTH 1 -->
+              <!-- BANNER COMPLETO 1 -->
               <div class="pv-section pv-full-banner pv-banner-slot" data-slot="after-featured" title="Banner después de productos destacados">
-                <div class="pv-slot-label">🖼️ Banner Completo — Después de Destacados</div>
-                <div class="pv-slot-status" id="pvStatusAfterFeatured">Vacío</div>
-                <button class="pv-edit-btn">Editar</button>
+                <div class="pv-slot-inner">
+                  <div class="pv-slot-icon pv-icon-full">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+                  </div>
+                  <div class="pv-slot-info">
+                    <div class="pv-slot-label">Banner Completo 1</div>
+                    <div class="pv-slot-desc">Después de Productos Destacados</div>
+                  </div>
+                </div>
+                <div class="pv-slot-right">
+                  <span class="pv-slot-status" id="pvStatusAfterFeatured">Vacío</span>
+                  <button class="pv-edit-btn">Editar</button>
+                </div>
               </div>
 
-              <!-- TOP CATEGORÍAS con banner lateral derecho -->
-              <div class="pv-row">
+              <!-- TOP CATEGORÍAS + BANNER DERECHO -->
+              <div class="pv-row pv-row-reverse">
                 <div class="pv-section pv-main-area">
-                  <span>⭐ Top por Categoría</span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <span>Top por Categoría</span>
                 </div>
                 <div class="pv-section pv-sidebar-banner pv-banner-slot" data-slot="side-right" title="Editar banner lateral derecho">
-                  <div class="pv-slot-label">📌 Banner Lateral Der</div>
-                  <div class="pv-slot-status" id="pvStatusSideRight">Auto</div>
+                  <div class="pv-slot-icon pv-icon-side">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
+                  </div>
+                  <div class="pv-slot-label">Lateral<br>Derecho</div>
+                  <span class="pv-slot-status" id="pvStatusSideRight">Auto</span>
                   <button class="pv-edit-btn">Editar</button>
                 </div>
               </div>
 
-              <!-- BANNER FULL-WIDTH 2 -->
+              <!-- BANNER COMPLETO 2 -->
               <div class="pv-section pv-full-banner pv-banner-slot" data-slot="after-categories" title="Banner después de categorías">
-                <div class="pv-slot-label">🖼️ Banner Completo — Después de Categorías</div>
-                <div class="pv-slot-status" id="pvStatusAfterCategories">Vacío</div>
-                <button class="pv-edit-btn">Editar</button>
+                <div class="pv-slot-inner">
+                  <div class="pv-slot-icon pv-icon-full">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+                  </div>
+                  <div class="pv-slot-info">
+                    <div class="pv-slot-label">Banner Completo 2</div>
+                    <div class="pv-slot-desc">Después de Categorías</div>
+                  </div>
+                </div>
+                <div class="pv-slot-right">
+                  <span class="pv-slot-status" id="pvStatusAfterCategories">Vacío</span>
+                  <button class="pv-edit-btn">Editar</button>
+                </div>
               </div>
 
-              <!-- BANNER FULL-WIDTH 3 -->
+              <!-- BANNER COMPLETO 3 -->
               <div class="pv-section pv-full-banner pv-banner-slot" data-slot="before-footer" title="Banner antes del footer">
-                <div class="pv-slot-label">🖼️ Banner Completo — Antes del Footer</div>
-                <div class="pv-slot-status" id="pvStatusBeforeFooter">Vacío</div>
-                <button class="pv-edit-btn">Editar</button>
+                <div class="pv-slot-inner">
+                  <div class="pv-slot-icon pv-icon-full">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+                  </div>
+                  <div class="pv-slot-info">
+                    <div class="pv-slot-label">Banner Completo 3</div>
+                    <div class="pv-slot-desc">Antes del Footer</div>
+                  </div>
+                </div>
+                <div class="pv-slot-right">
+                  <span class="pv-slot-status" id="pvStatusBeforeFooter">Vacío</span>
+                  <button class="pv-edit-btn">Editar</button>
+                </div>
               </div>
 
               <!-- TRUST BANNER -->
               <div class="pv-section pv-trust">
-                <span>✅ Barra de Confianza</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span>Barra de Confianza (envío, garantía, pagos)</span>
               </div>
 
               <!-- FOOTER -->
               <div class="pv-section pv-footer">
-                <span>📋 FOOTER</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15h18"/></svg>
+                <span>Footer — Links, redes sociales, contacto</span>
               </div>
             </div>
           </div>
