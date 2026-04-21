@@ -988,7 +988,10 @@ input, select, textarea {
 }
 
 .category-bubbles-viewport {
-  overflow: hidden;
+  overflow: visible;
+}
+.category-bubbles-section {
+  overflow: visible !important;
 }
 
 .category-bubbles-track {
@@ -1076,11 +1079,13 @@ input, select, textarea {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
-  min-width: 150px;
-  max-width: 230px;
-  z-index: 300;
-  padding: 8px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.1);
+  min-width: 170px;
+  max-width: 240px;
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 999;
+  padding: 10px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.18s ease, transform 0.18s ease;
@@ -4113,7 +4118,38 @@ input, select, textarea {
 
 @media (max-width: 768px) {
   .category-bubbles-page {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex !important;
+    grid-template-columns: none;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+    gap: var(--spacing-sm);
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .category-bubbles-page::-webkit-scrollbar { display: none; }
+  .category-bubbles-page > .category-bubble-item {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    min-width: 84px;
+  }
+  .category-bubbles-viewport,
+  .category-bubbles-section { overflow: visible !important; }
+  .category-sub-dropdown {
+    position: fixed;
+    top: auto;
+    left: 50% !important;
+    transform: translateX(-50%) scaleY(0.92);
+    width: min(90vw, 320px);
+    max-width: 90vw;
+    max-height: 50vh;
+    overflow-y: auto;
+    z-index: 9999;
+  }
+  .category-sub-dropdown.visible {
+    transform: translateX(-50%) scaleY(1);
   }
 
   .category-bubble-avatar {
@@ -4402,8 +4438,7 @@ input, select, textarea {
 }
 
 .top-categories-section .promo-banner--right {
-  position: sticky;
-  top: calc(var(--header-height) + var(--spacing-lg));
+  position: static;
   width: 200px;
   margin-right: -50px;
   padding-right: 50px;
@@ -4831,13 +4866,12 @@ input, select, textarea {
   width: 200px;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);          /* antes 1.5rem — más compacto */
+  gap: var(--spacing-md);
   align-items: stretch;
-  position: sticky;
-  top: calc(var(--header-height) + 0.5rem);
+  position: static;
   align-self: flex-start;
   z-index: 50;
-  margin-top: 0;                   /* refuerza que arranque desde arriba */
+  margin-top: 0;
 }
 
 @media (max-width: 768px) {
@@ -4874,8 +4908,7 @@ input, select, textarea {
   flex-direction: column;
   gap: var(--spacing-lg);
   align-items: stretch;
-  position: sticky;
-  top: calc(var(--header-height) + var(--spacing-lg));
+  position: static;
   align-self: flex-start;
 }
 
@@ -5775,20 +5808,29 @@ input, select, textarea {
     margin-bottom: 0;
   }
 
+   #mostSoldMobileSlot {
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+  }
+  #mostSoldMobileSlot .showcase-section--compact {
+    background: linear-gradient(160deg, rgba(26,75,140,0.10), rgba(232,119,34,0.08));
+    border: 1px solid rgba(26,75,140,0.18);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.10);
+    padding: var(--spacing-md) 0 var(--spacing-lg);
+    margin-bottom: 0;
+  }
   #mostSoldMobileSlot .showcase-section--compact .showcase-header {
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
   }
 
-  /* Show the carousel horizontally */
   #mostSoldMobileSlot .showcase-section--compact .hero-carousel {
     display: block !important;
     height: auto !important;
     max-height: none !important;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: hidden !important;
     scrollbar-width: none;
   }
-
   #mostSoldMobileSlot .showcase-section--compact .hero-carousel::-webkit-scrollbar {
     display: none;
   }
@@ -5797,19 +5839,40 @@ input, select, textarea {
     display: flex !important;
     flex-direction: row !important;
     height: auto !important;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm);
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
     overflow: visible;
+    width: max-content;
+    animation: bannerAutoScroll 28s linear infinite;
+    animation-play-state: running;
+  }
+  #mostSoldMobileSlot .showcase-section--compact .hero-carousel-track:hover,
+  #mostSoldMobileSlot .showcase-section--compact .hero-carousel-track:active {
+    animation-play-state: paused;
   }
 
   #mostSoldMobileSlot .showcase-section--compact .hero-slide {
-    flex: 0 0 150px;
-    width: 150px;
-    min-width: 150px;
-    min-height: auto;
-    background: var(--bg-secondary);
+    flex: 0 0 160px;
+    width: 160px;
+    min-width: 160px;
+    min-height: 230px;
+    padding: var(--spacing-md) var(--spacing-sm);
+    background: var(--bg-primary);
     border-radius: var(--radius-md);
     border: 1px solid var(--border-light);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  #mostSoldMobileSlot .showcase-section--compact .hero-slide-name {
+    font-size: 0.78rem !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    margin: var(--spacing-xs) 0 !important;
+  }
+  #mostSoldMobileSlot .showcase-section--compact .hero-slide-price,
+  #mostSoldMobileSlot .showcase-section--compact .hero-slide-price--offer {
+    font-size: 0.9rem !important;
+    margin-top: var(--spacing-xs);
   }
 
   #mostSoldMobileSlot .showcase-nav {
