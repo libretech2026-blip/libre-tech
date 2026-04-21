@@ -144,12 +144,13 @@ const Store = (() => {
     const dots = document.getElementById('categoryBubblesDots');
     if (!track || !dots) return;
 
-    // Categorías fijas según especificación
-    const fixedCategories = ['all', 'accesorios', 'audio'];
+    // Generar categorías dinámicamente desde productos
+    const activeProducts = getActiveProducts();
+    const dynamicCategories = [...new Set(activeProducts.map(p => p.category).filter(Boolean))];
+    const allCategories = ['all', ...dynamicCategories.sort()];
+    
     const uiCfg = getVisualUiConfig();
     const bubbleImages = uiCfg.categoryBubbleImages || {};
-
-    const allCategories = fixedCategories;
 
     const pageSize = 4;
     const pages = [];
@@ -645,8 +646,11 @@ const Store = (() => {
       }
     }
 
-    renderSideBannerStack(leftAdminBanners, document.getElementById('promoBannerFeatured'));
-    renderSideBannerStack(rightAdminBanners, document.getElementById('promoBannerCategories'));
+    // Render side banners in new layout:
+    // Left banners stack in #promoBannerLeftAdminStack (left sidebar with showcase)
+    // Right banners stack in #promoBannerRightAdminStack (right sidebar in Top Categorías section)
+    renderSideBannerStack(leftAdminBanners, document.getElementById('promoBannerLeftAdminStack'));
+    renderSideBannerStack(rightAdminBanners, document.getElementById('promoBannerRightAdminStack'));
   }
 
   function initHeroCarousel() {
@@ -678,15 +682,16 @@ const Store = (() => {
     }
     if (featured.length === 0) return;
 
-    // Apply hero background image to the carousel container
+    // Apply hero background image to the showcase-section--compact container
     const carousel = document.getElementById('heroCarousel');
-    if (carousel) {
+    const showcaseSection = carousel?.closest('.showcase-section--compact');
+    if (showcaseSection) {
       if (heroBgImage) {
-        carousel.style.backgroundImage = `url('${Cart.escapeAttr(heroBgImage)}')`;
-        carousel.style.backgroundSize = 'cover';
-        carousel.style.backgroundPosition = 'center';
+        showcaseSection.style.backgroundImage = `url('${Cart.escapeAttr(heroBgImage)}')`;
+        showcaseSection.style.backgroundSize = 'cover';
+        showcaseSection.style.backgroundPosition = 'center';
       } else {
-        carousel.style.backgroundImage = '';
+        showcaseSection.style.backgroundImage = '';
       }
     }
 
