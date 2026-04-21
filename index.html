@@ -343,6 +343,9 @@
     </div>
   </section>
 
+  <!-- ==================== LO MAS VENDIDO (mobile slot — hidden on desktop) ==================== -->
+  <div id="mostSoldMobileSlot" class="most-sold-mobile-slot container"></div>
+
   <!-- ==================== CATEGORÍAS (CARRUSEL 4 EN 4) ==================== -->
   <section class="category-bubbles-section container" id="categoryBubblesSection">
     <div class="category-bubbles-header">
@@ -822,6 +825,30 @@
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration:', err));
       }
+
+      // Move "Lo Más Vendido" above category bubbles on mobile
+      (function moveMostSoldOnMobile() {
+        const showcase = document.querySelector('#promoBannerLeft .showcase-section');
+        const mobileSlot = document.getElementById('mostSoldMobileSlot');
+        const desktopParent = document.getElementById('promoBannerLeft');
+        if (!showcase || !mobileSlot || !desktopParent) return;
+
+        let isMobile = null;
+
+        function syncPosition() {
+          const nowMobile = window.innerWidth <= 768;
+          if (nowMobile === isMobile) return;
+          isMobile = nowMobile;
+          if (nowMobile) {
+            mobileSlot.appendChild(showcase);
+          } else {
+            desktopParent.insertBefore(showcase, desktopParent.firstChild);
+          }
+        }
+
+        syncPosition();
+        window.addEventListener('resize', syncPosition, { passive: true });
+      })();
     });
   </script>
 </body>

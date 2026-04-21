@@ -1062,6 +1062,108 @@ input, select, textarea {
   overflow: hidden;
 }
 
+/* ---- Category sub-dropdown ---- */
+.category-bubble-item {
+  position: relative; /* anchor for dropdown */
+}
+
+.category-sub-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) scaleY(0.92);
+  transform-origin: top center;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
+  min-width: 150px;
+  max-width: 230px;
+  z-index: 300;
+  padding: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.category-sub-dropdown.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) scaleY(1);
+}
+
+.category-sub-dropdown-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  padding: 3px 8px 6px;
+}
+
+.category-sub-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-align: left;
+}
+
+.category-sub-item:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.category-sub-item.active {
+  background: rgba(26,75,140,0.08);
+  color: var(--primary-blue);
+  font-weight: 700;
+}
+
+.category-sub-item-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border-color);
+  flex-shrink: 0;
+}
+
+.category-sub-item.active .category-sub-item-dot {
+  background: var(--primary-orange);
+}
+
+@media (max-width: 600px) {
+  .category-sub-dropdown {
+    min-width: 130px;
+    font-size: 0.78rem;
+  }
+}
+
+[data-theme="dark"] .category-sub-dropdown {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+[data-theme="dark"] .category-sub-item:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .category-sub-item.active {
+  background: rgba(96,165,250,0.12);
+  color: #60a5fa;
+}
+
 [data-theme="dark"] .showcase-section {
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(26, 75, 140, 0.06) 50%, rgba(232, 119, 34, 0.06) 100%);
   border-color: rgba(99, 102, 241, 0.12);
@@ -5640,6 +5742,57 @@ input, select, textarea {
 
 [data-theme="dark"] .whatsapp-bubble {
   box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
+}
+
+/* ==================== LO MAS VENDIDO MOBILE SLOT ==================== */
+.most-sold-mobile-slot {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .most-sold-mobile-slot {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .most-sold-mobile-slot .showcase-section,
+  .most-sold-mobile-slot .showcase-section--compact {
+    width: 100% !important;
+    flex: none;
+    margin-bottom: 0;
+  }
+
+  .most-sold-mobile-slot .showcase-section--compact .showcase-header {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .most-sold-mobile-slot .hero-carousel {
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  .most-sold-mobile-slot .hero-carousel-track {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-sm);
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: var(--spacing-xs);
+  }
+
+  .most-sold-mobile-slot .hero-carousel-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .most-sold-mobile-slot .hero-slide {
+    flex: 0 0 140px;
+    width: 140px;
+    min-width: 140px;
+  }
+
+  .most-sold-mobile-slot .showcase-nav {
+    display: none !important;
+  }
 }
 
 /* ==================== TRUST BANNER ==================== */

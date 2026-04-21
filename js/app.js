@@ -193,11 +193,65 @@ const Store = (() => {
       });
     }
 
+    let _activeBubbleBtn = null;
+
+    function closeSubDropdown() {
+      const d = document.querySelector('.category-sub-dropdown');
+      if (d) d.remove();
+      _activeBubbleBtn = null;
+    }
+
     track.onclick = e => {
       const btn = e.target.closest('.category-bubble-item');
       if (!btn) return;
-      setActiveCategory(btn.dataset.category || 'all');
+
+      // click inside an already-open dropdown — let the item handler deal with it
+      if (e.target.closest('.category-sub-dropdown')) return;
+
+      const cat = btn.dataset.category || 'all';
+
+      if (_activeBubbleBtn === btn) { closeSubDropdown(); return; }
+      closeSubDropdown();
+
+      if (cat === 'all') { setActiveCategory('all'); return; }
+
+      const brands = [...new Set(
+        getActiveProducts().filter(p => p.category === cat).map(p => p.brand).filter(Boolean)
+      )].sort();
+
+      if (brands.length === 0) { setActiveCategory(cat); return; }
+
+      const label = cat.charAt(0).toUpperCase() + cat.slice(1);
+      const dropdown = document.createElement('div');
+      dropdown.className = 'category-sub-dropdown';
+
+      let html = `<div class="category-sub-dropdown-title">${Cart.escapeHTML(label)}</div>`;
+      html += `<button class="category-sub-item${currentCategory === cat && currentBrand === 'all' ? ' active' : ''}" data-brand="all" data-cat="${Cart.escapeAttr(cat)}"><span class="category-sub-item-dot"></span>Todas las marcas</button>`;
+      brands.forEach(brand => {
+        const active = currentCategory === cat && currentBrand === brand;
+        html += `<button class="category-sub-item${active ? ' active' : ''}" data-brand="${Cart.escapeAttr(brand)}" data-cat="${Cart.escapeAttr(cat)}"><span class="category-sub-item-dot"></span>${Cart.escapeHTML(brand)}</button>`;
+      });
+      dropdown.innerHTML = html;
+
+      btn.appendChild(dropdown);
+      _activeBubbleBtn = btn;
+      requestAnimationFrame(() => dropdown.classList.add('visible'));
+
+      dropdown.addEventListener('click', ev => {
+        ev.stopPropagation();
+        const item = ev.target.closest('.category-sub-item');
+        if (!item) return;
+        const selectedBrand = item.dataset.brand;
+        const selectedCat = item.dataset.cat;
+        closeSubDropdown();
+        currentBrand = selectedBrand === 'all' ? 'all' : selectedBrand;
+        setActiveCategory(selectedCat);
+      });
     };
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.category-bubble-item')) closeSubDropdown();
+    });
 
     dots.onclick = e => {
       const dot = e.target.closest('.category-bubbles-dot');

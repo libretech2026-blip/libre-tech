@@ -2514,8 +2514,9 @@ const Admin = (() => {
   }
 
   function getStoreCategoriesWithAll() {
-    // Categorías fijas según especificación
-    return ['Todos', 'Accesorios', 'Audio'];
+    const products = getProducts();
+    const dynamic = [...new Set(products.map(p => p.category).filter(Boolean))].sort();
+    return ['Todos', ...dynamic];
   }
 
   function renderCategoryBubblePreviewImage(image, label) {
