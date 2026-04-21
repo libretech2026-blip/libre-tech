@@ -726,41 +726,54 @@ const Store = (() => {
 
     track.innerHTML = slidesHTML;
     const totalSlides = featured.length;
+    
+    // Detectar si es móvil
+    const isMobile = window.innerWidth <= 768;
 
-    // Dots
-    dotsC.innerHTML = Array.from({ length: totalSlides }, (_, i) =>
-      `<button class="carousel-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Ir a slide ${i + 1}"></button>`
-    ).join('');
+    // Dots (solo en escritorio)
+    if (!isMobile) {
+      dotsC.innerHTML = Array.from({ length: totalSlides }, (_, i) =>
+        `<button class="carousel-dot${i === 0 ? ' active' : ''}" data-index="${i}" aria-label="Ir a slide ${i + 1}"></button>`
+      ).join('');
+    } else {
+      dotsC.style.display = 'none';
+    }
 
     carouselIndex = 0;
     const slideCount = totalSlides;
 
-    dotsC.addEventListener('click', e => {
-      const dot = e.target.closest('.carousel-dot');
-      if (!dot) return;
-      carouselIndex = parseInt(dot.dataset.index, 10);
-      updateCarousel();
+    if (!isMobile) {
+      // Comportamiento de escritorio: carrusel con transición
+      dotsC.addEventListener('click', e => {
+        const dot = e.target.closest('.carousel-dot');
+        if (!dot) return;
+        carouselIndex = parseInt(dot.dataset.index, 10);
+        updateCarousel();
+        resetCarouselTimer();
+      });
+
+      function updateCarousel() {
+        const slideWidth = track.parentElement.offsetWidth;
+        track.style.transform = `translateX(-${carouselIndex * slideWidth}px)`;
+        dotsC.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === carouselIndex));
+      }
+
+      function nextSlide() {
+        carouselIndex = (carouselIndex + 1) % slideCount;
+        updateCarousel();
+      }
+
+      function resetCarouselTimer() {
+        clearInterval(carouselInterval);
+        carouselInterval = setInterval(nextSlide, 4000);
+      }
+
       resetCarouselTimer();
-    });
-
-    function updateCarousel() {
-      const slideWidth = track.parentElement.offsetWidth;
-      track.style.transform = `translateX(-${carouselIndex * slideWidth}px)`;
-      dotsC.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === carouselIndex));
+      window.addEventListener('resize', updateCarousel);
+    } else {
+      // Comportamiento móvil: scroll horizontal sin transición automática
+      track.style.transform = 'none';
     }
-
-    function nextSlide() {
-      carouselIndex = (carouselIndex + 1) % slideCount;
-      updateCarousel();
-    }
-
-    function resetCarouselTimer() {
-      clearInterval(carouselInterval);
-      carouselInterval = setInterval(nextSlide, 4000);
-    }
-
-    resetCarouselTimer();
-    window.addEventListener('resize', updateCarousel);
   }
 
   // --- Eventos ---
