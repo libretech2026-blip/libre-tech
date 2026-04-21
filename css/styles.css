@@ -4537,7 +4537,7 @@ input, select, textarea {
   background-attachment: local;
   margin-top: 0;
   align-self: flex-start;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 0;                /* antes var(--spacing-lg) — quita el hueco */
   background: none;
   border: none;
   box-shadow: none;
@@ -4831,12 +4831,13 @@ input, select, textarea {
   width: 200px;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--spacing-md);          /* antes 1.5rem — más compacto */
   align-items: stretch;
   position: sticky;
   top: calc(var(--header-height) + 0.5rem);
   align-self: flex-start;
   z-index: 50;
+  margin-top: 0;                   /* refuerza que arranque desde arriba */
 }
 
 @media (max-width: 768px) {
@@ -4889,7 +4890,7 @@ input, select, textarea {
 }
 
 .promo-banner--left .promo-side-placeholder {
-  margin-top: 0;
+  margin-top: var(--spacing-sm);   /* pequeña separación del showcase */
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--border-light);
 }
@@ -5855,6 +5856,12 @@ input, select, textarea {
   /* Hide the left banner aside on mobile — content moved to slots above */
   #promoBannerLeft {
     display: none !important;
+  }
+
+ /* Productos a ancho completo en móvil */
+  .section-with-banner {
+    grid-template-columns: 1fr !important;
+    gap: 0;
   }
 
   /* Products take full width on mobile */
