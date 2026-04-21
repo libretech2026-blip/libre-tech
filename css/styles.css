@@ -5835,32 +5835,46 @@ input, select, textarea {
     display: none;
   }
 
+   #mostSoldMobileSlot .showcase-section--compact .hero-carousel {
+    overflow: hidden !important;
+    padding-bottom: var(--spacing-md);
+  }
   #mostSoldMobileSlot .showcase-section--compact .hero-carousel-track {
     display: flex !important;
     flex-direction: row !important;
     height: auto !important;
+    align-items: stretch;
     gap: var(--spacing-md);
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-md) var(--spacing-lg);
     overflow: visible;
     width: max-content;
-    animation: bannerAutoScroll 28s linear infinite;
+    animation: bannerAutoScroll 80s linear infinite;
     animation-play-state: running;
   }
+
   #mostSoldMobileSlot .showcase-section--compact .hero-carousel-track:hover,
   #mostSoldMobileSlot .showcase-section--compact .hero-carousel-track:active {
     animation-play-state: paused;
   }
 
-  #mostSoldMobileSlot .showcase-section--compact .hero-slide {
+   #mostSoldMobileSlot .showcase-section--compact .hero-slide {
     flex: 0 0 160px;
     width: 160px;
     min-width: 160px;
-    min-height: 230px;
-    padding: var(--spacing-md) var(--spacing-sm);
+    min-height: 290px;
+    height: auto;
+    padding: var(--spacing-md) var(--spacing-sm) var(--spacing-lg);
     background: var(--bg-primary);
     border-radius: var(--radius-md);
     border: 1px solid var(--border-light);
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow: visible;
+  }
+  #mostSoldMobileSlot .showcase-section--compact .hero-slide > * {
+    flex-shrink: 0;
   }
   #mostSoldMobileSlot .showcase-section--compact .hero-slide-name {
     font-size: 0.78rem !important;
@@ -7075,5 +7089,48 @@ input, select, textarea {
 @media (max-width: 600px) {
   .profile-form-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* === FIX: banners laterales anclados arriba en desktop === */
+@media (min-width: 769px) {
+  .promo-banner--left,
+  .promo-banner--right {
+    position: static !important;
+    align-self: flex-start !important;
+    margin-top: 0 !important;
+    margin-bottom: auto !important;
+    top: auto !important;
+  }
+  /* Forzar al contenedor padre a no estirarlos */
+  .hero-section,
+  .main-hero,
+  .hero-with-banners,
+  .home-hero-row,
+  .hero-row {
+    align-items: flex-start !important;
+  }
+}
+
+/* === FIX: separar "Lo más vendido" del banner izquierdo === */
+@media (min-width: 769px) {
+  .most-sold-section,
+  .most-sold,
+  #mostSoldDesktopSlot,
+  .showcase-section:not(.showcase-section--compact) {
+    clear: both;
+    margin-top: var(--spacing-2xl, 48px) !important;
+    position: relative;
+    z-index: 2;
+  }
+  .most-sold-section .section-title,
+  .most-sold .section-title,
+  #mostSoldDesktopSlot .showcase-header,
+  .showcase-section .showcase-header {
+    padding-top: var(--spacing-md);
+    padding-left: var(--spacing-lg);
+    background: var(--bg-primary);
+    position: relative;
+    z-index: 3;
   }
 }

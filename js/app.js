@@ -253,13 +253,13 @@ const Store = (() => {
       if (!e.target.closest('.category-bubble-item')) closeSubDropdown();
     });
 
-    dots.onclick = e => {
+     dots.onclick = e => {
       const dot = e.target.closest('.category-bubbles-dot');
       if (!dot) return;
       categoryCarouselPage = parseInt(dot.dataset.page, 10) || 0;
       updateCategoryCarousel();
-      startCategoryAutoRotate();
     };
+
 
     function nextPage() {
       if (pageCount <= 1) return;
@@ -267,15 +267,16 @@ const Store = (() => {
       updateCategoryCarousel();
     }
 
+
     function startCategoryAutoRotate() {
+      // Autoplay desactivado por preferencia del usuario.
       clearInterval(categoryCarouselInterval);
-      if (pageCount <= 1) return;
-      categoryCarouselInterval = setInterval(nextPage, 4500);
     }
 
+
+    clearInterval(categoryCarouselInterval);
     updateCategoryCarousel();
     syncCategoryBubbleState();
-    startCategoryAutoRotate();
   }
 
   function updateHeroStats() {
