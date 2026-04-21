@@ -4173,6 +4173,8 @@ input, select, textarea {
   background-size: cover;
   background-position: center;
   background-attachment: local;
+  margin-top: 0;
+  align-self: flex-start;
 }
 
 .showcase-section--compact::before {
@@ -4302,10 +4304,10 @@ input, select, textarea {
   width: 200px;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: 4.5rem;
   align-items: stretch;
   position: sticky;
-  top: calc(var(--header-height) + var(--spacing-lg));
+  top: calc(var(--header-height) + 0.5rem);
   z-index: 50;
 }
 
@@ -4327,6 +4329,10 @@ input, select, textarea {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+}
+
+.promo-banner--left .promo-side-placeholder {
+  margin-top: 1.5rem;
 }
 
 /* Promo banner vertical */
@@ -4622,31 +4628,38 @@ input, select, textarea {
   }
 }
 
-/* Tablet: stack left and right, content goes below */
+/* Tablet: keep similar layout to desktop */
 @media (max-width: 768px) {
   .section-with-banner {
-    grid-template-columns: 1fr;
+    grid-template-columns: 130px 1fr;
     gap: var(--spacing-lg);
   }
   
   .showcase-section,
   .promo-banner--left,
   .promo-banner--right {
-    width: 100%;
-    position: static;
+    width: 130px;
+    position: sticky;
+    top: calc(var(--header-height) + 0.5rem);
   }
   
   .promo-banner--left {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-md);
-    align-items: start;
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+    align-items: stretch;
   }
   
   .promo-banner--right {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    align-items: stretch;
+  }
+  
+  .showcase-section--compact {
+    height: 300px;
+    min-height: 300px;
   }
   
   .top-category-block .products-grid {
@@ -4654,25 +4667,39 @@ input, select, textarea {
   }
 }
 
-/* Mobile: full single column */
+/* Mobile: mantener columnas como desktop */
 @media (max-width: 480px) {
   .section-with-banner {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-lg);
+    grid-template-columns: 100px 1fr;
+    gap: var(--spacing-md);
   }
   
   .showcase-section,
-  .section-main-content,
   .promo-banner--left,
   .promo-banner--right {
-    width: 100%;
+    width: 100px;
+    position: sticky;
+    top: calc(var(--header-height) + 0.5rem);
   }
   
-  .promo-banner--left,
+  .promo-banner--left {
+    display: flex;
+    flex-direction: column;
+    gap: 3.5rem;
+    align-items: stretch;
+  }
+  
   .promo-banner--right {
+    display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
-    position: static;
+    align-items: stretch;
+  }
+  
+  .showcase-section--compact {
+    height: 280px;
+    min-height: 280px;
+    margin-top: -1.5rem;
   }
   
   .top-category-block .products-grid {
