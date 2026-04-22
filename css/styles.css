@@ -5931,7 +5931,7 @@ input, select, textarea {
     box-shadow:
       0 10px 30px rgba(0,0,0,0.12),
       inset 0 1px 0 rgba(255,255,255,0.25);
-    padding: var(--spacing-sm) 0 var(--spacing-xs);
+    padding: var(--spacing-sm) 0 var(--spacing-sm);
     margin-bottom: 0;
     overflow: visible;
   }
@@ -6025,7 +6025,7 @@ input, select, textarea {
     flex: 0 0 160px;
     width: 160px;
     min-width: 160px;
-    min-height: 235px;
+    min-height: 285px;
     height: auto;
     padding: var(--spacing-xs) 8px var(--spacing-sm);
     background: transparent !important;
@@ -7533,5 +7533,43 @@ input, select, textarea {
   }
   .cart-sidebar.active {
     transform: translateX(0) !important;
+  }
+}
+
+/* ==================== CATEGORY BUBBLES — NAV ABAJO Y CENTRADA ==================== */
+.category-bubbles-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.category-bubbles-header {
+  order: 2;              /* header (con dots/arrows) se mueve al final */
+  justify-content: center !important;
+  margin-top: var(--spacing-md);
+  margin-bottom: 0 !important;
+}
+
+.category-bubbles-viewport {
+  order: 1;              /* las burbujas van primero */
+}
+
+.category-bubbles-dots {
+  justify-content: center !important;
+  width: 100%;
+}
+
+/* Flechas (si las genera JS con clase .category-bubbles-arrow o .carousel-arrow) */
+.category-bubbles-arrow,
+.category-bubbles-prev,
+.category-bubbles-next,
+.category-bubbles-header .arrow,
+.category-bubbles-header button {
+  position: static !important;
+  transform: none !important;
+}
+
+@media (max-width: 768px) {
+  .category-bubbles-header {
+    gap: 12px !important;
   }
 }
