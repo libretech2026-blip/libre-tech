@@ -5864,16 +5864,71 @@ input, select, textarea {
     margin-bottom: var(--spacing-xl);
   }
   #mostSoldMobileSlot .showcase-section--compact {
-    background: transparent !important;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+    position: relative;
+    background:
+      radial-gradient(120% 80% at 0% 0%, rgba(232,119,34,0.18) 0%, transparent 55%),
+      radial-gradient(120% 80% at 100% 100%, rgba(26,75,140,0.22) 0%, transparent 55%),
+      linear-gradient(160deg, rgba(26,75,140,0.10), rgba(232,119,34,0.08));
+    border: 1px solid rgba(232,119,34,0.25);
+    border-radius: 22px;
+    box-shadow:
+      0 10px 30px rgba(0,0,0,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.25);
     padding: var(--spacing-md) 0 var(--spacing-lg);
     margin-bottom: 0;
+    overflow: hidden;
+  }
+
+  /* Brillo decorativo arriba a la derecha */
+  #mostSoldMobileSlot .showcase-section--compact::after {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(232,119,34,0.35) 0%, transparent 70%);
+    pointer-events: none;
+    filter: blur(8px);
+  }
+
+  [data-theme="dark"] #mostSoldMobileSlot .showcase-section--compact {
+    background:
+      radial-gradient(120% 80% at 0% 0%, rgba(232,119,34,0.22) 0%, transparent 55%),
+      radial-gradient(120% 80% at 100% 100%, rgba(26,75,140,0.35) 0%, transparent 55%),
+      linear-gradient(160deg, rgba(26,75,140,0.25), rgba(0,0,0,0.4));
+    border: 1px solid rgba(232,119,34,0.35);
+    box-shadow:
+      0 10px 30px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.08);
   }
 
   #mostSoldMobileSlot .showcase-section--compact .showcase-header {
-    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm);
+    position: relative;
+    z-index: 2;
+  }
+  #mostSoldMobileSlot .showcase-section--compact .showcase-title {
+    font-size: 1rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, var(--primary-orange), #ff9800);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    gap: 8px !important;
+  }
+  #mostSoldMobileSlot .showcase-section--compact .showcase-title svg {
+    width: 20px !important;
+    height: 20px !important;
+    color: var(--primary-orange);
+    filter: drop-shadow(0 0 6px rgba(232,119,34,0.5));
+    animation: pulseStar 1.8s ease-in-out infinite;
+  }
+  @keyframes pulseStar {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.18); }
   }
 
   #mostSoldMobileSlot .showcase-section--compact .hero-carousel {
@@ -5884,21 +5939,22 @@ input, select, textarea {
     overflow-y: visible !important;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    padding-bottom: var(--spacing-sm);
   }
   #mostSoldMobileSlot .showcase-section--compact .hero-carousel::-webkit-scrollbar {
     display: none;
   }
 
-  #mostSoldMobileSlot .showcase-section--compact .hero-carousel-track {
+   #mostSoldMobileSlot .showcase-section--compact .hero-carousel-track {
     display: flex !important;
     flex-direction: row !important;
     height: auto !important;
     align-items: stretch;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-xs) var(--spacing-md);
+    gap: 4px;
+    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
     overflow: visible;
     width: max-content;
-    animation: bannerAutoScroll 80s linear infinite;
+    animation: bannerAutoScroll 60s linear infinite;
     animation-play-state: running;
   }
 
@@ -5907,38 +5963,91 @@ input, select, textarea {
     animation-play-state: paused;
   }
 
-  #mostSoldMobileSlot .showcase-section--compact .hero-slide {
-    flex: 0 0 150px;
-    width: 150px;
-    min-width: 150px;
-    min-height: 260px;
+   #mostSoldMobileSlot .showcase-section--compact .hero-slide {
+    flex: 0 0 155px;
+    width: 155px;
+    min-width: 155px;
+    min-height: 280px;
     height: auto;
-    padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-md);
-    background: var(--bg-primary);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-light);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    padding: var(--spacing-sm) 6px var(--spacing-sm);
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+    align-items: center;
     overflow: visible;
   }
   #mostSoldMobileSlot .showcase-section--compact .hero-slide > * {
     flex-shrink: 0;
   }
+  #mostSoldMobileSlot .showcase-section--compact .hero-slide-image {
+    width: 120px !important;
+    height: 120px !important;
+    background: rgba(255,255,255,0.8) !important;
+    border-radius: 16px !important;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    margin-bottom: 10px;
+    transition: transform .3s ease;
+  }
+  [data-theme="dark"] #mostSoldMobileSlot .showcase-section--compact .hero-slide-image {
+    background: rgba(255,255,255,0.06) !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+  }
+  #mostSoldMobileSlot .showcase-section--compact .hero-slide:hover .hero-slide-image {
+    transform: translateY(-3px) scale(1.03);
+  }
   #mostSoldMobileSlot .showcase-section--compact .hero-slide-name {
-    font-size: 0.8rem !important;
-    line-height: 1.3 !important;
+    font-size: 0.82rem !important;
+    line-height: 1.25 !important;
     white-space: normal !important;
     overflow: visible !important;
-    margin: var(--spacing-xs) 0 6px !important;
-    min-height: 3.2em;
+    margin: 4px 0 6px !important;
+    min-height: 2.5em;
+    color: var(--text-primary) !important;
+    text-shadow: none !important;
+    font-weight: 700 !important;
+    text-align: center;
+    padding: 0 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  #mostSoldMobileSlot .showcase-section--compact .hero-slide-cat {
+    font-size: 0.55rem !important;
+    padding: 2px 8px !important;
+    background: linear-gradient(135deg, var(--primary-blue), #2563eb) !important;
+    color: #fff !important;
+    border-radius: 999px !important;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 700;
   }
   #mostSoldMobileSlot .showcase-section--compact .hero-slide-price,
   #mostSoldMobileSlot .showcase-section--compact .hero-slide-price--offer {
-    font-size: 0.95rem !important;
-    margin-top: 6px;
+    font-size: 1rem !important;
+    margin-top: 4px !important;
     line-height: 1.2;
+    color: var(--primary-orange) !important;
+    text-shadow: none !important;
+    font-weight: 900 !important;
+  }
+  #mostSoldMobileSlot .showcase-section--compact .hero-slide-price--original {
+    font-size: 0.7rem !important;
+    color: var(--text-tertiary) !important;
+    text-decoration: line-through;
+    margin-top: 2px;
+  }
+  #mostSoldMobileSlot .showcase-section--compact .hero-slide-discount-badge {
+    top: 6px !important;
+    right: 6px !important;
+    font-size: 0.62rem !important;
+    padding: 3px 7px !important;
+    border-radius: 999px !important;
+    box-shadow: 0 4px 10px rgba(213,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.35) !important;
   }
 
   #mostSoldMobileSlot .showcase-nav {
@@ -7185,10 +7294,30 @@ input, select, textarea {
     z-index: 3;
   }
 
-  /* Subir el título "LO MAS VENDIDO" dentro del showcase compacto */
-  .showcase-section--compact .showcase-header {
-    margin-top: -20px !important;
+  /* ====== Título "LO MAS VENDIDO" despegado del banner ====== */
+  .promo-banner--left .showcase-section--compact {
+    overflow: visible !important;
+    margin-top: calc(-1 * var(--spacing-2xl, 48px));
     padding-top: 0 !important;
-    padding-bottom: 0 !important;
+  }
+
+  .promo-banner--left .showcase-section--compact .showcase-header {
+    margin: 0 auto var(--spacing-md) !important;
+    padding: 10px 16px !important;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: 999px;
+    display: inline-flex !important;
+    align-self: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+    position: relative;
+    z-index: 10;
+    transform: translateY(-14px);
+  }
+
+  [data-theme="dark"] .promo-banner--left .showcase-section--compact .showcase-header {
+    background: var(--bg-secondary);
+    border-color: rgba(255,255,255,0.08);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   }
 }
