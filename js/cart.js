@@ -217,18 +217,18 @@ const Cart = (() => {
       const product = products.find(p => p.id === item.productId);
       if (!product) return;
 
-       const el = document.createElement('div');
+      const el = document.createElement('div');
       el.className = 'cart-item';
       const productUrl = `producto.html?id=${encodeURIComponent(product.id)}`;
       el.innerHTML = `
-        <a href="${productUrl}" class="cart-item-image cart-item-link" data-action="goto-product" data-id="${product.id}" aria-label="Ver ${escapeAttr(product.name)}">
+        <a href="${productUrl}" class="cart-item-image cart-item-link" data-action="goto-product" data-id="${product.id}" rel="noopener" aria-label="Ver ${escapeAttr(product.name)}">
           ${product.image
-            ? `<img src="${escapeAttr(product.image)}" alt="${escapeAttr(product.name)}" loading="lazy">`
+            ? `<img src="${escapeAttr(product.image)}" alt="${escapeAttr(product.name)}" loading="lazy" decoding="async">`
             : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;margin:auto;opacity:.3"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`
           }
         </a>
         <div class="cart-item-info">
-          <a href="${productUrl}" class="cart-item-name cart-item-link" data-action="goto-product" data-id="${product.id}">${escapeHTML(product.name)}</a>
+          <a href="${productUrl}" class="cart-item-name cart-item-link" data-action="goto-product" data-id="${product.id}" rel="noopener">${escapeHTML(product.name)}</a>
           <div class="cart-item-price">${product.offerActive && product.offerPrice ? `<span class="offer-price">${formatPrice(product.offerPrice)}</span> <span class="product-price-original">${formatPrice(product.price)}</span>` : formatPrice(product.price)}</div>
           <div class="cart-item-controls">
             <button class="qty-btn" data-action="decrease" data-id="${product.id}" aria-label="Disminuir cantidad">−</button>
@@ -240,14 +240,6 @@ const Cart = (() => {
           </div>
         </div>
       `;
-      // Cerrar el carrito al hacer clic en imagen o nombre
-      el.querySelectorAll('[data-action="goto-product"]').forEach(link => {
-        link.addEventListener('click', () => {
-          document.body.style.overflow = '';
-          document.getElementById('cartSidebar')?.classList.remove('active');
-          document.getElementById('cartOverlay')?.classList.remove('active');
-        });
-      });
       container.appendChild(el);
     });
   }
@@ -302,6 +294,18 @@ const Cart = (() => {
       if (!btn) return;
 
       const { action, id } = btn.dataset;
+
+      if (action === 'goto-product') {
+        // Deja que el <a> navegue normal, pero cerramos el carrito antes
+        document.body.style.overflow = '';
+        document.getElementById('cartSidebar')?.classList.remove('active');
+        document.getElementById('cartOverlay')?.classList.remove('active');
+        return;
+      }
+
+      // Para los demás acciones (botones), prevenir default por si acaso
+      if (btn.tagName === 'BUTTON') e.preventDefault();
+
       if (action === 'increase') updateQuantity(id, 1);
       else if (action === 'decrease') updateQuantity(id, -1);
       else if (action === 'remove') removeItem(id);

@@ -4704,23 +4704,19 @@ input, select, textarea {
 @media (max-width: 768px) {
   .showcase-section--compact .hero-carousel {
     overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: visible;
     margin: 0;
     border-radius: 0;
-    background: var(--bg-primary);
+    background: transparent !important;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
+    scrollbar-width: none;
   }
-  
+
   .showcase-section--compact .hero-carousel::-webkit-scrollbar {
-    height: 3px;
+    display: none;
   }
-  
-  .showcase-section--compact .hero-carousel::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 2px;
-  }
-}
+}   
+   
 
 .showcase-section--compact .hero-carousel-track {
   flex-direction: row;
@@ -4791,10 +4787,12 @@ input, select, textarea {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
+    justify-content: flex-start !important;
     gap: 4px !important;
     flex: 1 1 auto !important;
     visibility: visible !important;
     opacity: 1 !important;
+    padding: 0 2px;
   }
 
 .showcase-section--compact .hero-slide::before {
@@ -5899,8 +5897,9 @@ input, select, textarea {
     z-index: 5;
   }
 
-  #mostSoldMobileSlot .showcase-section--compact {
+   #mostSoldMobileSlot .showcase-section--compact {
     position: relative;
+    min-height: 420px;
     background:
       radial-gradient(120% 80% at 0% 0%, rgba(232,119,34,0.18) 0%, transparent 55%),
       radial-gradient(120% 80% at 100% 100%, rgba(26,75,140,0.22) 0%, transparent 55%),
@@ -5910,7 +5909,7 @@ input, select, textarea {
     box-shadow:
       0 10px 30px rgba(0,0,0,0.12),
       inset 0 1px 0 rgba(255,255,255,0.25);
-    padding: var(--spacing-md) 0 var(--spacing-lg);
+    padding: var(--spacing-lg) 0 var(--spacing-xl);
     margin-bottom: 0;
     overflow: visible;
   }
@@ -6001,21 +6000,21 @@ input, select, textarea {
   }
 
     #mostSoldMobileSlot .showcase-section--compact .hero-slide {
-    flex: 0 0 165px;
-    width: 165px;
-    min-width: 165px;
-    min-height: 310px;
+    flex: 0 0 170px;
+    width: 170px;
+    min-width: 170px;
+    min-height: 330px;
     height: auto;
-    padding: var(--spacing-sm) 8px var(--spacing-md);
+    padding: var(--spacing-sm) 10px var(--spacing-md);
     background: transparent !important;
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    overflow: visible;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    overflow: visible !important;
     contain: none;
     isolation: auto;
   }
@@ -6023,16 +6022,18 @@ input, select, textarea {
   #mostSoldMobileSlot .showcase-section--compact .hero-slide > * {
     flex-shrink: 0;
   }
+  
   #mostSoldMobileSlot .showcase-section--compact .hero-slide-image {
     width: 120px !important;
     height: 120px !important;
-    background: rgba(255,255,255,0.8) !important;
+    background: rgba(255,255,255,0.5) !important;
     border-radius: 16px !important;
     overflow: hidden;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     margin-bottom: 10px;
     transition: transform .3s ease;
   }
+  
   [data-theme="dark"] #mostSoldMobileSlot .showcase-section--compact .hero-slide-image {
     background: rgba(255,255,255,0.06) !important;
     box-shadow: 0 6px 18px rgba(0,0,0,0.4);
