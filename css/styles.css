@@ -5915,7 +5915,7 @@ input, select, textarea {
 
     #mostSoldMobileSlot {
     margin-top: calc(-1 * var(--spacing-2xl, 48px));
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-2xl, 48px) !important;
     position: relative;
     z-index: 5;
   }
@@ -5931,7 +5931,7 @@ input, select, textarea {
     box-shadow:
       0 10px 30px rgba(0,0,0,0.12),
       inset 0 1px 0 rgba(255,255,255,0.25);
-    padding: var(--spacing-sm) 0 var(--spacing-sm);
+    padding: var(--spacing-md) 0 var(--spacing-lg);
     margin-bottom: 0;
     overflow: visible;
   }
@@ -6025,9 +6025,9 @@ input, select, textarea {
     flex: 0 0 160px;
     width: 160px;
     min-width: 160px;
-    min-height: 285px;
+    min-height: 310px;
     height: auto;
-    padding: var(--spacing-xs) 8px var(--spacing-sm);
+    padding: var(--spacing-sm) 10px var(--spacing-md);
     background: transparent !important;
     border: none !important;
     border-radius: 0 !important;
@@ -6046,14 +6046,14 @@ input, select, textarea {
   }
 
   #mostSoldMobileSlot .showcase-section--compact .hero-slide-image {
-    width: 120px !important;
-    height: 120px !important;
-    background: rgba(255,255,255,0.5) !important;
+    width: 130px !important;
+    height: 130px !important;
+    background: rgba(255,255,255,0.85) !important;
     border-radius: 16px !important;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     margin-bottom: 10px;
-    transition: transform .3s ease;
+    flex-shrink: 0;
   }
   
   [data-theme="dark"] #mostSoldMobileSlot .showcase-section--compact .hero-slide-image {
@@ -7571,5 +7571,13 @@ input, select, textarea {
 @media (max-width: 768px) {
   .category-bubbles-header {
     gap: 12px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .category-bubbles-section {
+    margin-top: var(--spacing-xl) !important;
+    padding-top: var(--spacing-md);
+    clear: both;
   }
 }

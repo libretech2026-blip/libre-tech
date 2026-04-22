@@ -744,3 +744,39 @@ const SB = (() => {
     incrementCouponUse
   };
 })();
+
+// ---- Products cache (stale-while-revalidate) ----
+  const PRODUCTS_TTL = 5 * 60 * 1000; // 5 min
+  let _productsInflight = null;
+
+  const _origSyncProducts = syncProducts;
+  async function syncProductsCached() {
+    // Leer cache IndexedDB rápido
+    const cached = await _idb.get('__products_cache__');
+    if (cached && cached.value && Array.isArray(cached.value)) {
+      const age = Date.now() - (cached.ts || 0);
+      // Si cache fresco, devolverlo
+      if (age < PRODUCTS_TTL) {
+        return cached.value;
+      }
+      // Stale: devolver cache + refrescar en background
+      if (!_productsInflight) {
+        _productsInflight = _origSyncProducts().then(fresh => {
+          _idb.set('__products_cache__', fresh).catch(() => {});
+          _productsInflight = null;
+          return fresh;
+        }).catch(err => {
+          _productsInflight = null;
+          throw err;
+        });
+      }
+      return cached.value;
+    }
+    // Primera vez: pedir a Supabase y cachear
+    const fresh = await _origSyncProducts();
+    _idb.set('__products_cache__', fresh).catch(() => {});
+    return fresh;
+  }
+
+  // Sobrescribir el método exportado
+  syncProducts = syncProductsCached;
