@@ -5864,13 +5864,14 @@ input, select, textarea {
     margin-bottom: var(--spacing-xl);
   }
   #mostSoldMobileSlot .showcase-section--compact {
-    background: linear-gradient(160deg, rgba(26,75,140,0.10), rgba(232,119,34,0.08));
-    border: 1px solid rgba(26,75,140,0.18);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 6px 22px rgba(0,0,0,0.10);
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
     padding: var(--spacing-md) 0 var(--spacing-lg);
     margin-bottom: 0;
   }
+
   #mostSoldMobileSlot .showcase-section--compact .showcase-header {
     padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
   }
@@ -5879,24 +5880,22 @@ input, select, textarea {
     display: block !important;
     height: auto !important;
     max-height: none !important;
-    overflow: hidden !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
   #mostSoldMobileSlot .showcase-section--compact .hero-carousel::-webkit-scrollbar {
     display: none;
   }
 
-   #mostSoldMobileSlot .showcase-section--compact .hero-carousel {
-    overflow: hidden !important;
-    padding-bottom: var(--spacing-md);
-  }
   #mostSoldMobileSlot .showcase-section--compact .hero-carousel-track {
     display: flex !important;
     flex-direction: row !important;
     height: auto !important;
     align-items: stretch;
-    gap: var(--spacing-md);
-    padding: var(--spacing-md) var(--spacing-md) var(--spacing-lg);
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-xs) var(--spacing-md);
     overflow: visible;
     width: max-content;
     animation: bannerAutoScroll 80s linear infinite;
@@ -5908,13 +5907,13 @@ input, select, textarea {
     animation-play-state: paused;
   }
 
-   #mostSoldMobileSlot .showcase-section--compact .hero-slide {
-    flex: 0 0 160px;
-    width: 160px;
-    min-width: 160px;
-    min-height: 325px;
+  #mostSoldMobileSlot .showcase-section--compact .hero-slide {
+    flex: 0 0 150px;
+    width: 150px;
+    min-width: 150px;
+    min-height: 260px;
     height: auto;
-    padding: var(--spacing-md) var(--spacing-sm) 22px;
+    padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-md);
     background: var(--bg-primary);
     border-radius: var(--radius-md);
     border: 1px solid var(--border-light);
@@ -7178,12 +7177,18 @@ input, select, textarea {
   }
   .most-sold-section .section-title,
   .most-sold .section-title,
-  #mostSoldDesktopSlot .showcase-header,
-  .showcase-section .showcase-header {
+  #mostSoldDesktopSlot .showcase-header {
     padding-top: var(--spacing-md);
     padding-left: var(--spacing-lg);
     background: var(--bg-primary);
     position: relative;
     z-index: 3;
+  }
+
+  /* Subir el título "LO MAS VENDIDO" dentro del showcase compacto */
+  .showcase-section--compact .showcase-header {
+    margin-top: -20px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
   }
 }
