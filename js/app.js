@@ -125,19 +125,30 @@ const Store = (() => {
     });
   }
 
-  function setActiveCategory(category, sourceChip) {
+   function setActiveCategory(category, sourceChip, options = {}) {
     const safeCategory = category || 'all';
+    const preserveBrand = options.preserveBrand === true;
+    const skipBrandDropdown = options.skipBrandDropdown === true;
+
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
     const selectedChip = Array.from(document.querySelectorAll('.filter-chip')).find(c => (c.dataset.category || '') === safeCategory);
     if (selectedChip) selectedChip.classList.add('active');
 
     currentCategory = safeCategory;
-    currentBrand = 'all';
-    showBrandDropdown(currentCategory, sourceChip || selectedChip);
+    if (!preserveBrand) currentBrand = 'all';
+
+    if (skipBrandDropdown) {
+      const dd = document.getElementById('brandDropdown');
+      if (dd) dd.style.display = 'none';
+    } else {
+      showBrandDropdown(currentCategory, sourceChip || selectedChip);
+    }
+
     showAll = currentCategory !== 'all';
     renderFeaturedProducts();
     syncCategoryBubbleState();
   }
+
 
   function renderCategoryBubbleCarousel() {
     const track = document.getElementById('categoryBubblesTrack');
@@ -196,16 +207,34 @@ const Store = (() => {
     let _activeBubbleBtn = null;
 
     function closeSubDropdown() {
-      const d = document.querySelector('.category-sub-dropdown');
-      if (d) d.remove();
+      document.querySelectorAll('.category-sub-dropdown').forEach(d => d.remove());
       _activeBubbleBtn = null;
+    }
+
+    function positionCategorySubDropdown(dropdown, btn) {
+      const rect = btn.getBoundingClientRect();
+      const isMobileView = window.innerWidth <= 768;
+
+      dropdown.style.position = 'fixed';
+      dropdown.style.zIndex = '100000';
+      dropdown.classList.toggle('is-mobile', isMobileView);
+
+      if (isMobileView) {
+        dropdown.style.top = '50%';
+        dropdown.style.left = '50%';
+      } else {
+        const centerX = rect.left + (rect.width / 2);
+        const safeLeft = Math.min(Math.max(centerX, 160), window.innerWidth - 160);
+        const safeTop = Math.max(16, Math.min(rect.bottom + 8, window.innerHeight - 24));
+        dropdown.style.top = safeTop + 'px';
+        dropdown.style.left = safeLeft + 'px';
+      }
     }
 
     track.onclick = e => {
       const btn = e.target.closest('.category-bubble-item');
       if (!btn) return;
 
-      // click inside an already-open dropdown — let the item handler deal with it
       if (e.target.closest('.category-sub-dropdown')) return;
 
       const cat = btn.dataset.category || 'all';
@@ -233,31 +262,25 @@ const Store = (() => {
       });
       dropdown.innerHTML = html;
 
-       // Append al body para escapar de overflow:hidden del viewport
       document.body.appendChild(dropdown);
+      positionCategorySubDropdown(dropdown, btn);
       _activeBubbleBtn = btn;
-      const rect = btn.getBoundingClientRect();
-      const isMobileView = window.innerWidth <= 768;
-      if (!isMobileView) {
-        dropdown.style.position = 'fixed';
-        dropdown.style.top = (rect.bottom + 8) + 'px';
-        dropdown.style.left = (rect.left + rect.width / 2) + 'px';
-        dropdown.style.zIndex = '100000';
-      }
+
       requestAnimationFrame(() => dropdown.classList.add('visible'));
 
       dropdown.addEventListener('click', ev => {
+        ev.preventDefault();
         ev.stopPropagation();
+
         const item = ev.target.closest('.category-sub-item');
         if (!item) return;
+
         const selectedBrand = item.dataset.brand;
         const selectedCat = item.dataset.cat;
+
+        currentBrand = selectedBrand === 'all' ? 'all' : selectedBrand;
         closeSubDropdown();
-        const brandToApply = selectedBrand === 'all' ? 'all' : selectedBrand;
-        setActiveCategory(selectedCat);
-        currentBrand = brandToApply;
-        renderFeaturedProducts();
-        syncCategoryBubbleState();
+        setActiveCategory(selectedCat, null, { preserveBrand: true, skipBrandDropdown: true });
       });
     };
 
