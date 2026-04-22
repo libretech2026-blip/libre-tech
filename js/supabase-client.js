@@ -482,113 +482,18 @@ const SB = (() => {
     const { error } = await client.rpc('admin_update_password', { target_user_id: userId, new_password: newPassword });
     if (error) throw error;
   }
-
-  /* ----------------------------------------------------------
+/* ----------------------------------------------------------
      SITE CONFIG — key/value store for banners, social links, etc.
-     Con caché en IndexedDB + stale-while-revalidate para
-     sobrevivir a respuestas lentas de Supabase.
   ---------------------------------------------------------- */
-  const _memCache = new Map();              // cache en memoria (instantáneo)
-  const _inflight = new Map();              // deduplicar peticiones concurrentes
-  const SITE_CONFIG_TTL = 10 * 60 * 1000;   // 10 minutos
-
-  // Mini wrapper de IndexedDB para persistir entre recargas
-  const _idb = (() => {
-    const DB = 'librtech-cache';
-    const STORE = 'site_config';
-    let dbP = null;
-    function open() {
-      if (dbP) return dbP;
-      dbP = new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB, 1);
-        req.onupgradeneeded = () => req.result.createObjectStore(STORE);
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      });
-      return dbP;
-    }
-    return {
-      async get(key) {
-        try {
-          const db = await open();
-          return await new Promise((res, rej) => {
-            const tx = db.transaction(STORE, 'readonly').objectStore(STORE).get(key);
-            tx.onsuccess = () => res(tx.result || null);
-            tx.onerror = () => rej(tx.error);
-          });
-        } catch { return null; }
-      },
-      async set(key, value) {
-        try {
-          const db = await open();
-          return await new Promise((res, rej) => {
-            const tx = db.transaction(STORE, 'readwrite').objectStore(STORE).put({ value, ts: Date.now() }, key);
-            tx.onsuccess = () => res();
-            tx.onerror = () => rej(tx.error);
-          });
-        } catch { /* silencioso */ }
-      },
-      async del(key) {
-        try {
-          const db = await open();
-          return await new Promise((res) => {
-            const tx = db.transaction(STORE, 'readwrite').objectStore(STORE).delete(key);
-            tx.onsuccess = () => res();
-            tx.onerror = () => res();
-          });
-        } catch { /* silencioso */ }
-      }
-    };
-  })();
-
-  async function _fetchSiteConfigFromSB(key) {
-    if (!client) return null;
-    // Deduplicar peticiones concurrentes
-    if (_inflight.has(key)) return _inflight.get(key);
-    const p = (async () => {
-      try {
-        const { data, error } = await client
-          .from('site_config')
-          .select('value')
-          .eq('key', key)
-          .maybeSingle();
-        if (error) { console.warn('[SB] getSiteConfig error:', error.message); return null; }
-        const value = data ? data.value : null;
-        // Guardar en caché
-        _memCache.set(key, { value, ts: Date.now() });
-        _idb.set(key, value).catch(() => {});
-        return value;
-      } finally {
-        _inflight.delete(key);
-      }
-    })();
-    _inflight.set(key, p);
-    return p;
-  }
-
   async function getSiteConfig(key) {
     if (!client) return null;
-
-    // 1. Memoria (instantáneo dentro de la misma sesión)
-    const mem = _memCache.get(key);
-    if (mem && Date.now() - mem.ts < SITE_CONFIG_TTL) {
-      return mem.value;
-    }
-
-    // 2. IndexedDB (instantáneo entre recargas)
-    const idb = await _idb.get(key);
-    if (idb && idb.value !== undefined) {
-      _memCache.set(key, { value: idb.value, ts: idb.ts });
-      const age = Date.now() - (idb.ts || 0);
-      // Stale-while-revalidate: devuelve el cache y refresca en background si es viejo
-      if (age > SITE_CONFIG_TTL) {
-        _fetchSiteConfigFromSB(key).catch(() => {});
-      }
-      return idb.value;
-    }
-
-    // 3. Primera vez: pedir a Supabase (única carga lenta)
-    return _fetchSiteConfigFromSB(key);
+    const { data, error } = await client
+      .from('site_config')
+      .select('value')
+      .eq('key', key)
+      .maybeSingle();
+    if (error) { console.warn('[SB] getSiteConfig error:', error.message); return null; }
+    return data ? data.value : null;
   }
 
   async function setSiteConfig(key, value) {
@@ -597,10 +502,9 @@ const SB = (() => {
       .from('site_config')
       .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     if (error) throw error;
-    // Invalidar caches locales para que la siguiente lectura traiga los valores frescos
-    _memCache.set(key, { value, ts: Date.now() });
-    _idb.set(key, value).catch(() => {});
   }
+
+
 
   /* ----------------------------------------------------------
      CUSTOMER PROFILES — shipping/contact data
