@@ -4705,24 +4705,19 @@ input, select, textarea {
 
 @media (max-width: 768px) {
   .showcase-section--compact .hero-carousel-track {
-    height: 0;
-    overflow-x: hidden;
-    overflow-y: hidden;
+    height: auto;
+    overflow: visible;
     scroll-behavior: smooth;
-    gap: 0;
+    gap: var(--spacing-sm);
     padding: 0;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    display: none;
+    display: flex;
   }
-  
   .showcase-section--compact .hero-carousel-track::-webkit-scrollbar {
     display: none;
   }
-  
-  .showcase-section--compact .hero-carousel-track::-webkit-scrollbar-thumb {
-    display: none;
-  }
+
 }
 
 .showcase-section--compact .hero-slide {
@@ -4763,6 +4758,17 @@ input, select, textarea {
     gap: 2px;
   }
 }
+
+#mostSoldMobileSlot .showcase-section--compact .hero-slide-info {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex: 1 1 auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
 
 .showcase-section--compact .hero-slide::before {
   display: none;
@@ -5860,9 +5866,10 @@ input, select, textarea {
   }
 
    #mostSoldMobileSlot {
-    margin-top: var(--spacing-md);
-    margin-bottom: var(--spacing-xl);
+    margin-top: 0;
+    margin-bottom: var(--spacing-lg);
   }
+
   #mostSoldMobileSlot .showcase-section--compact {
     position: relative;
     background:
@@ -5874,7 +5881,7 @@ input, select, textarea {
     box-shadow:
       0 10px 30px rgba(0,0,0,0.12),
       inset 0 1px 0 rgba(255,255,255,0.25);
-    padding: var(--spacing-md) 0 var(--spacing-lg);
+    padding: var(--spacing-sm) 0 var(--spacing-md);
     margin-bottom: 0;
     overflow: hidden;
   }
@@ -5979,6 +5986,8 @@ input, select, textarea {
     justify-content: flex-start;
     align-items: center;
     overflow: visible;
+    contain: none;
+    isolation: auto;
   }
   #mostSoldMobileSlot .showcase-section--compact .hero-slide > * {
     flex-shrink: 0;
@@ -7312,7 +7321,7 @@ input, select, textarea {
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
     position: relative;
     z-index: 10;
-    transform: translateY(-14px);
+    transform: translateY(-45px);
   }
 
   [data-theme="dark"] .promo-banner--left .showcase-section--compact .showcase-header {
