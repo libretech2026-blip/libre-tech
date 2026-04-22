@@ -5865,9 +5865,11 @@ input, select, textarea {
     margin-bottom: 0;
   }
 
-   #mostSoldMobileSlot {
-    margin-top: 0;
+    #mostSoldMobileSlot {
+    margin-top: calc(-1 * var(--spacing-lg));
     margin-bottom: var(--spacing-lg);
+    position: relative;
+    z-index: 5;
   }
 
   #mostSoldMobileSlot .showcase-section--compact {
@@ -7329,4 +7331,219 @@ input, select, textarea {
     border-color: rgba(255,255,255,0.08);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   }
+}
+
+/* ==================== PRODUCT DETAIL - MOBILE REDESIGN ==================== */
+@media (max-width: 768px) {
+  .product-detail {
+    padding-bottom: var(--spacing-xl);
+  }
+
+  .pd-layout {
+    grid-template-columns: 1fr !important;
+    gap: var(--spacing-lg) !important;
+    padding: 0 var(--spacing-sm);
+  }
+
+  /* Galería full-width con borde sutil y esquinas suaves */
+  .pd-gallery {
+    position: static !important;
+    margin: 0 calc(-1 * var(--spacing-sm));
+  }
+
+  .pd-main-image {
+    border-radius: 0 !important;
+    aspect-ratio: 4/3 !important;
+    background: linear-gradient(180deg, var(--bg-secondary), var(--bg-primary));
+    position: relative;
+  }
+
+  .pd-main-image img {
+    padding: var(--spacing-md) !important;
+  }
+
+  /* Thumbnails centradas con scroll suave */
+  .pd-thumbnails {
+    justify-content: flex-start !important;
+    padding: var(--spacing-sm) var(--spacing-md) !important;
+    gap: 8px !important;
+    scrollbar-width: none;
+  }
+  .pd-thumbnails::-webkit-scrollbar { display: none; }
+
+  .pd-thumb {
+    width: 56px !important;
+    height: 56px !important;
+    border-radius: 10px !important;
+    border-width: 2px !important;
+  }
+
+  /* Info: padding lateral cómodo */
+  .pd-info {
+    padding: 0 var(--spacing-sm);
+    gap: 10px !important;
+  }
+
+  .product-category,
+  .pd-brand {
+    font-size: 0.7rem !important;
+    letter-spacing: 0.08em;
+  }
+
+  .pd-name {
+    font-size: 1.35rem !important;
+    line-height: 1.25 !important;
+    margin: 2px 0 !important;
+  }
+
+  /* Precio MÁS llamativo */
+  .pd-price {
+    font-size: 1.75rem !important;
+    font-weight: 900 !important;
+    background: linear-gradient(135deg, var(--primary-orange), #ff9800);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 4px 0;
+  }
+
+  .pd-stock {
+    font-size: 0.85rem !important;
+    padding: 4px 10px;
+    background: var(--bg-secondary);
+    border-radius: 999px;
+    align-self: flex-start;
+  }
+
+  /* Especificaciones y descripción con card style */
+  .pd-specs,
+  .pd-description {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md) !important;
+    margin-top: var(--spacing-sm);
+  }
+
+  .pd-section-title {
+    font-size: 0.95rem !important;
+    font-weight: 800;
+    margin-bottom: 10px !important;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pd-section-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 16px;
+    background: linear-gradient(180deg, var(--primary-orange), var(--primary-blue));
+    border-radius: 2px;
+  }
+
+  .pd-specs-table td {
+    padding: 8px 6px !important;
+    font-size: 0.85rem;
+  }
+
+  .pd-description p {
+    font-size: 0.9rem !important;
+    line-height: 1.65 !important;
+  }
+
+  /* ==================== BARRA DE ACCIÓN STICKY (cantidad + agregar) ==================== */
+  .pd-actions {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: var(--spacing-md) calc(-1 * var(--spacing-sm)) 0 !important;
+    padding: var(--spacing-md) !important;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-light);
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.08);
+    z-index: 20;
+    gap: var(--spacing-sm) !important;
+  }
+
+  [data-theme="dark"] .pd-actions {
+    background: var(--bg-secondary);
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.5);
+  }
+
+  .pd-qty {
+    border-width: 1px !important;
+    border-radius: 999px !important;
+    flex: 0 0 auto;
+    background: var(--bg-secondary);
+  }
+
+  .qty-btn {
+    width: 38px !important;
+    height: 44px !important;
+    font-size: 1.1rem !important;
+  }
+
+  .qty-value {
+    min-width: 32px !important;
+    font-size: 0.95rem !important;
+  }
+
+  .btn-add-cart-lg {
+    flex: 1 1 auto !important;
+    height: 48px !important;
+    border-radius: 999px !important;
+    background: linear-gradient(135deg, var(--primary-blue), #2563eb) !important;
+    box-shadow: 0 6px 18px rgba(26,75,140,0.35);
+    font-size: 0.95rem !important;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-add-cart-lg:active {
+    transform: scale(0.98);
+  }
+
+  /* Sección recomendados en móvil */
+  .recommended-section {
+    padding: var(--spacing-xl) 0 !important;
+    margin-top: var(--spacing-md) !important;
+  }
+
+  .recommended-title {
+    font-size: 1.15rem !important;
+    padding: 0 var(--spacing-sm);
+    margin-bottom: var(--spacing-lg) !important;
+  }
+
+  .recommended-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--spacing-sm) !important;
+    padding: 0 var(--spacing-sm);
+  }
+
+  /* Breadcrumb más compacto */
+  .breadcrumb {
+    padding: calc(var(--header-height) + 8px) var(--spacing-sm) 8px !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Selector de color */
+  .pd-color-btn {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .pd-option-label {
+    font-size: 0.8rem !important;
+    margin-bottom: 8px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .pd-name { font-size: 1.2rem !important; }
+  .pd-price { font-size: 1.5rem !important; }
+  .qty-btn { width: 34px !important; }
 }

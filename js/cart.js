@@ -453,12 +453,12 @@ const Cart = (() => {
       </div>`;
 
       // Coupon input
-      html += `<div style="margin-top:10px">
-        <div style="display:flex;gap:6px">
-          <input type="text" id="couponInput" placeholder="Codigo de cupon" style="flex:1;padding:6px 10px;border:1px solid var(--border-color);border-radius:var(--radius-md);font-size:0.8rem;text-transform:uppercase" />
-          <button type="button" id="btnApplyCoupon" style="padding:6px 12px;background:var(--primary-blue);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.8rem;cursor:pointer;font-weight:600">Aplicar</button>
+      html += `<div class="coupon-box" style="margin-top:10px">
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <input type="text" id="couponInput" placeholder="Código de cupón" style="flex:1 1 auto;min-width:0;padding:10px 12px;border:1px solid var(--border-color);border-radius:var(--radius-md);font-size:0.85rem;text-transform:uppercase;background:var(--bg-primary);color:var(--text-primary)" />
+          <button type="button" id="btnApplyCoupon" style="flex:0 0 auto;white-space:nowrap;padding:10px 16px;background:linear-gradient(135deg,var(--primary-blue),#2563eb);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.85rem;cursor:pointer;font-weight:700;letter-spacing:0.02em;box-shadow:0 2px 8px rgba(26,75,140,0.25);transition:transform .15s ease">Aplicar</button>
         </div>
-        <div id="couponStatus" style="font-size:0.8rem;margin-top:4px"></div>
+        <div id="couponStatus" style="font-size:0.8rem;margin-top:6px"></div>
       </div>`;
 
       // Show discount if coupon applied
