@@ -233,8 +233,17 @@ const Store = (() => {
       });
       dropdown.innerHTML = html;
 
-      btn.appendChild(dropdown);
+       // Append al body para escapar de overflow:hidden del viewport
+      document.body.appendChild(dropdown);
       _activeBubbleBtn = btn;
+      const rect = btn.getBoundingClientRect();
+      const isMobileView = window.innerWidth <= 768;
+      if (!isMobileView) {
+        dropdown.style.position = 'fixed';
+        dropdown.style.top = (rect.bottom + 8) + 'px';
+        dropdown.style.left = (rect.left + rect.width / 2) + 'px';
+        dropdown.style.zIndex = '100000';
+      }
       requestAnimationFrame(() => dropdown.classList.add('visible'));
 
       dropdown.addEventListener('click', ev => {
@@ -244,8 +253,11 @@ const Store = (() => {
         const selectedBrand = item.dataset.brand;
         const selectedCat = item.dataset.cat;
         closeSubDropdown();
-        currentBrand = selectedBrand === 'all' ? 'all' : selectedBrand;
+        const brandToApply = selectedBrand === 'all' ? 'all' : selectedBrand;
         setActiveCategory(selectedCat);
+        currentBrand = brandToApply;
+        renderFeaturedProducts();
+        syncCategoryBubbleState();
       });
     };
 
