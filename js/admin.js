@@ -2591,7 +2591,7 @@ const Admin = (() => {
       }
     });
 
-    list?.addEventListener('change', e => {
+    list?.addEventListener('change', async e => {
       const input = e.target.closest('.vui-cat-file');
       if (!input || !input.files || !input.files[0]) return;
       const file = input.files[0];
@@ -2601,15 +2601,20 @@ const Admin = (() => {
         return;
       }
       const key = input.dataset.catKey;
-      const reader = new FileReader();
-      reader.onload = () => {
+      try {
+        showToast('Subiendo imagen de categoría...', 'info');
+        const publicUrl = await SB.uploadImage(file, `bubbles/${key}`);
         const cfg = collectVisualUiConfigFromForm();
-        cfg.categoryBubbleImages[key] = reader.result;
+        cfg.categoryBubbleImages[key] = publicUrl;
         _visualUiInMemory = cfg;
-        try { localStorage.setItem(VUI_KEY, JSON.stringify(cfg)); } catch (e) { /* quota ok */ }
+        try { localStorage.setItem(VUI_KEY, JSON.stringify(cfg)); } catch (_) { /* ok */ }
         renderVisualUiForm();
-      };
-      reader.readAsDataURL(file);
+        showToast('Imagen de categoría subida', 'success');
+      } catch (err) {
+        console.error('[Admin] Bubble upload error:', err);
+        showToast('Error al subir: ' + (err.message || err), 'error');
+        input.value = '';
+      }
     });
 
     list?.addEventListener('click', e => {
@@ -3025,20 +3030,38 @@ const Admin = (() => {
 
       imageArea.addEventListener('click', () => imageInput.click());
 
-      imageInput.addEventListener('change', () => {
-
+       imageInput.addEventListener('change', async () => {
         const file = imageInput.files[0];
-
         if (!file) return;
-
         if (file.size > 5 * 1024 * 1024) { showToast('Imagen máx. 5MB', 'error'); return; }
 
-        const reader = new FileReader();
+        const preview = document.getElementById('vbImagePreview');
+        const uploadText = document.getElementById('vbUploadText');
 
-        reader.onload = e => { document.getElementById('vbImagePreview').src = e.target.result; document.getElementById('vbImagePreview').style.display = 'block'; document.getElementById('vbUploadText').style.display = 'none'; vbCurrentImage = e.target.result; };
+        // Mostrar preview local mientras se sube
+        const localReader = new FileReader();
+        localReader.onload = e => {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+          uploadText.style.display = 'none';
+        };
+        localReader.readAsDataURL(file);
 
-        reader.readAsDataURL(file);
-
+        // Subir a Supabase Storage y guardar solo la URL pública
+        try {
+          showToast('Subiendo imagen...', 'info');
+          const publicUrl = await SB.uploadImage(file, 'banners');
+          vbCurrentImage = publicUrl;
+          preview.src = publicUrl;
+          showToast('Imagen subida', 'success');
+        } catch (err) {
+          console.error('[Admin] Banner upload error:', err);
+          showToast('Error al subir imagen: ' + (err.message || err), 'error');
+          preview.style.display = 'none';
+          uploadText.style.display = 'block';
+          vbCurrentImage = '';
+          imageInput.value = '';
+        }
       });
 
     }
