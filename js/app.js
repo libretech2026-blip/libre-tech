@@ -813,7 +813,8 @@ const Store = (() => {
       </a>
     `}).join('');
 
-    track.innerHTML = slidesHTML;
+    // Duplicar slides para loop infinito sin corte en móvil
+    track.innerHTML = slidesHTML.join('') + slidesHTML.join('');
     const totalSlides = featured.length;
     
     // Detectar si es móvil
