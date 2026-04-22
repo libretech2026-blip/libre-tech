@@ -6055,8 +6055,8 @@ input, select, textarea {
   }
 
   #mostSoldMobileSlot .showcase-section--compact .hero-slide-image {
-    width: 120px !important;
-    height: 60px !important;
+    width: 150px !important;
+    height: 150px !important;
     background: rgba(255,255,255,0.85) !important;
     border-radius: 16px !important;
     overflow: hidden;
