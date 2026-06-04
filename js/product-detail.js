@@ -490,6 +490,22 @@ const ProductDetail = (() => {
       document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
       thumb.classList.add('active');
     });
+
+    // Add to cart from recommended section
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.btn-add-cart');
+      if (!btn || btn.closest('.product-detail')) return; // Skip if in main product detail section
+      e.preventDefault();
+      e.stopPropagation();
+      const productId = btn.dataset.productId;
+      Cart.addItem(productId);
+      btn.classList.add('added');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+      setTimeout(() => {
+        btn.classList.remove('added');
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+      }, 1200);
+    });
   }
 
   // --- Header scroll ---

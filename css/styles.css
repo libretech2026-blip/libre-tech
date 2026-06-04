@@ -1017,7 +1017,7 @@ input, select, textarea {
 @media (max-width: 480px) {
   .hero {
     height: 240px;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: 0;
   }
 }
 
@@ -1256,7 +1256,7 @@ input, select, textarea {
 
 .category-bubbles-section {
   margin-top: var(--spacing-lg);
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
   padding: var(--spacing-md);
   border-radius: var(--radius-xl);
   border: none;
@@ -4562,7 +4562,7 @@ input, select, textarea {
   .category-bubbles-section {
     padding: var(--spacing-sm);
     margin-top: 0;
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: 0;
     margin-left: var(--spacing-sm);
     margin-right: var(--spacing-sm);
   }
