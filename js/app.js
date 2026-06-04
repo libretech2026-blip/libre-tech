@@ -805,9 +805,7 @@ const Store = (() => {
     }
 
     // Render side banners in new layout:
-    // Left banners stack in #promoBannerLeftAdminStack (left sidebar with showcase)
     // Right banners stack in #promoBannerRightAdminStack (right sidebar in Top Categorías section)
-    renderSideBannerStack(leftAdminBanners, document.getElementById('promoBannerLeftAdminStack'));
     renderSideBannerStack(rightAdminBanners, document.getElementById('promoBannerRightAdminStack'));
   }
 

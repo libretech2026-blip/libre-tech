@@ -5330,46 +5330,6 @@ input, select, textarea {
   }
 }
 
-.promo-banner--left {
-  display: none;
-  width: 200px;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  align-items: stretch;
-  position: static;
-  align-self: flex-start;
-  z-index: 50;
-  margin-top: 0;
-}
-
-@media (max-width: 768px) {
-  .promo-banner--left {
-    position: static;
-    top: auto;
-    left: auto;
-    right: auto;
-    width: 100%;
-    max-width: 100%;
-    z-index: 50;
-    gap: var(--spacing-md);
-    margin-top: 0;
-    flex-direction: column;
-  }
-  .promo-banner--left #promoBannerLeftAdminStack {
-    display: flex;
-    flex-direction: row;
-    gap: var(--spacing-md);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: var(--spacing-xs);
-  }
-  .promo-banner--left #promoBannerLeftAdminStack .promo-banner-link {
-    flex: 0 0 auto;
-    width: 140px;
-  }
-}
-
 .promo-banner--right {
   display: none;
   width: 200px;
@@ -5381,19 +5341,11 @@ input, select, textarea {
 }
 
 .promo-banner--right .promo-hero-placeholder,
-.promo-banner--right .promo-side-placeholder,
-.promo-banner--left .promo-hero-placeholder,
-.promo-banner--left .promo-side-placeholder {
+.promo-banner--right .promo-side-placeholder {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
-}
-
-.promo-banner--left .promo-side-placeholder {
-  margin-top: var(--spacing-sm);   /* pequeña separación del showcase */
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--border-light);
 }
 
 /* Promo banner vertical */
@@ -8294,8 +8246,8 @@ input, select, textarea {
 @media (max-width: 768px) {
   .category-bubbles-section,
   #categoryBubblesSection {
-    margin-top: var(--spacing-2xl, 48px) !important;
-    padding-top: var(--spacing-md) !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
     clear: both;
     position: relative;
   }
