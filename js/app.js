@@ -707,7 +707,6 @@ const Store = (() => {
           <span class="product-category">${Cart.escapeHTML(product.category || '')}</span>
           <h3 class="product-name">${Cart.escapeHTML(product.name)}</h3>
           ${renderStars(rating.avg, rating.count)}
-          <p class="product-description">${Cart.escapeHTML(product.description || '')}</p>
           <div class="product-price-row">
             <span class="product-price-wrapper">
               ${product.offerActive && product.offerPrice
