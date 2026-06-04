@@ -440,7 +440,6 @@
             <!-- Legend -->
             <div class="pv-legend">
               <span class="pv-legend-item pv-legend-hero">Hero / Carrusel</span>
-              <span class="pv-legend-item pv-legend-side">Banner lateral</span>
               <span class="pv-legend-item pv-legend-full">Banner completo / Carrusel</span>
               <span class="pv-legend-item pv-legend-content">Contenido</span>
             </div>
@@ -494,20 +493,10 @@
                 </div>
               </div>
 
-              <!-- PRODUCTOS + BANNER IZQUIERDO -->
-              <div class="pv-row">
-                <div class="pv-section pv-sidebar-banner pv-banner-slot" data-slot="side-left" title="Editar banner lateral izquierdo">
-                  <div class="pv-slot-icon pv-icon-side">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/></svg>
-                  </div>
-                  <div class="pv-slot-label">Lateral<br>Izquierdo</div>
-                  <span class="pv-slot-status" id="pvStatusSideLeft">Auto</span>
-                  <button class="pv-edit-btn">Editar</button>
-                </div>
-                <div class="pv-section pv-main-area">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
-                  <span>Productos Destacados</span>
-                </div>
+              <!-- PRODUCTOS DESTACADOS -->
+              <div class="pv-section pv-main-area">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+                <span>Productos Destacados</span>
               </div>
 
               <!-- BANNER COMPLETO 1 -->
@@ -527,20 +516,10 @@
                 </div>
               </div>
 
-              <!-- TOP CATEGORÍAS + BANNER DERECHO -->
-              <div class="pv-row pv-row-reverse">
-                <div class="pv-section pv-main-area">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                  <span>Top por Categoría</span>
-                </div>
-                <div class="pv-section pv-sidebar-banner pv-banner-slot" data-slot="side-right" title="Editar banner lateral derecho">
-                  <div class="pv-slot-icon pv-icon-side">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
-                  </div>
-                  <div class="pv-slot-label">Lateral<br>Derecho</div>
-                  <span class="pv-slot-status" id="pvStatusSideRight">Auto</span>
-                  <button class="pv-edit-btn">Editar</button>
-                </div>
+              <!-- TOP CATEGORÍAS -->
+              <div class="pv-section pv-main-area">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span>Top por Categoría</span>
               </div>
 
               <!-- BANNER COMPLETO 2 -->
@@ -1148,9 +1127,7 @@
               <label class="form-label" for="vbPosition">Posición en la página *</label>
               <select class="form-select" id="vbPosition">
                 <option value="hero-carousel">Hero Carrusel (solo fondo)</option>
-                <option value="side-left">Lateral Izquierdo (junto a destacados)</option>
                 <option value="after-featured">Completo — Después de destacados</option>
-                <option value="side-right">Lateral Derecho (junto a categorías)</option>
                 <option value="after-categories">Completo — Después de categorías</option>
                 <option value="before-footer">Completo — Antes del footer</option>
               </select>
@@ -1200,7 +1177,7 @@
             </div>
           </div>
           <div class="form-group" id="vbHeightGroup">
-            <label class="form-label" for="vbHeight">Altura del banner en px (solo laterales, opcional)</label>
+            <label class="form-label" for="vbHeight">Altura del banner en px (opcional)</label>
             <input type="number" class="form-input" id="vbHeight" min="50" max="800" placeholder="Ej: 300 (vacío = automática)">
           </div>
           <div class="form-group">

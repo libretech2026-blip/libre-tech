@@ -781,7 +781,7 @@ input, select, textarea {
   left: 0;
   top: 0;
   width: 280px;
-  height: calc(100vh - var(--header-height));
+  height: 100vh;
   background: var(--bg-primary);
   box-shadow: var(--shadow-lg);
   z-index: 1001;
@@ -1001,7 +1001,7 @@ input, select, textarea {
   display: flex;
   position: relative;
   width: 100%;
-  height: 350px;
+  height: 380px;
   padding: 0;
   background-size: cover;
   background-position: center center;
@@ -1011,6 +1011,18 @@ input, select, textarea {
   overflow: hidden;
   align-items: center;
   justify-content: flex-start;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    height: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    height: 240px;
+  }
 }
 
 /* Static ambient glow — no animation, no flicker */
@@ -1394,6 +1406,12 @@ input, select, textarea {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+  .category-bubbles-page {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .category-bubble-item {
@@ -3615,7 +3633,7 @@ input, select, textarea {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  padding-top: calc(var(--header-height) + var(--spacing-lg));
+  padding-top: var(--spacing-md);
   padding-bottom: var(--spacing-md);
   font-size: 0.85rem;
   color: var(--text-tertiary);
@@ -5725,30 +5743,62 @@ input, select, textarea {
     padding: var(--spacing-xl) 0;
   }
 
+  .footer-top {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+    padding-bottom: var(--spacing-lg);
+  }
+
   .footer-grid {
     grid-template-columns: 1fr;
     gap: var(--spacing-lg);
   }
 
+  .footer-col {
+    padding: 0;
+  }
+
   .footer-col-title {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     margin-bottom: var(--spacing-sm);
+    font-weight: 700;
+  }
+
+  .footer-links-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .footer-links-list a {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .footer-links-list a:hover {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .footer-social-icons {
+    justify-content: center;
+    gap: var(--spacing-sm);
+  }
+
+  .footer-social-icon {
+    width: 36px;
+    height: 36px;
   }
 
   .footer-subtext {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
   }
 
   .footer-tagline {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
   }
 
   .footer-copy {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
   }
 }
 
@@ -5758,7 +5808,7 @@ input, select, textarea {
    CMS PAGE
    ============================================================ */
 .cms-page {
-  padding-top: calc(var(--header-height) + var(--spacing-md));
+  padding-top: var(--spacing-lg);
   padding-bottom: var(--spacing-3xl);
   min-height: 70vh;
 }
@@ -7126,15 +7176,15 @@ input, select, textarea {
 /* ==================== CUSTOMER REVIEWS SECTION ==================== */
 .customer-reviews-section {
   padding: var(--spacing-3xl) var(--spacing-lg);
-  background: transparent;
-  margin: var(--spacing-xl) auto;
-  max-width: var(--max-width);
+  background: var(--bg-secondary);
+  margin: var(--spacing-xl) 0;
+  width: 100%;
 }
 
 .reviews-title {
   text-align: center;
   color: var(--primary-orange);
-  font-size: 2rem;
+  font-size: 1.2rem;
   font-weight: 800;
   margin-bottom: var(--spacing-2xl);
   text-transform: uppercase;
@@ -7146,6 +7196,8 @@ input, select, textarea {
   grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-lg);
   padding: 0 var(--spacing-md);
+  max-width: var(--max-width);
+  margin: 0 auto;
 }
 
 .review-card {
@@ -7159,7 +7211,7 @@ input, select, textarea {
 
 @media (max-width: 768px) {
   .review-card {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
   }
 }
 
@@ -7183,7 +7235,7 @@ input, select, textarea {
 
 @media (max-width: 768px) {
   .review-author {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
   }
 }
 
@@ -7196,7 +7248,7 @@ input, select, textarea {
 
 @media (max-width: 768px) {
   .review-text {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
   }
 }
 
@@ -7238,6 +7290,12 @@ input, select, textarea {
 @media (max-width: 480px) {
   .reviews-grid {
     grid-template-columns: repeat(3, 1fr) !important;
+    gap: var(--spacing-sm);
+  }
+  
+  .review-card {
+    padding: var(--spacing-xs);
+    margin-left: 0;
   }
 }
 

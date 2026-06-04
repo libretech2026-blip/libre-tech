@@ -33,6 +33,14 @@
   <!-- ==================== HEADER ==================== -->
   <header class="site-header" id="siteHeader">
     <div class="header-inner">
+      <!-- Hamburger Menu Button -->
+      <button class="btn-hamburger" id="btnHamburger" title="Menú" aria-label="Menú de categorías" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Logo -->
       <a href="index.html" class="logo-link">
         <img src="nuevos logos/PNG/Isotipo/4.png" alt="LIBRE TECH" class="logo-img" width="40" height="40">
         <div class="logo-text">
@@ -42,29 +50,25 @@
           </div>
         </div>
       </a>
-      <div class="search-wrapper">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="search" class="search-input" id="searchInput" placeholder="Buscar productos..." autocomplete="off" aria-label="Buscar productos">
-        <div class="search-dropdown" id="searchDropdown"></div>
-      </div>
+
+      <!-- Spacer to push actions right -->
       <div style="flex:1"></div>
+
+      <!-- Acciones -->
       <div class="header-actions">
-        <button class="btn-mobile-search" id="btnMobileSearch" title="Buscar" aria-label="Buscar">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </button>
-        <button class="theme-toggle" id="themeToggle" title="Cambiar modo claro/oscuro" aria-label="Cambiar tema">
-          <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-          <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-        </button>
+
+        <!-- Perfil / Login -->
         <div class="user-menu-wrapper" id="userMenuWrapper">
+          <!-- Botón de perfil (siempre visible) -->
           <button class="header-btn" id="btnProfile" title="Mi perfil" aria-label="Mi perfil">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
             </svg>
           </button>
+          <!-- Avatar (se muestra cuando está logueado, reemplaza ícono) -->
           <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none" width="36" height="36">
+
+          <!-- Dropdown Panel -->
           <div class="user-dropdown" id="userDropdown">
             <div class="login-panel" id="loginPanel">
               <div class="login-panel-header">
@@ -172,6 +176,23 @@
       </div>
     </div>
   </header>
+
+  <!-- ==================== HAMBURGER MENU SIDEBAR ==================== -->
+  <aside class="hamburger-menu" id="hamburgerMenu" role="navigation" aria-label="Menú de navegación">
+    <div class="hamburger-menu-header">
+      <h2>Menú</h2>
+      <button class="hamburger-menu-close" id="btnCloseMenu" aria-label="Cerrar menú">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="hamburger-search-wrapper">
+      <input type="search" class="hamburger-search-input" id="hamburgerSearchInput" placeholder="Buscar productos..." autocomplete="off" aria-label="Buscar productos">
+      <div class="hamburger-search-dropdown" id="hamburgerSearchDropdown"></div>
+    </div>
+    <nav class="hamburger-menu-content" id="hamburgerMenuContent">
+      <!-- Renderizado por JS -->
+    </nav>
+  </aside>
 
   <!-- ==================== BREADCRUMB ==================== -->
   <nav class="breadcrumb container" id="breadcrumb" aria-label="Navegación">
@@ -548,6 +569,8 @@
   <script src="js/supabase-client.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/hamburger-menu.js"></script>
   <script src="js/product-detail.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {

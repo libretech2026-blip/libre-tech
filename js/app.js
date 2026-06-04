@@ -580,7 +580,7 @@ const Store = (() => {
         const totalActive = getActiveProducts().length;
         const featuredCount = getActiveProducts().filter(p => p.featured === true).length;
         btnViewAll.style.display = totalActive > featuredCount ? '' : 'none';
-        btnViewAll.textContent = 'Ver todos los productos';
+        btnViewAll.textContent = showAll ? 'Destacados' : 'Todos';
       } else {
         btnViewAll.style.display = 'none';
       }
@@ -970,10 +970,10 @@ const Store = (() => {
       }
     });
 
-    // View all products
+    // View all products / Back to featured
     document.getElementById('btnViewAll')?.addEventListener('click', e => {
       e.preventDefault();
-      showAll = true;
+      showAll = !showAll;
       renderFeaturedProducts();
     });
 

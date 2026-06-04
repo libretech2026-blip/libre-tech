@@ -12,8 +12,17 @@
 </head>
 <body>
 
+  <!-- ==================== HEADER ==================== -->
   <header class="site-header" id="siteHeader">
     <div class="header-inner">
+      <!-- Hamburger Menu Button -->
+      <button class="btn-hamburger" id="btnHamburger" title="Menú" aria-label="Menú de categorías" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Logo -->
       <a href="index.html" class="logo-link">
         <img src="nuevos logos/PNG/Isotipo/4.png" alt="LIBRE TECH" class="logo-img" width="40" height="40">
         <div class="logo-text">
@@ -23,19 +32,173 @@
           </div>
         </div>
       </a>
+
+      <!-- Spacer to push actions right -->
       <div style="flex:1"></div>
+
+      <!-- Acciones -->
       <div class="header-actions">
-        <button class="theme-toggle" id="themeToggle" title="Cambiar modo claro/oscuro" aria-label="Cambiar tema">
-          <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-          <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+
+        <!-- Perfil / Login -->
+        <div class="user-menu-wrapper" id="userMenuWrapper">
+          <!-- Botón de perfil (siempre visible) -->
+          <button class="header-btn" id="btnProfile" title="Mi perfil" aria-label="Mi perfil">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </button>
+          <!-- Avatar (se muestra cuando está logueado, reemplaza ícono) -->
+          <img src="" alt="Avatar" class="user-avatar" id="userAvatar" style="display:none" width="36" height="36">
+
+          <!-- Dropdown Panel -->
+          <div class="user-dropdown" id="userDropdown">
+            <!-- Estado: No logueado - formulario login -->
+            <div class="login-panel" id="loginPanel">
+              <div class="login-panel-header">
+                <h3>Entrar</h3>
+                <button class="login-close" id="btnCloseLogin" aria-label="Cerrar">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <form id="loginForm" autocomplete="off" class="login-form">
+                <div class="login-field">
+                  <label for="loginEmail">Nombre de usuario o correo electrónico <span class="required">*Obligatorio</span></label>
+                  <input type="text" id="loginEmail" class="form-input" required>
+                </div>
+                <div class="login-field">
+                  <label for="loginPassword">Contraseña <span class="required">*Obligatorio</span></label>
+                  <div class="password-wrapper">
+                    <input type="password" id="loginPassword" class="form-input" required>
+                    <button type="button" class="password-toggle" aria-label="Mostrar contraseña"><svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-closed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>
+                  </div>
+                </div>
+                <div class="forgot-password-link"><a href="#" id="btnForgotPassword">¿Olvidaste tu contraseña?</a></div>
+                <button type="submit" class="btn btn-primary btn-full">Iniciar sesión</button>
+              </form>
+              <div class="login-divider"><span>o</span></div>
+              <button class="btn-google-login" id="btnGoogleLogin" title="Iniciar sesión con Google">
+                <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+                <span>Iniciar sesión con Google</span>
+              </button>
+              <div class="login-register">
+                <p>¿No tienes cuenta aún?</p>
+                <a href="#" id="btnCreateAccount" class="create-account-link">Crear una cuenta</a>
+              </div>
+            </div>
+
+            <!-- Estado: Formulario de registro -->
+            <div class="register-panel" id="registerPanel" style="display:none">
+              <div class="login-panel-header">
+                <h3>Crear cuenta</h3>
+                <button class="login-close" id="btnBackToLogin" aria-label="Volver">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+                </button>
+              </div>
+              <form id="registerForm" autocomplete="off" class="login-form">
+                <div class="login-field">
+                  <label for="registerName">Nombre completo <span class="required">*Obligatorio</span></label>
+                  <input type="text" id="registerName" class="form-input" required minlength="2" maxlength="100">
+                </div>
+                <div class="login-field">
+                  <label for="registerEmail">Correo electrónico <span class="required">*Obligatorio</span></label>
+                  <input type="email" id="registerEmail" class="form-input" required maxlength="200">
+                </div>
+                <div class="login-field">
+                  <label for="registerPassword">Contraseña <span class="required">*Mín. 6 caracteres</span></label>
+                  <div class="password-wrapper">
+                    <input type="password" id="registerPassword" class="form-input" required minlength="6">
+                    <button type="button" class="password-toggle" aria-label="Mostrar contraseña"><svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-closed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>
+                  </div>
+                </div>
+                <div class="login-field">
+                  <label for="registerPassword2">Confirmar contraseña <span class="required">*Obligatorio</span></label>
+                  <div class="password-wrapper">
+                    <input type="password" id="registerPassword2" class="form-input" required minlength="6">
+                    <button type="button" class="password-toggle" aria-label="Mostrar contraseña"><svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-closed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Registrarme</button>
+              </form>
+              <div class="login-register">
+                <p>¿Ya tienes cuenta?</p>
+                <a href="#" id="btnBackToLogin2" class="create-account-link">Iniciar sesión</a>
+              </div>
+            </div>
+
+            <!-- Estado: Logueado - menú usuario -->
+            <div class="logged-panel" id="loggedPanel" style="display:none">
+              <div class="user-dropdown-header">
+                <p id="userName"></p>
+                <small id="userEmail"></small>
+              </div>
+              <a href="#" id="btnMyProfile">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Mi perfil
+              </a>
+              <a href="#" id="btnOrderHistory">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Mis pedidos
+              </a>
+              <a href="#" id="btnOpenWishlistProfile">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                </svg>
+                Mi lista de deseos
+              </a>
+              <a href="pqr.html" id="btnMyPqrs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                PQRs
+              </a>
+              <button id="btnThemeProfile" class="dropdown-theme-btn">
+                <svg id="themeIconProfile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+                <span id="themeTextProfile">Claro/Oscuro</span>
+              </button>
+              <button id="btnLogout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón carrito -->
+        <button class="header-btn" id="btnOpenCart" title="Ver carrito" aria-label="Abrir carrito de compras">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+          </svg>
+          <span class="badge" id="cartBadge" style="display:none">0</span>
         </button>
-        <a href="index.html" class="btn btn-secondary" style="font-size:0.85rem;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-          Volver a la tienda
-        </a>
       </div>
     </div>
   </header>
+
+  <!-- ==================== HAMBURGER MENU SIDEBAR ==================== -->
+  <aside class="hamburger-menu" id="hamburgerMenu" role="navigation" aria-label="Menú de navegación">
+    <div class="hamburger-menu-header">
+      <h2>Menú</h2>
+      <button class="hamburger-menu-close" id="btnCloseMenu" aria-label="Cerrar menú">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <!-- Barra de búsqueda en el menú -->
+    <div class="hamburger-search-wrapper">
+      <input
+        type="search"
+        class="hamburger-search-input"
+        id="hamburgerSearchInput"
+        placeholder="Buscar productos..."
+        autocomplete="off"
+        aria-label="Buscar productos"
+      >
+      <div class="hamburger-search-dropdown" id="hamburgerSearchDropdown"></div>
+    </div>
+    <nav class="hamburger-menu-content" id="hamburgerMenuContent">
+      <!-- Renderizado por JS -->
+    </nav>
+  </aside>
 
   <main class="cms-page container" id="cmsPage">
     <nav class="breadcrumb" id="breadcrumb" aria-label="Navegación">
@@ -110,7 +273,7 @@
       }
       document.addEventListener('DOMContentLoaded', function(){
         updateIcons();
-        document.getElementById('themeToggle')?.addEventListener('click', function(){
+        document.getElementById('btnThemeProfile')?.addEventListener('click', function(){
           const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
           if(isDark){ document.documentElement.removeAttribute('data-theme'); localStorage.setItem('libretech_theme','light'); }
           else { document.documentElement.setAttribute('data-theme','dark'); localStorage.setItem('libretech_theme','dark'); }
@@ -118,6 +281,19 @@
         });
       });
     })();
+  </script>
+
+  <script src="js/supabase-client.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/hamburger-menu.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try { await SB.syncProducts(); } catch (e) { console.warn('SB sync:', e); }
+      Cart.init();
+      Auth.init();
+    });
   </script>
 
   <script>
