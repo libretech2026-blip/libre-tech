@@ -1945,6 +1945,11 @@ input, select, textarea {
     justify-content: flex-end;
     gap: var(--spacing-sm);
   }
+  
+  .product-card-actions {
+    padding: 0 var(--spacing-md) var(--spacing-sm);
+    gap: var(--spacing-sm);
+  }
 }
 
 .product-price-wrapper {
@@ -4093,22 +4098,27 @@ input, select, textarea {
   text-decoration: none;
   color: inherit;
   display: block;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .product-card-link:hover .product-name {
   color: var(--primary-blue);
 }
 
-/* Product card with floating add-to-cart */
-.product-card {
-  position: relative;
+.product-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 var(--spacing-lg) var(--spacing-md);
+  gap: var(--spacing-md);
+  flex-shrink: 0;
 }
 
-.product-card > .btn-add-cart {
-  position: absolute;
-  bottom: var(--spacing-md);
-  right: var(--spacing-md);
-  z-index: 2;
+/* Product card with actions row */
+.product-card {
+  position: relative;
 }
 
 /* ============================================================

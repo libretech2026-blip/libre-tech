@@ -686,6 +686,9 @@ const Store = (() => {
     const inWishlist = isInWishlist(product.id);
 
     card.innerHTML = `
+      ${Auth.isLoggedIn() ? `<button class="btn-wishlist-card${inWishlist ? ' active' : ''}" data-wishlist-id="${product.id}" title="${inWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos'}" aria-label="Favoritos">
+        <svg viewBox="0 0 24 24" fill="${inWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      </button>` : ''}
       <a href="${detailLink}" class="product-card-link">
         <div class="product-card-image">
           ${isOutOfStock ? '<span class="product-badge out-of-stock">Agotado</span>' : ''}
@@ -714,20 +717,19 @@ const Store = (() => {
                 : `<span class="product-price">${Cart.formatPrice(product.price)}</span>`
               }
             </span>
-            ${isOutOfStock
-              ? `<button class="btn-add-cart disabled" disabled title="Agotado" aria-label="Producto agotado">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>`
-              : `<button class="btn-add-cart" data-product-id="${product.id}" title="Agregar" aria-label="Agregar ${Cart.escapeAttr(product.name)}">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                </button>`
-            }
           </div>
         </div>
       </a>
-      ${Auth.isLoggedIn() ? `<button class="btn-wishlist-card${inWishlist ? ' active' : ''}" data-wishlist-id="${product.id}" title="${inWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos'}" aria-label="Favoritos">
-        <svg viewBox="0 0 24 24" fill="${inWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-      </button>` : ''}
+      <div class="product-card-actions">
+        ${isOutOfStock
+          ? `<button class="btn-add-cart disabled" disabled title="Agotado" aria-label="Producto agotado">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>`
+          : `<button class="btn-add-cart" data-product-id="${product.id}" title="Agregar" aria-label="Agregar ${Cart.escapeAttr(product.name)}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>`
+        }
+      </div>
     `;
     return card;
   }
@@ -1230,6 +1232,9 @@ const Store = (() => {
     const list = getWishlist();
     const products = getActiveProducts();
 
+    console.log('[Wishlist Debug] List IDs:', list);
+    console.log('[Wishlist Debug] Available products:', products.map(p => p.id));
+    
     if (countEl) countEl.textContent = list.length > 0 ? `(${list.length})` : '';
     if (list.length === 0) {
       if (emptyEl) emptyEl.style.display = '';
@@ -1244,6 +1249,7 @@ const Store = (() => {
 
     list.forEach(pid => {
       const p = products.find(x => x.id === pid);
+      console.log(`[Wishlist Debug] Looking for product ${pid}: ${p ? 'Found' : 'NOT Found'}`);
       if (!p) return;
       const div = document.createElement('div');
       div.className = 'wishlist-item';
