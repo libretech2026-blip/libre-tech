@@ -1017,6 +1017,7 @@ input, select, textarea {
 @media (max-width: 480px) {
   .hero {
     height: 240px;
+    margin-bottom: var(--spacing-sm);
   }
 }
 
