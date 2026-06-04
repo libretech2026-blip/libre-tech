@@ -174,7 +174,7 @@ const Store = (() => {
     const uiCfg = getVisualUiConfig();
     const bubbleImages = uiCfg.categoryBubbleImages || {};
 
-    const pageSize = 6;
+    const pageSize = 4;
     const pages = [];
     for (let i = 0; i < allCategories.length; i += pageSize) {
       pages.push(allCategories.slice(i, i + pageSize));
@@ -213,6 +213,23 @@ const Store = (() => {
         dot.classList.toggle('active', i === categoryCarouselPage);
       });
     }
+
+    // Auto-rotate categories every 8 seconds if there's more than one page
+    let categoryCarouselAutoInterval = null;
+    
+    function startCategoryAutoRotate() {
+      if (pageCount <= 1) return;
+      categoryCarouselAutoInterval = setInterval(() => {
+        categoryCarouselPage = (categoryCarouselPage + 1) % pageCount;
+        updateCategoryCarousel();
+      }, 8000);
+    }
+
+    function stopCategoryAutoRotate() {
+      clearInterval(categoryCarouselAutoInterval);
+    }
+
+    startCategoryAutoRotate();
 
     let _activeBubbleBtn = null;
 
@@ -312,14 +329,6 @@ const Store = (() => {
       updateCategoryCarousel();
     }
 
-
-    function startCategoryAutoRotate() {
-      // Autoplay desactivado por preferencia del usuario.
-      clearInterval(categoryCarouselInterval);
-    }
-
-
-    clearInterval(categoryCarouselInterval);
     updateCategoryCarousel();
     syncCategoryBubbleState();
   }

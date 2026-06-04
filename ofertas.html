@@ -243,25 +243,64 @@
             return;
           }
 
-          // Filter products with discount > 0
-          const offers = allProducts
-            .filter(p => p.discount_percentage && p.discount_percentage > 0)
-            .sort((a, b) => (b.discount_percentage || 0) - (a.discount_percentage || 0));
+          // Filter products with discount > 0 or marked as offer or with offerPrice
+          let offers = allProducts
+            .filter(p => {
+              // Check multiple discount indicators
+              const hasDiscount = p.discount_percentage && p.discount_percentage > 0;
+              const hasOfferPrice = p.offerActive === true && p.offerPrice && p.offerPrice < p.price;
+              const isMarkedAsOffer = p.oferta === true || p.is_oferta === true;
+              return hasDiscount || hasOfferPrice || isMarkedAsOffer;
+            })
+            .sort((a, b) => {
+              // Sort by discount percentage or calculated discount
+              const discountA = a.discount_percentage || (a.offerActive && a.offerPrice ? Math.round((1 - a.offerPrice / a.price) * 100) : 0);
+              const discountB = b.discount_percentage || (b.offerActive && b.offerPrice ? Math.round((1 - b.offerPrice / b.price) * 100) : 0);
+              return discountB - discountA;
+            });
 
-          // If no offers found, show message
+          // If no offers with discount, show fallback message but allow admin to add offers
           if (!offers || offers.length === 0) {
-            noOffers.style.display = 'block';
-            return;
+            // Try to get products marked as featured as alternative
+            const fallback = allProducts
+              .filter(p => p.is_featured === true || p.featured === true)
+              .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+              .slice(0, 12);
+            
+            if (fallback && fallback.length > 0) {
+              offers = fallback;
+              // Still show them but with different messaging
+            } else {
+              noOffers.style.display = 'block';
+              noOffers.innerHTML = `
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:1rem;opacity:.3">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <p style="font-size:1.1rem;margin-bottom:.5rem;">No hay ofertas disponibles</p>
+                <small>Por favor, ve a Administración y marca algunos productos con descuento</small>
+              `;
+              return;
+            }
           }
 
           // Render products
           offersGrid.innerHTML = offers.map(product => {
             const originalPrice = product.price || 0;
-            const discount = product.discount_percentage || 0;
-            const discountAmount = originalPrice * (discount / 100);
-            const finalPrice = (originalPrice - discountAmount).toFixed(2);
+            let finalPrice = originalPrice;
+            let discount = product.discount_percentage || 0;
+            
+            // If using offerPrice, calculate from that
+            if (product.offerActive === true && product.offerPrice && product.offerPrice > 0) {
+              finalPrice = product.offerPrice;
+              discount = Math.round((1 - finalPrice / originalPrice) * 100);
+            } else if (discount > 0) {
+              const discountAmount = originalPrice * (discount / 100);
+              finalPrice = (originalPrice - discountAmount).toFixed(2);
+            }
+            
             const imageUrl = product.images && product.images.length > 0 ? product.images[0] : 'LOGO_LIBRETECH.png';
             const rating = Math.round(product.rating || 0);
+            const finalPriceStr = typeof finalPrice === 'string' ? finalPrice : finalPrice.toFixed(2);
             
             return `
               <a href="producto.html?id=${product.id}" class="product-card" style="text-decoration:none;color:inherit">
@@ -277,9 +316,9 @@
                   </div>
                   <div class="product-prices">
                     ${discount > 0 ? `<span class="original-price" style="text-decoration:line-through;color:var(--text-tertiary)">$${originalPrice.toFixed(2)}</span>` : ''}
-                    <span class="product-price">$${finalPrice}</span>
+                    <span class="product-price">$${finalPriceStr}</span>
                   </div>
-                  <button class="btn btn-primary btn-block" onclick="addToCartFromOffers(event, '${product.id}', '${product.name}', ${finalPrice})">
+                  <button class="btn btn-primary btn-block" onclick="addToCartFromOffers(event, '${product.id}', '${product.name}', ${finalPriceStr})">
                     Agregar
                   </button>
                 </div>
