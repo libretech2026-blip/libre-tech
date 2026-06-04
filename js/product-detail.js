@@ -645,7 +645,7 @@ const ProductDetail = (() => {
           </div>
         </a>
         <div class="wishlist-item-actions">
-          <button class="wishlist-item-cart" data-product-id="${p.id}" title="Agregar al carrito">
+          <button class="wishlist-item-cart" data-product-id="${p.id}" title="Agregar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
           </button>
           <button class="wishlist-item-remove" data-wishlist-remove="${p.id}" title="Eliminar">

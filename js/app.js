@@ -573,10 +573,10 @@ const Store = (() => {
     products.forEach(product => grid.appendChild(createProductCard(product)));
     updateProductsCount();
 
-    // Show/hide "Ver todos" button - only shown when showing featured products
+    // Show/hide "Ver todos" button - shown when showing featured OR when showing all products
     const btnViewAll = document.getElementById('btnViewAll');
     if (btnViewAll) {
-      if (isShowingFeaturedOnly) {
+      if (isShowingFeaturedOnly || showAll) {
         const totalActive = getActiveProducts().length;
         const featuredCount = getActiveProducts().filter(p => p.featured === true).length;
         btnViewAll.style.display = totalActive > featuredCount ? '' : 'none';
@@ -683,7 +683,7 @@ const Store = (() => {
         ? `<button class="btn-add-cart disabled" disabled title="Agotado" aria-label="Producto agotado">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>`
-        : `<button class="btn-add-cart" data-product-id="${product.id}" title="Agregar al carrito" aria-label="Agregar ${Cart.escapeAttr(product.name)} al carrito">
+        : `<button class="btn-add-cart" data-product-id="${product.id}" title="Agregar" aria-label="Agregar ${Cart.escapeAttr(product.name)}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>`
       }
@@ -1215,7 +1215,7 @@ const Store = (() => {
           </div>
         </a>
         <div class="wishlist-item-actions">
-          <button class="wishlist-item-cart" data-product-id="${p.id}" title="Agregar al carrito">
+          <button class="wishlist-item-cart" data-product-id="${p.id}" title="Agregar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
           </button>
           <button class="wishlist-item-remove" data-wishlist-remove="${p.id}" title="Eliminar">
@@ -1453,13 +1453,36 @@ const Store = (() => {
     const hero = document.querySelector('.hero');
     if (!hero) return;
     
-    // Use fixed background image with cache bust parameter
-    const timestamp = new Date().getTime();
-    hero.style.backgroundImage = `url('nuevos logos/fondobannersup.png?v=${timestamp}')`;
-    hero.style.backgroundSize = 'contain';
-    hero.style.backgroundPosition = 'center';
-    hero.style.backgroundAttachment = 'scroll';
-    hero.style.backgroundRepeat = 'no-repeat';
+    // Try to get hero banner image from admin configuration
+    let heroImageUrl = '';
+    if (_bannersFromDB) {
+      const heroBanner = _bannersFromDB.find(b => b.position === 'hero-carousel' && b.active !== false && b.image);
+      if (heroBanner) {
+        const now = new Date();
+        const validStart = !heroBanner.startDate || new Date(heroBanner.startDate) <= now;
+        const validEnd = !heroBanner.endDate || new Date(heroBanner.endDate) >= now;
+        if (validStart && validEnd) heroImageUrl = heroBanner.image;
+      }
+    } else {
+      try {
+        const stored = JSON.parse(localStorage.getItem('libretech_banners') || '[]');
+        const heroBanner = stored.find(b => b.position === 'hero-carousel' && b.active !== false && b.image);
+        if (heroBanner) heroImageUrl = heroBanner.image;
+      } catch {}
+    }
+    
+    // Only apply background image if one is configured in admin
+    if (heroImageUrl) {
+      const timestamp = new Date().getTime();
+      hero.style.backgroundImage = `url('${heroImageUrl}?v=${timestamp}')`;
+      hero.style.backgroundSize = 'cover';
+      hero.style.backgroundPosition = 'center';
+      hero.style.backgroundAttachment = 'scroll';
+      hero.style.backgroundRepeat = 'no-repeat';
+    } else {
+      // No image configured - use gradient or color only
+      hero.style.backgroundImage = 'none';
+    }
   }
 
   return { init, renderProducts, renderCategories, getProductRating, renderStars, getActiveProducts, getProducts, isInWishlist, toggleWishlist, updateWishlistBadge, openWishlist, closeWishlist, renderWishlistSidebar, renderSocialLinks, renderPromoPhotoBanners, updateWishlistVisibility, setHeroBackgroundImage, setActiveCategory, renderBannerCarousel, renderCustomerReviews };

@@ -3988,7 +3988,7 @@ input, select, textarea {
 
 /* Recommended section */
 .recommended-section {
-  padding: var(--spacing-3xl) 0;
+  padding: var(--spacing-3xl) 0 var(--spacing-4xl) 0;
   border-top: 1px solid var(--border-color);
   margin-top: var(--spacing-xl);
 }
@@ -4270,6 +4270,10 @@ input, select, textarea {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .recommended-section {
+    padding-bottom: 140px;
+  }
+
   .breadcrumb {
     padding-top: calc(var(--header-height) + var(--spacing-md));
     font-size: 0.8rem;
@@ -4462,7 +4466,7 @@ input, select, textarea {
   }
 
   .category-bubbles-page {
-    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: var(--spacing-xs);
   }
 
@@ -6586,32 +6590,33 @@ input, select, textarea {
 
 @media (max-width: 768px) {
   .trust-banner {
-    padding: 0.75rem 0;
+    padding: 1rem 0;
     margin: var(--spacing-xl) 0 0 0;
   }
   
   .trust-banner-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
   }
   
   .trust-banner-item {
-    gap: 0.4rem;
-    justify-content: center;
+    gap: 0.6rem;
+    justify-content: flex-start;
+    padding: 0 var(--spacing-sm);
   }
   
   .trust-banner-icon {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
   
   .trust-banner-text {
-    font-size: 0.6rem;
-    line-height: 1.1;
+    font-size: 0.75rem;
+    line-height: 1.3;
   }
   
   .trust-banner-text span {
-    font-size: 0.5rem;
+    font-size: 0.65rem;
   }
 }
   }
@@ -7177,8 +7182,11 @@ input, select, textarea {
 .customer-reviews-section {
   padding: var(--spacing-3xl) var(--spacing-lg);
   background: var(--bg-secondary);
-  margin: var(--spacing-xl) 0;
+  margin: var(--spacing-xl) auto;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .reviews-title {
@@ -7196,14 +7204,15 @@ input, select, textarea {
   grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-lg);
   padding: 0 var(--spacing-md);
-  max-width: var(--max-width);
+  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
 }
 
 .review-card {
   background: var(--bg-primary);
   padding: var(--spacing-md);
-  margin-left: var(--spacing-md);
+  margin-left: 0;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   transition: all var(--transition-smooth);
@@ -7290,12 +7299,30 @@ input, select, textarea {
 @media (max-width: 480px) {
   .reviews-grid {
     grid-template-columns: repeat(3, 1fr) !important;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
   }
   
   .review-card {
-    padding: var(--spacing-xs);
+    padding: var(--spacing-sm);
     margin-left: 0;
+  }
+  
+  .review-text {
+    font-size: 0.75rem !important;
+    line-height: 1.4;
+  }
+  
+  .review-author {
+    font-size: 0.8rem !important;
+  }
+  
+  .review-date {
+    font-size: 0.7rem;
+  }
+
+  /* Separate recommended products from footer on mobile */
+  .recommended-section {
+    padding-bottom: 160px;
   }
 }
 

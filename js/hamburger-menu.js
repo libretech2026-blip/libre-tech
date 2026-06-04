@@ -111,9 +111,15 @@ const HamburgerMenu = (() => {
         Store.setActiveCategory('all');
       }
       closeMenu();
+      // Scroll to products section
+      const productsSection = document.getElementById('productos');
+      if (productsSection) {
+        setTimeout(() => {
+          productsSection.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
     });
-    content.appendChild(allBtn);
-
+    
     const allCategoryDiv = document.createElement('div');
     allCategoryDiv.className = 'menu-category';
     allCategoryDiv.appendChild(allBtn);
@@ -132,8 +138,26 @@ const HamburgerMenu = (() => {
           <polyline points="6 9 12 15 18 9"></polyline>
         </svg>
       `;
-
-      // Subcategories container
+      
+      // Click on category name to show all products of that category
+      const categorySpan = categoryBtn.querySelector('span');
+      if (categorySpan) {
+        categorySpan.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (typeof Store !== 'undefined' && Store.setActiveCategory) {
+            Store.setActiveCategory(category);
+          }
+          closeMenu();
+          // Scroll to products section
+          const productsSection = document.getElementById('productos');
+          if (productsSection) {
+            setTimeout(() => {
+              productsSection.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          }
+        });
+      }
+      
       const subcategoriesDiv = document.createElement('div');
       subcategoriesDiv.className = 'menu-subcategories';
 
@@ -144,17 +168,15 @@ const HamburgerMenu = (() => {
         brandBtn.textContent = brand;
         brandBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          // Click on the category filter chip to activate the category
+          // Set category first
           if (typeof Store !== 'undefined' && Store.setActiveCategory) {
             Store.setActiveCategory(category);
           }
-          // Then manually set the brand filter by clicking on the brand in the dropdown
-          // This is done through DOM manipulation to trigger the proper event handlers
+          // Then filter by brand using the dropdown
           setTimeout(() => {
             const filterChip = document.querySelector(`[data-category="${category}"]`);
             if (filterChip) {
               filterChip.click();
-              // After a small delay, find and click the brand in the brand dropdown
               setTimeout(() => {
                 const brandItem = document.querySelector(`.brand-dd-item[data-brand="${brand}"]`);
                 if (brandItem) {
@@ -164,14 +186,24 @@ const HamburgerMenu = (() => {
             }
           }, 100);
           closeMenu();
+          // Scroll to products section
+          const productsSection = document.getElementById('productos');
+          if (productsSection) {
+            setTimeout(() => {
+              productsSection.scrollIntoView({ behavior: 'smooth' });
+            }, 250);
+          }
         });
         subcategoriesDiv.appendChild(brandBtn);
       });
 
-      // Toggle subcategories on category button click
-      categoryBtn.addEventListener('click', () => {
-        categoryBtn.classList.toggle('active');
-        subcategoriesDiv.classList.toggle('active');
+      // Toggle subcategories on chevron/button click
+      categoryBtn.addEventListener('click', (e) => {
+        // Don't toggle if clicking on the category name (span)
+        if (!e.target.closest('span')) {
+          categoryBtn.classList.toggle('active');
+          subcategoriesDiv.classList.toggle('active');
+        }
       });
 
       // Category container

@@ -220,60 +220,93 @@
       Cart.init();
       Auth.init();
 
-      // Cargar ofertas
       const offersGrid = document.getElementById('offersGrid');
       const noOffers = document.getElementById('noOffers');
       
       if (!offersGrid) return;
 
-      // Obtener productos con descuento
-      const { data: offers } = await SB.client
-        .from('products')
-        .select('*')
-        .gt('discount_percentage', 0)
-        .order('discount_percentage', { ascending: false });
+      let attempts = 0;
+      const maxAttempts = 50;
+      
+      const loadOffers = async () => {
+        try {
+          // Get all products
+          const allProducts = (Store && Store.getProducts) ? Store.getProducts() : [];
+          
+          if (!allProducts || allProducts.length === 0) {
+            if (attempts < maxAttempts) {
+              attempts++;
+              setTimeout(loadOffers, 100);
+              return;
+            }
+            noOffers.style.display = 'block';
+            return;
+          }
 
-      if (!offers || offers.length === 0) {
-        noOffers.style.display = 'block';
-        return;
-      }
+          // Filter products with discount > 0
+          const offers = allProducts
+            .filter(p => p.discount_percentage && p.discount_percentage > 0)
+            .sort((a, b) => (b.discount_percentage || 0) - (a.discount_percentage || 0));
 
-      offersGrid.innerHTML = offers.map(product => {
-        const originalPrice = product.price;
-        const discountAmount = originalPrice * (product.discount_percentage / 100);
-        const finalPrice = (originalPrice - discountAmount).toFixed(2);
-        
-        return `
-          <div class="product-card">
-            <div class="product-image-wrapper">
-              <img src="${product.images?.[0] || 'LOGO_LIBRETECH.png'}" alt="${product.name}" class="product-image" loading="lazy">
-              ${product.discount_percentage > 0 ? `<span class="product-discount-badge">-${product.discount_percentage}%</span>` : ''}
-            </div>
-            <div class="product-info">
-              <p class="product-brand">${product.brand || ''}</p>
-              <h3 class="product-name">${product.name}</h3>
-              <div class="product-rating">
-                <span class="stars">${'★'.repeat(Math.round(product.rating || 0))}${'☆'.repeat(5 - Math.round(product.rating || 0))}</span>
-              </div>
-              <div class="product-prices">
-                ${product.discount_percentage > 0 ? `<span class="original-price" style="text-decoration:line-through">$${originalPrice.toFixed(2)}</span>` : ''}
-                <span class="product-price">$${finalPrice}</span>
-              </div>
-              <button class="btn btn-primary btn-block" onclick="addToCartFromOffers('${product.id}', '${product.name}', ${finalPrice})">
-                Agregar al carrito
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
+          // If no offers found, show message
+          if (!offers || offers.length === 0) {
+            noOffers.style.display = 'block';
+            return;
+          }
 
-      window.addToCartFromOffers = function(productId, productName, price) {
-        const product = offers.find(p => p.id === productId);
-        if (product) {
-          Cart.addItem(product, 1);
-          alert(`${productName} agregado al carrito`);
+          // Render products
+          offersGrid.innerHTML = offers.map(product => {
+            const originalPrice = product.price || 0;
+            const discount = product.discount_percentage || 0;
+            const discountAmount = originalPrice * (discount / 100);
+            const finalPrice = (originalPrice - discountAmount).toFixed(2);
+            const imageUrl = product.images && product.images.length > 0 ? product.images[0] : 'LOGO_LIBRETECH.png';
+            const rating = Math.round(product.rating || 0);
+            
+            return `
+              <a href="producto.html?id=${product.id}" class="product-card" style="text-decoration:none;color:inherit">
+                <div class="product-image-wrapper">
+                  <img src="${imageUrl}" alt="${product.name}" class="product-image" loading="lazy" onerror="this.src='LOGO_LIBRETECH.png'">
+                  ${discount > 0 ? `<span class="product-discount-badge">-${discount}%</span>` : ''}
+                </div>
+                <div class="product-info">
+                  <p class="product-brand">${product.brand || ''}</p>
+                  <h3 class="product-name">${product.name}</h3>
+                  <div class="product-rating">
+                    <span class="stars">${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}</span>
+                  </div>
+                  <div class="product-prices">
+                    ${discount > 0 ? `<span class="original-price" style="text-decoration:line-through;color:var(--text-tertiary)">$${originalPrice.toFixed(2)}</span>` : ''}
+                    <span class="product-price">$${finalPrice}</span>
+                  </div>
+                  <button class="btn btn-primary btn-block" onclick="addToCartFromOffers(event, '${product.id}', '${product.name}', ${finalPrice})">
+                    Agregar
+                  </button>
+                </div>
+              </a>
+            `;
+          }).join('');
+
+          window.addToCartFromOffers = function(event, productId, productName, price) {
+            event.preventDefault();
+            event.stopPropagation();
+            const allProducts = Store.getProducts ? Store.getProducts() : [];
+            const product = allProducts.find(p => p.id === productId);
+            if (product) {
+              Cart.addItem(product, 1);
+              alert(`${productName} agregado al carrito`);
+            }
+          };
+        } catch (e) {
+          console.warn('Error loading offers:', e);
+          if (attempts < maxAttempts) {
+            attempts++;
+            setTimeout(loadOffers, 100);
+          }
         }
       };
+
+      loadOffers();
     });
   </script>
 </body>
