@@ -949,6 +949,8 @@ const Store = (() => {
     document.addEventListener('click', e => {
       const btn = e.target.closest('.btn-add-cart');
       if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
       const productId = btn.dataset.productId;
       Cart.addItem(productId);
       btn.classList.add('added');
