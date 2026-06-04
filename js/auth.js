@@ -264,6 +264,19 @@ const Auth = (() => {
       document.getElementById('userDropdown')?.classList.remove('active');
     });
 
+    // Theme toggle in profile
+    document.getElementById('btnThemeProfile')?.addEventListener('click', e => {
+      e.preventDefault();
+      toggleTheme();
+    });
+
+    // Wishlist in profile
+    document.getElementById('btnOpenWishlistProfile')?.addEventListener('click', e => {
+      e.preventDefault();
+      document.getElementById('userDropdown')?.classList.remove('active');
+      document.getElementById('btnOpenWishlist')?.click();
+    });
+
     // Historial de pedidos
     document.getElementById('btnOrderHistory')?.addEventListener('click', e => {
       e.preventDefault();

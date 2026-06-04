@@ -39,8 +39,10 @@ const Store = (() => {
     renderCategories();
     renderCategoryBubbleCarousel();
     renderFeaturedProducts();
-    renderTopCategories();
+    // renderTopCategories(); // Eliminado: Top por categorías
     renderPromoBanners();
+    renderBannerCarousel();
+    renderCustomerReviews();
     initHeroCarousel();
     bindEvents();
     initHeaderScroll();
@@ -49,16 +51,21 @@ const Store = (() => {
     updateWishlistBadge();
     updateWishlistVisibility();
     renderSocialLinks();
+    renderFooterSocialIcons();
     renderPromoPhotoBanners();
+    setHeroBackgroundImage();
 
     // Load banners and social links from Supabase, then re-render
     loadSiteConfigFromDB();
+
+    // Notify that products are loaded/ready
+    notifyProductsUpdated();
 
     // Re-render wishlist hearts when auth state changes
     document.addEventListener('auth-changed', () => {
       updateWishlistVisibility();
       renderFeaturedProducts();
-      renderTopCategories();
+      // renderTopCategories(); // Eliminado: Top por categorías
       renderCategoryBubbleCarousel();
     });
   }
@@ -78,10 +85,13 @@ const Store = (() => {
         renderPromoBanners();
         initHeroCarousel();
         renderPromoPhotoBanners();
+        renderBannerCarousel();
+        setHeroBackgroundImage();
       }
       if (socialData && typeof socialData === 'object') {
         try { localStorage.setItem('libretech_social_links', JSON.stringify(socialData)); } catch(e) { /* ok */ }
         renderSocialLinks();
+        renderFooterSocialIcons();
       }
       if (uiData && typeof uiData === 'object') {
         _uiConfigFromDB = uiData;
@@ -89,6 +99,7 @@ const Store = (() => {
         applyHeaderInnerCustomization();
         renderCategoryBubbleCarousel();
       }
+      notifyProductsUpdated();
     } catch (e) { console.warn('[App] loadSiteConfigFromDB:', e); }
   }
 
@@ -105,7 +116,7 @@ const Store = (() => {
   function applyHeaderInnerCustomization() {
     const cfg = getVisualUiConfig();
     const color = (cfg.headerInnerColor || '').trim();
-    const safe = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color) ? color : '#e87722';
+    const safe = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color) ? color : '#0f3060';
     document.documentElement.style.setProperty('--header-inner-bg', safe);
   }
 
@@ -155,15 +166,15 @@ const Store = (() => {
     const dots = document.getElementById('categoryBubblesDots');
     if (!track || !dots) return;
 
-    // Generar categorías dinámicamente desde productos
+    // Generar categorías dinámicamente desde productos (sin 'all')
     const activeProducts = getActiveProducts();
     const dynamicCategories = [...new Set(activeProducts.map(p => p.category).filter(Boolean))];
-    const allCategories = ['all', ...dynamicCategories.sort()];
+    const allCategories = dynamicCategories.sort(); // Eliminamos 'all'
     
     const uiCfg = getVisualUiConfig();
     const bubbleImages = uiCfg.categoryBubbleImages || {};
 
-    const pageSize = 4;
+    const pageSize = 6;
     const pages = [];
     for (let i = 0; i < allCategories.length; i += pageSize) {
       pages.push(allCategories.slice(i, i + pageSize));
@@ -171,8 +182,7 @@ const Store = (() => {
 
     track.innerHTML = pages.map(page => {
       const cards = page.map(cat => {
-        const isAll = cat === 'all';
-        const label = isAll ? 'Todos' : cat.charAt(0).toUpperCase() + cat.slice(1);
+        const label = cat.charAt(0).toUpperCase() + cat.slice(1);
         const key = normalizeCategoryKey(cat);
         const img = bubbleImages[key] || '';
         return `
@@ -532,44 +542,60 @@ const Store = (() => {
   function renderFeaturedProducts() {
     const grid = document.getElementById('productsGrid');
     const noResults = document.getElementById('noResults');
+    const featuredHeader = document.getElementById('featuredHeader');
     if (!grid) return;
 
     let products = getFilteredProducts();
+    let isShowingFeaturedOnly = false;
 
     if (!showAll) {
       // Show only featured when no search/filter
       if (currentCategory === 'all' && !searchQuery.trim()) {
         products = products.filter(p => p.featured === true);
+        isShowingFeaturedOnly = true;
       }
     }
 
     grid.innerHTML = '';
     if (products.length === 0) {
       if (noResults) noResults.style.display = 'block';
+      if (featuredHeader) featuredHeader.style.display = 'none';
       updateProductsCount();
       return;
     }
     if (noResults) noResults.style.display = 'none';
 
+    // Show featured header only when showing featured products OR when showing all products
+    if (featuredHeader) {
+      featuredHeader.style.display = isShowingFeaturedOnly || showAll ? 'flex' : 'none';
+    }
+
     products.forEach(product => grid.appendChild(createProductCard(product)));
     updateProductsCount();
 
-    // Show/hide "Ver todos" button
+    // Show/hide "Ver todos" button - only shown when showing featured products
     const btnViewAll = document.getElementById('btnViewAll');
     if (btnViewAll) {
-      if (showAll || currentCategory !== 'all' || searchQuery.trim()) {
-        btnViewAll.style.display = 'none';
-      } else {
+      if (isShowingFeaturedOnly) {
         const totalActive = getActiveProducts().length;
         const featuredCount = getActiveProducts().filter(p => p.featured === true).length;
         btnViewAll.style.display = totalActive > featuredCount ? '' : 'none';
         btnViewAll.textContent = 'Ver todos los productos';
+      } else {
+        btnViewAll.style.display = 'none';
       }
     }
   }
 
   // Alias for external calls
   function renderProducts() { renderFeaturedProducts(); }
+
+  // Dispatch event when products are updated (for hamburger menu, etc.)
+  function notifyProductsUpdated() {
+    try {
+      document.dispatchEvent(new CustomEvent('products-updated'));
+    } catch (e) { /* ok */ }
+  }
 
   // --- Render top categories section ---
   function renderTopCategories() {
@@ -974,6 +1000,68 @@ const Store = (() => {
         if (searchInput.value.trim()) renderSearchDropdown(searchInput.value);
       });
     }
+
+    // Search in hamburger menu
+    const hamburgerSearchInput = document.getElementById('hamburgerSearchInput');
+    if (hamburgerSearchInput) {
+      let debounceTimer;
+      hamburgerSearchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          searchQuery = hamburgerSearchInput.value;
+          showAll = !!searchQuery.trim();
+          renderFeaturedProducts();
+          renderHamburgerSearchDropdown(hamburgerSearchInput.value);
+        }, 300);
+      });
+      document.addEventListener('click', e => {
+        if (!e.target.closest('.hamburger-search-wrapper')) {
+          const dd = document.getElementById('hamburgerSearchDropdown');
+          if (dd) dd.classList.remove('visible');
+        }
+      });
+      hamburgerSearchInput.addEventListener('focus', () => {
+        if (hamburgerSearchInput.value.trim()) renderHamburgerSearchDropdown(hamburgerSearchInput.value);
+      });
+    }
+  }
+
+  // --- Hamburger menu search dropdown ---
+  function renderHamburgerSearchDropdown(query) {
+    const dropdown = document.getElementById('hamburgerSearchDropdown');
+    if (!dropdown) return;
+    const q = (query || '').toLowerCase().trim();
+    if (!q) { dropdown.classList.remove('visible'); dropdown.innerHTML = ''; return; }
+
+    const products = getActiveProducts().filter(p =>
+      !p.featured &&
+      (p.name.toLowerCase().includes(q) ||
+      (p.description || '').toLowerCase().includes(q) ||
+      (p.category || '').toLowerCase().includes(q))
+    ).slice(0, 8);
+
+    if (products.length === 0) {
+      dropdown.innerHTML = '<div class="search-dropdown-empty">No se encontraron productos</div>';
+      dropdown.classList.add('visible');
+      return;
+    }
+
+    dropdown.innerHTML = products.map(p => `
+      <a href="producto.html?id=${encodeURIComponent(p.id)}" class="search-dropdown-item">
+        <div class="search-dropdown-thumb">
+          ${p.image
+            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy">`
+            : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`
+          }
+        </div>
+        <div class="search-dropdown-info">
+          <div class="search-dropdown-name">${Cart.escapeHTML(p.name)}</div>
+          <div class="search-dropdown-meta">${Cart.escapeHTML(p.category || '')}</div>
+        </div>
+        <span class="search-dropdown-price">${Cart.formatPrice(p.price)}</span>
+      </a>
+    `).join('');
+    dropdown.classList.add('visible');
   }
 
   // --- Live search dropdown ---
@@ -1011,6 +1099,15 @@ const Store = (() => {
       </a>
     `).join('');
     dropdown.classList.add('active');
+  }
+
+  // Theme toggle in header
+  const themeToggleBtn = document.getElementById('themeToggle');
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', e => {
+      e.preventDefault();
+      toggleTheme();
+    });
   }
 
   // --- Header scroll effect ---
@@ -1185,6 +1282,62 @@ const Store = (() => {
     }).join('');
   }
 
+  function renderFooterSocialIcons() {
+    const container = document.getElementById('footerSocialIcons');
+    if (!container) return;
+    const links = getSocialLinks();
+    const entries = Object.entries(links).filter(([, url]) => url && url.trim());
+    if (entries.length === 0) return;
+    container.innerHTML = entries.map(([platform, url]) => {
+      const icon = SOCIAL_ICONS[platform] || SOCIAL_ICONS.instagram;
+      const safeName = Cart.escapeHTML(platform.charAt(0).toUpperCase() + platform.slice(1));
+      const safeUrl = Cart.escapeAttr(url);
+      return `<a href="${safeUrl}" target="_blank" rel="noopener" class="footer-social-icon" title="${safeName}" aria-label="${safeName}">${icon}</a>`;
+    }).join('');
+  }
+
+  function renderCustomerReviews() {
+    const grid = document.getElementById('customersReviewsGrid');
+    if (!grid) return;
+
+    // Get all reviews from localStorage
+    try {
+      const reviewsData = JSON.parse(localStorage.getItem('libretech_reviews') || '{}');
+      const allReviews = [];
+      Object.entries(reviewsData).forEach(([, reviews]) => {
+        allReviews.push(...reviews);
+      });
+
+      if (allReviews.length === 0) {
+        grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-tertiary);">Aún no hay reseñas. ¡Sé el primero!</p>';
+        return;
+      }
+
+      // Shuffle and get first 3
+      const shuffled = allReviews.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+      grid.innerHTML = shuffled.map(review => {
+        const stars = Array.from({length: 5}, (_, i) => 
+          `<svg width="16" height="16" viewBox="0 0 24 24" fill="${i < review.star ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+        ).join('');
+
+        return `
+          <div class="review-card">
+            <div class="review-header">
+              <span class="review-author">${Cart.escapeHTML(review.name)}</span>
+              <div class="review-stars">${stars}</div>
+            </div>
+            <p class="review-text">${Cart.escapeHTML(review.comment)}</p>
+            <div class="review-date">Cliente verificado</div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      console.warn('Error rendering reviews:', e);
+      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-tertiary);">Error al cargar reseñas</p>';
+    }
+  }
+
   // ===== PROMO PHOTO BANNERS =====
   const PROMO_PHOTOS_KEY = 'libretech_promo_photos';
   function getPromoPhotos() {
@@ -1226,5 +1379,119 @@ const Store = (() => {
     });
   }
 
-  return { init, renderProducts, renderCategories, getProductRating, renderStars, getActiveProducts, getProducts, isInWishlist, toggleWishlist, updateWishlistBadge, openWishlist, closeWishlist, renderWishlistSidebar, renderSocialLinks, renderPromoPhotoBanners, updateWishlistVisibility };
+  let bannerCarouselIndex = 0;
+  let bannerCarouselInterval = null;
+
+  function renderBannerCarousel() {
+    const track = document.getElementById('bannerCarouselTrack');
+    const dotsContainer = document.getElementById('bannerCarouselDots');
+    if (!track || !dotsContainer) return;
+
+    track.innerHTML = '';
+    dotsContainer.innerHTML = '';
+
+    // Get carousel banners from memory
+    const photos = getBannerCarouselPhotos().filter(p => p.active && p.image);
+    if (photos.length === 0) {
+      track.innerHTML = '<div class="banner-carousel-item" style="opacity:0.5;display:flex;align-items:center;justify-content:center;"><p style="color:var(--text-tertiary);">Sin banners para mostrar</p></div>';
+      return;
+    }
+
+    // Render carousel items
+    photos.forEach((photo, idx) => {
+      const item = document.createElement('div');
+      item.className = 'banner-carousel-item';
+      const link = photo.link || photo.linkSection || photo.linkUrl || '';
+      if (link) {
+        const isExternal = link.startsWith('http');
+        item.innerHTML = `<a href="${Cart.escapeAttr(link)}"${isExternal ? ' target="_blank" rel="noopener"' : ''}><img src="${Cart.escapeAttr(photo.image)}" alt="${Cart.escapeHTML(photo.title || 'Banner')}" loading="lazy"></a>`;
+      } else {
+        item.innerHTML = `<img src="${Cart.escapeAttr(photo.image)}" alt="${Cart.escapeHTML(photo.title || 'Banner')}" loading="lazy">`;
+      }
+      track.appendChild(item);
+    });
+
+    // Render dots
+    photos.forEach((_, idx) => {
+      const dot = document.createElement('button');
+      dot.className = 'banner-carousel-dot' + (idx === 0 ? ' active' : '');
+      dot.addEventListener('click', () => showBannerCarouselSlide(idx, photos.length));
+      dotsContainer.appendChild(dot);
+    });
+
+    // Auto-rotate carousel
+    if (bannerCarouselInterval) clearInterval(bannerCarouselInterval);
+    bannerCarouselIndex = 0;
+    showBannerCarouselSlide(0, photos.length);
+    bannerCarouselInterval = setInterval(() => {
+      bannerCarouselIndex = (bannerCarouselIndex + 1) % photos.length;
+      showBannerCarouselSlide(bannerCarouselIndex, photos.length);
+    }, 5000); // Change every 5 seconds
+  }
+
+  function showBannerCarouselSlide(index, total) {
+    const track = document.getElementById('bannerCarouselTrack');
+    const dots = document.querySelectorAll('.banner-carousel-dot');
+    if (!track) return;
+
+    track.style.transform = `translateX(${-index * 100}%)`;
+    dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+    bannerCarouselIndex = index;
+  }
+
+  function getBannerCarouselPhotos() {
+    if (_bannersFromDB && Array.isArray(_bannersFromDB)) {
+      return _bannersFromDB.filter(b => b.position === 'carousel');
+    }
+    try {
+      const cached = JSON.parse(localStorage.getItem('libretech_banner_carousel') || '[]');
+      return cached;
+    } catch { return []; }
+  }
+
+  function setHeroBackgroundImage() {
+    const hero = document.querySelector('.hero');
+    if (!hero) return;
+    
+    // Use fixed background image with cache bust parameter
+    const timestamp = new Date().getTime();
+    hero.style.backgroundImage = `url('nuevos logos/fondobannersup.png?v=${timestamp}')`;
+    hero.style.backgroundSize = 'contain';
+    hero.style.backgroundPosition = 'center';
+    hero.style.backgroundAttachment = 'scroll';
+    hero.style.backgroundRepeat = 'no-repeat';
+  }
+
+  return { init, renderProducts, renderCategories, getProductRating, renderStars, getActiveProducts, getProducts, isInWishlist, toggleWishlist, updateWishlistBadge, openWishlist, closeWishlist, renderWishlistSidebar, renderSocialLinks, renderPromoPhotoBanners, updateWishlistVisibility, setHeroBackgroundImage, setActiveCategory, renderBannerCarousel, renderCustomerReviews };
 })();
+
+// --- Theme toggle function ---
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  
+  html.setAttribute('data-theme', newTheme);
+  localStorage.setItem('libretech_theme', newTheme);
+  
+  // Update theme toggle button icons
+  const themeToggle = document.getElementById('themeToggle');
+  const themeIconSun = document.getElementById('themeIconSun');
+  const themeIconMoon = document.getElementById('themeIconMoon');
+  
+  if (themeToggle) {
+    if (newTheme === 'dark') {
+      if (themeIconSun) themeIconSun.style.display = 'none';
+      if (themeIconMoon) themeIconMoon.style.display = '';
+    } else {
+      if (themeIconSun) themeIconSun.style.display = '';
+      if (themeIconMoon) themeIconMoon.style.display = 'none';
+    }
+  }
+  
+  // Update profile theme button icons
+  const profileThemeIcon = document.getElementById('themeIconProfile');
+  if (profileThemeIcon) {
+    // The profile theme button uses a different SVG, so we just toggle visibility based on theme
+  }
+}

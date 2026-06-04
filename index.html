@@ -101,47 +101,30 @@
   <!-- ==================== HEADER ==================== -->
   <header class="site-header" id="siteHeader">
     <div class="header-inner">
+      <!-- Hamburger Menu Button -->
+      <button class="btn-hamburger" id="btnHamburger" title="Menú" aria-label="Menú de categorías" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
       <!-- Logo -->
       <a href="index.html" class="logo-link">
-        <img src="LOGO_LIBRETECH.png" alt="LIBRE TECH" class="logo-img" width="40" height="40">
-        <span class="logo-text">LIBRE TECH</span>
+        <img src="nuevos logos/PNG/Isotipo/4.png" alt="LIBRE TECH" class="logo-img" width="40" height="40">
+        <div class="logo-text">
+          <div>
+            <span class="logo-text-libre">LIBRE</span> <span class="logo-text-tech">TECH</span>
+            <span class="logo-subtitle">LA TECH QUE TE LIBERA</span>
+          </div>
+        </div>
       </a>
-
-      <!-- Barra de búsqueda -->
-      <div class="search-wrapper">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input
-          type="search"
-          class="search-input"
-          id="searchInput"
-          placeholder="Buscar productos..."
-          autocomplete="off"
-          aria-label="Buscar productos"
-        >
-        <!-- Live search results dropdown -->
-        <div class="search-dropdown" id="searchDropdown"></div>
-      </div>
 
       <!-- Spacer to push actions right -->
       <div style="flex:1"></div>
 
       <!-- Acciones -->
       <div class="header-actions">
-        <!-- Mobile search toggle -->
-        <button class="btn-mobile-search" id="btnMobileSearch" title="Buscar" aria-label="Buscar">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </button>
-        <!-- Dark/Light mode toggle -->
-        <button class="theme-toggle" id="themeToggle" title="Cambiar modo claro/oscuro" aria-label="Cambiar tema">
-          <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-          </svg>
-          <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-          </svg>
-        </button>
+
         <!-- Perfil / Login -->
         <div class="user-menu-wrapper" id="userMenuWrapper">
           <!-- Botón de perfil (siempre visible) -->
@@ -242,10 +225,22 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 Mis pedidos
               </a>
+              <a href="#" id="btnOpenWishlistProfile">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                </svg>
+                Mi lista de deseos
+              </a>
               <a href="pqr.html" id="btnMyPqrs">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                 PQRs
               </a>
+              <button id="btnThemeProfile" class="dropdown-theme-btn">
+                <svg id="themeIconProfile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+                <span id="themeTextProfile">Claro/Oscuro</span>
+              </button>
               <button id="btnLogout">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                 Cerrar sesión
@@ -253,14 +248,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Botón favoritos -->
-        <button class="header-btn" id="btnOpenWishlist" title="Mi lista de deseos" aria-label="Ver lista de deseos">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-          </svg>
-          <span class="badge wishlist-badge" id="wishlistBadge" style="display:none">0</span>
-        </button>
 
         <!-- Botón carrito -->
         <button class="header-btn" id="btnOpenCart" title="Ver carrito" aria-label="Abrir carrito de compras">
@@ -273,6 +260,32 @@
       </div>
     </div>
   </header>
+
+  <!-- ==================== HAMBURGER MENU OVERLAY ==================== -->
+  <!-- ==================== HAMBURGER MENU SIDEBAR ==================== -->
+  <aside class="hamburger-menu" id="hamburgerMenu" role="navigation" aria-label="Menú de navegación">
+    <div class="hamburger-menu-header">
+      <h2>Menú</h2>
+      <button class="hamburger-menu-close" id="btnCloseMenu" aria-label="Cerrar menú">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <!-- Barra de búsqueda en el menú -->
+    <div class="hamburger-search-wrapper">
+      <input
+        type="search"
+        class="hamburger-search-input"
+        id="hamburgerSearchInput"
+        placeholder="Buscar productos..."
+        autocomplete="off"
+        aria-label="Buscar productos"
+      >
+      <div class="hamburger-search-dropdown" id="hamburgerSearchDropdown"></div>
+    </div>
+    <nav class="hamburger-menu-content" id="hamburgerMenuContent">
+      <!-- Renderizado por JS -->
+    </nav>
+  </aside>
 
   <!-- ==================== HERO BANNER ==================== -->
   <section class="hero">
@@ -319,37 +332,27 @@
     <div class="hero-content container">
       <div class="hero-text">
         <h1 class="hero-title">
-          <span class="hero-title-line">La tech que</span>
-          <span class="hero-title-line hero-title-gradient">te libera</span>
+          <span class="hero-title-line">Tecnología</span>
+          <span class="hero-title-line hero-title-line-2">que mejora</span>
+          <span class="hero-title-line hero-title-line-3">tu día a día</span>
         </h1>
+        <p class="hero-subtitle">Descubre nuestros productos seleccionados para tu estilo de vida.</p>
         <div class="hero-actions">
           <a href="#productos" class="hero-cta" id="heroCtaBtn">
             Ver productos
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </a>
-          <div class="hero-stats">
-            <div class="hero-stat">
-              <span class="hero-stat-number" id="heroProductCount">66+</span>
-              <span class="hero-stat-label">Productos</span>
-            </div>
-            <div class="hero-stat-divider"></div>
-            <div class="hero-stat">
-              <span class="hero-stat-number">12+</span>
-              <span class="hero-stat-label">Marcas</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- ==================== MOBILE SLOTS (above categories) ==================== -->
-  <!-- Lo Más Vendido slot (mobile only) -->
-  <div id="mostSoldMobileSlot" class="mobile-top-slot container"></div>
   <!-- Left admin banners slot (mobile only — horizontal auto-scroll carousel) -->
 
-  <!-- ==================== CATEGORÍAS (CARRUSEL 4 EN 4) ==================== -->
+  <!-- ==================== CATEGORÍAS (CARRUSEL 6 EN 6) ==================== -->
   <section class="category-bubbles-section container" id="categoryBubblesSection">
+    <h2 class="category-bubbles-title">Categorías</h2>
     <div class="category-bubbles-header">
       <div class="category-bubbles-dots" id="categoryBubblesDots"></div>
     </div>
@@ -360,34 +363,33 @@
     </div>
   </section>
 
+  <!-- ==================== BANNER CAROUSEL (3 FOTOS) ==================== -->
+  <section class="banner-carousel-section" id="bannerCarouselSection">
+    <div class="banner-carousel-container">
+      <div class="banner-carousel-track" id="bannerCarouselTrack">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="banner-carousel-dots" id="bannerCarouselDots"></div>
+    </div>
+  </section>
+
   <!-- ==================== PRODUCTOS CON BANNERS LATERALES ==================== -->
   <main class="products-section container" id="productos">
     <div class="section-with-banner">
-      <!-- Left: Banners laterales izquierdos + LO MAS VENDIDO -->
+      <!-- Left: Banners laterales izquierdos -->
       <aside class="promo-banner promo-banner--left" id="promoBannerLeft">
-        <!-- LO MAS VENDIDO showcase (con fondo de admin) -->
-        <section class="showcase-section showcase-section--compact">
-          <div class="showcase-header">
-            <h2 class="showcase-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              LO MAS VENDIDO
-            </h2>
-          </div>
-          <div class="showcase-nav" style="width:100%">
-            <div class="hero-carousel-dots" id="heroCarouselDots" style="width:100%;justify-content:center"></div>
-          </div>
-          <div class="hero-carousel" id="heroCarousel">
-            <div class="hero-carousel-track" id="heroCarouselTrack">
-              <!-- Rendered by JS -->
-            </div>
-          </div>
-        </section>
         <!-- Rendered by JS for left admin banners -->
         <div id="promoBannerLeftAdminStack" class="promo-side-placeholder"><!-- Rendered by JS --></div>
       </aside>
 
       <!-- Center: Todos los productos (filtrados por categorías) -->
       <div class="section-main-content">
+        <!-- Header: Título Destacados + Botón Ver todos -->
+        <div class="featured-header" id="featuredHeader" style="display:none">
+          <h2 class="featured-title">Destacados</h2>
+          <a href="#" class="btn btn-secondary" id="btnViewAll" style="font-size:0.95rem;">Ver todos los productos</a>
+        </div>
+
         <!-- Filtros por categoría (rendered by JS only if no bubbles selected) -->
         <div class="filters-bar" id="filtersBar" style="display:none">
           <button class="filter-chip active" data-category="all">
@@ -412,38 +414,20 @@
           <p style="font-size:1.1rem;margin-bottom:.5rem;">No se encontraron productos</p>
           <small>Intenta con otro término de búsqueda o categoría</small>
         </div>
-
-        <div style="text-align:center;padding:var(--spacing-xl) 0">
-          <a href="#" class="btn btn-secondary" id="btnViewAll" style="font-size:0.95rem;">Ver todos los productos</a>
-        </div>
       </div>
     </div>
   </main>
 
-  <!-- ==================== PROMO PHOTO BANNERS: DESPUÉS DE DESTACADOS ==================== -->
-  <div class="promo-photo-slot" id="promoPhotoAfterFeatured"></div>
-
-  <!-- ==================== TOP CATEGORÍAS POR VALORACIONES ==================== -->
-  <section class="top-categories-section container" id="topCategoriesSection">
-    <h2 class="section-heading">Top por Categoría</h2>
-    <div class="section-with-banner">
-      <!-- Left: Top categorías -->
-      <div class="section-main-content">
-        <div id="topCategoriesContainer">
-          <!-- Rendered by JS -->
-        </div>
-      </div>
-
-      <!-- Right: Banners laterales derechos -->
-      <aside class="promo-banner promo-banner--right" id="promoBannerRight">
-        <!-- Rendered by JS for right admin banners -->
-        <div id="promoBannerRightAdminStack" class="promo-side-placeholder"><!-- Rendered by JS --></div>
-      </aside>
+  <!-- ==================== RESEÑAS DE CLIENTES ==================== -->
+  <section class="customer-reviews-section container">
+    <h2 class="reviews-title">LO QUE DICEN NUESTROS CLIENTES</h2>
+    <div class="reviews-grid" id="customersReviewsGrid">
+      <!-- Rendered by JS from Supabase reviews table -->
     </div>
   </section>
 
-  <!-- ==================== PROMO PHOTO BANNERS: DESPUÉS DE CATEGORÍAS ==================== -->
-  <div class="promo-photo-slot" id="promoPhotoAfterCategories"></div>
+  <!-- ==================== PROMO PHOTO BANNERS: DESPUÉS DE DESTACADOS ==================== -->
+  <div class="promo-photo-slot" id="promoPhotoAfterFeatured"></div>
 
   <!-- ==================== CARRITO SIDEBAR ==================== -->
   <div class="cart-overlay" id="cartOverlay"></div>
@@ -713,59 +697,56 @@
   <!-- ==================== FOOTER ==================== -->
   <footer class="site-footer">
     <div class="container">
-      <div class="footer-grid">
-        <!-- Brand -->
-        <div class="footer-col">
-          <div class="footer-brand">
-            <img src="LOGO_LIBRETECH.png" alt="LIBRE TECH" class="logo-img" width="32" height="32">
-            <span>LIBRE TECH</span>
+      <div class="footer-top">
+        <div class="footer-logo-section">
+          <img src="nuevos logos/sin.png" alt="LIBRE TECH" class="footer-logo-img" width="80" height="80">
+          <div class="footer-social-icons" id="footerSocialIcons">
+            <!-- Rendered by JS: social media icons without text -->
           </div>
-          <p class="footer-tagline">Tu tienda de tecnología en Colombia. Los mejores productos tech al mejor precio.</p>
         </div>
-        <!-- Conózcanos -->
-        <div class="footer-col">
-          <h4 class="footer-col-title">Conózcanos</h4>
-          <ul class="footer-links-list">
-            <li><a href="pagina.html?page=sobre-nosotros">Sobre nosotros</a></li>
-            <li><a href="pagina.html?page=preguntas-frecuentes">Preguntas Frecuentes</a></li>
-            <li><a href="pagina.html?page=contactanos">Contáctanos</a></li>
-          </ul>
-        </div>
-        <!-- Enlaces útiles -->
-        <div class="footer-col">
-          <h4 class="footer-col-title">Enlaces útiles</h4>
-          <ul class="footer-links-list">
-            <li><a href="pagina.html?page=seguimiento-pedido">Seguimiento de su pedido</a></li>
-            <li><a href="pagina.html?page=politica-privacidad">Política de Privacidad</a></li>
-            <li><a href="pagina.html?page=terminos-condiciones">Términos y Condiciones</a></li>
-            <li><a href="pagina.html?page=devoluciones-garantias">Devoluciones y Garantías</a></li>
-          </ul>
-        </div>
-        <!-- Contacto -->
-        <div class="footer-col">
-          <h4 class="footer-col-title">Contacto</h4>
-          <ul class="footer-links-list">
-            <li><a href="https://wa.me/573116488816" target="_blank" rel="noopener">WhatsApp</a></li>
-            <li id="adminFooterLink" style="display:none"><a href="admin.html">Administración</a></li>
-          </ul>
-        </div>
-      </div>
-      <!-- Social media section -->
-      <div class="footer-social" id="footerSocial">
-        <h4 class="footer-col-title">Síguenos</h4>
-        <div class="footer-social-links" id="footerSocialLinks">
-          <!-- Rendered by JS from localStorage -->
+        <div class="footer-grid">
+          <!-- Comprar -->
+          <div class="footer-col">
+            <h4 class="footer-col-title">Comprar</h4>
+            <ul class="footer-links-list">
+              <li><a href="#productos">Todos los productos</a></li>
+              <li><a href="#productos?filter=ofertas">Ofertas</a></li>
+              <li><a href="#productos?filter=destacados">Productos destacados</a></li>
+            </ul>
+          </div>
+          <!-- Atención al cliente -->
+          <div class="footer-col">
+            <h4 class="footer-col-title">Atención al cliente</h4>
+            <ul class="footer-links-list">
+              <li><a href="pagina.html?page=seguimiento-pedido">Seguimiento de pedido</a></li>
+              <li><a href="pagina.html?page=preguntas-frecuentes">Preguntas frecuentes</a></li>
+              <li><a href="pagina.html?page=devoluciones-garantias">Devoluciones y garantías</a></li>
+              <li><a href="https://wa.me/573116488816" target="_blank" rel="noopener">WhatsApp</a></li>
+              <li><a href="pagina.html?page=contactanos">Contáctanos</a></li>
+            </ul>
+          </div>
+          <!-- Empresa -->
+          <div class="footer-col">
+            <h4 class="footer-col-title">Empresa</h4>
+            <ul class="footer-links-list">
+              <li><a href="pagina.html?page=sobre-nosotros">Sobre nosotros</a></li>
+              <li><a href="pagina.html?page=politica-privacidad">Política de privacidad</a></li>
+              <li><a href="pagina.html?page=terminos-condiciones">Términos y condiciones</a></li>
+              <li id="adminFooterLink" style="display:none"><a href="admin.html">Administración</a></li>
+            </ul>
+          </div>
         </div>
       </div>
+
       <p class="footer-copy">&copy; 2026 LIBRE TECH. Todos los derechos reservados.</p>
     </div>
   </footer>
 
   <!-- ==================== SCRIPTS ==================== -->
-  <!-- WhatsApp Floating Bubble -->
-  <a href="https://wa.me/573116488816" target="_blank" rel="noopener" class="whatsapp-bubble" title="Chatea con nosotros por WhatsApp" aria-label="WhatsApp">
+  <!-- WhatsApp Floating Bubble (Draggable) -->
+  <div id="whatsappBubble" class="whatsapp-bubble" title="Arrastra para mover. Click para ir a WhatsApp" aria-label="WhatsApp Flotante" role="button" tabindex="0" draggable="true">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.654-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-  </a>
+  </div>
 
   <!-- Dark mode script -->
   <script>
@@ -793,6 +774,7 @@
   <script src="js/cart.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/hamburger-menu.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       try { await SB.syncProducts(); } catch (e) { console.warn('SB sync:', e); }
@@ -828,11 +810,9 @@
         navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW registration:', err));
       }
 
-      // Move elements above categories on mobile
+      // Mobile layout sync (admin banners only)
       (function mobileSlotsLayout() {
-        const showcase = document.querySelector('#promoBannerLeft .showcase-section');
         const adminStack = document.getElementById('promoBannerLeftAdminStack');
-        const mobileSlotSold = document.getElementById('mostSoldMobileSlot');
         const mobileSlotBanners = document.getElementById('leftBannersMobileSlot');
         const desktopParent = document.getElementById('promoBannerLeft');
         if (!desktopParent) return;
@@ -846,7 +826,6 @@
           isMobile = nowMobile;
 
           if (nowMobile) {
-            if (showcase && mobileSlotSold) mobileSlotSold.appendChild(showcase);
             // Move admin banners into the slot and duplicate for seamless scroll
             if (adminStack && mobileSlotBanners) {
               mobileSlotBanners.appendChild(adminStack);
@@ -864,7 +843,6 @@
               cloneNode.parentNode.removeChild(cloneNode);
               cloneNode = null;
             }
-            if (showcase && desktopParent) desktopParent.insertBefore(showcase, desktopParent.firstChild);
             if (adminStack && desktopParent) desktopParent.appendChild(adminStack);
           }
         }
@@ -873,6 +851,125 @@
         window.addEventListener('resize', syncLayout, { passive: true });
       })();
     });
+  </script>
+
+  <!-- WhatsApp Bubble Drag Script -->
+  <script>
+    (function() {
+      const bubble = document.getElementById('whatsappBubble');
+      if (!bubble) return;
+
+      let isDragging = false;
+      let currentX = 0;
+      let currentY = 0;
+      let initialX = 0;
+      let initialY = 0;
+      const STORAGE_KEY = 'whatsapp_bubble_pos';
+
+      // Load saved position
+      function loadPosition() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const { x, y } = JSON.parse(saved);
+            bubble.style.left = x + 'px';
+            bubble.style.bottom = 'auto';
+            bubble.style.top = y + 'px';
+          }
+        } catch (e) {
+          console.warn('Error loading bubble position:', e);
+        }
+      }
+
+      // Save position
+      function savePosition() {
+        try {
+          const rect = bubble.getBoundingClientRect();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            x: parseInt(bubble.style.left),
+            y: parseInt(bubble.style.top)
+          }));
+        } catch (e) {
+          console.warn('Error saving bubble position:', e);
+        }
+      }
+
+      // Handle mouse/touch start
+      function handleStart(e) {
+        if (e.type.includes('touch')) {
+          initialX = e.touches[0].clientX - currentX;
+          initialY = e.touches[0].clientY - currentY;
+        } else {
+          initialX = e.clientX - currentX;
+          initialY = e.clientY - currentY;
+        }
+        isDragging = true;
+        bubble.style.cursor = 'grabbing';
+      }
+
+      // Handle mouse/touch move
+      function handleMove(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+
+        if (e.type.includes('touch')) {
+          currentX = e.touches[0].clientX - initialX;
+          currentY = e.touches[0].clientY - initialY;
+        } else {
+          currentX = e.clientX - initialX;
+          currentY = e.clientY - initialY;
+        }
+
+        // Keep within viewport
+        const rect = bubble.getBoundingClientRect();
+        const maxX = window.innerWidth - rect.width;
+        const maxY = window.innerHeight - rect.height;
+
+        currentX = Math.max(0, Math.min(currentX, maxX));
+        currentY = Math.max(0, Math.min(currentY, maxY));
+
+        bubble.style.left = currentX + 'px';
+        bubble.style.top = currentY + 'px';
+        bubble.style.bottom = 'auto';
+      }
+
+      // Handle mouse/touch end
+      function handleEnd(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        bubble.style.cursor = 'grab';
+        savePosition();
+      }
+
+      // Handle click to open WhatsApp
+      function handleClick(e) {
+        if (isDragging) return;
+        window.open('https://wa.me/573116488816', '_blank', 'noopener');
+      }
+
+      // Event listeners
+      bubble.addEventListener('mousedown', handleStart);
+      bubble.addEventListener('touchstart', handleStart, { passive: false });
+
+      document.addEventListener('mousemove', handleMove);
+      document.addEventListener('touchmove', handleMove, { passive: false });
+
+      document.addEventListener('mouseup', handleEnd);
+      document.addEventListener('touchend', handleEnd);
+
+      bubble.addEventListener('click', handleClick);
+
+      // Keyboard support
+      bubble.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleClick(e);
+        }
+      });
+
+      // Load saved position on load
+      window.addEventListener('load', loadPosition);
+      loadPosition();
+    })();
   </script>
 </body>
 </html>

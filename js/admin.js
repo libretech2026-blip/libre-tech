@@ -2634,7 +2634,7 @@ const Admin = (() => {
       try {
         await saveVisualUiConfig(cfg);
         // Aplicar cambios inmediatamente
-        const safeColor = cfg.headerInnerColor || '#e87722';
+        const safeColor = cfg.headerInnerColor || '#0f3060';
         document.documentElement.style.setProperty('--header-inner-bg', safeColor);
         showToast('Personalización visual guardada', 'success');
       } catch (err) {
