@@ -107,16 +107,16 @@ const HamburgerMenu = (() => {
     allBtn.className = 'menu-category-btn';
     allBtn.textContent = 'Todos los productos';
     allBtn.addEventListener('click', () => {
-      if (typeof Store !== 'undefined' && Store.setActiveCategory) {
-        Store.setActiveCategory('all');
-      }
       closeMenu();
-      // Scroll to products section
-      const productsSection = document.getElementById('productos');
-      if (productsSection) {
-        setTimeout(() => {
-          productsSection.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
+      // Navigate to productos.html
+      if (window.location.pathname.includes('productos.html')) {
+        // Already on productos page, just set category
+        if (typeof Store !== 'undefined' && Store.setActiveCategory) {
+          Store.setActiveCategory('all', null, { skipBrandDropdown: true });
+        }
+      } else {
+        // Navigate to productos.html
+        window.location.href = 'productos.html';
       }
     });
     
@@ -125,84 +125,24 @@ const HamburgerMenu = (() => {
     allCategoryDiv.appendChild(allBtn);
     content.appendChild(allCategoryDiv);
 
-    // Add categories with subcategories
+    // Add categories with brands (displayed inline, NO popups)
     categories.forEach(category => {
       const brands = Array.from(categoryMap.get(category)).sort();
 
       // Category button
       const categoryBtn = document.createElement('button');
       categoryBtn.className = 'menu-category-btn';
-      categoryBtn.innerHTML = `
-        <span>${category}</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      `;
-      
-      // Click on category name to show all products of that category
-      const categorySpan = categoryBtn.querySelector('span');
-      if (categorySpan) {
-        categorySpan.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (typeof Store !== 'undefined' && Store.setActiveCategory) {
-            Store.setActiveCategory(category);
-          }
-          closeMenu();
-          // Scroll to products section
-          const productsSection = document.getElementById('productos');
-          if (productsSection) {
-            setTimeout(() => {
-              productsSection.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
-          }
-        });
-      }
-      
-      const subcategoriesDiv = document.createElement('div');
-      subcategoriesDiv.className = 'menu-subcategories';
-
-      // Add brand items
-      brands.forEach(brand => {
-        const brandBtn = document.createElement('button');
-        brandBtn.className = 'menu-subcategory-item';
-        brandBtn.textContent = brand;
-        brandBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          // Set category first
-          if (typeof Store !== 'undefined' && Store.setActiveCategory) {
-            Store.setActiveCategory(category);
-          }
-          // Then filter by brand using the dropdown
-          setTimeout(() => {
-            const filterChip = document.querySelector(`[data-category="${category}"]`);
-            if (filterChip) {
-              filterChip.click();
-              setTimeout(() => {
-                const brandItem = document.querySelector(`.brand-dd-item[data-brand="${brand}"]`);
-                if (brandItem) {
-                  brandItem.click();
-                }
-              }, 150);
-            }
-          }, 100);
-          closeMenu();
-          // Scroll to products section
-          const productsSection = document.getElementById('productos');
-          if (productsSection) {
-            setTimeout(() => {
-              productsSection.scrollIntoView({ behavior: 'smooth' });
-            }, 250);
-          }
-        });
-        subcategoriesDiv.appendChild(brandBtn);
-      });
-
-      // Toggle subcategories on chevron/button click
+      categoryBtn.textContent = category;
       categoryBtn.addEventListener('click', (e) => {
-        // Don't toggle if clicking on the category name (span)
-        if (!e.target.closest('span')) {
-          categoryBtn.classList.toggle('active');
-          subcategoriesDiv.classList.toggle('active');
+        e.stopPropagation();
+        closeMenu();
+        // Navigate to productos.html with category filter
+        if (window.location.pathname.includes('productos.html')) {
+          if (typeof Store !== 'undefined' && Store.setActiveCategory) {
+            Store.setActiveCategory(category, null, { skipBrandDropdown: true });
+          }
+        } else {
+          window.location.href = `productos.html?category=${encodeURIComponent(category)}`;
         }
       });
 
@@ -210,7 +150,35 @@ const HamburgerMenu = (() => {
       const categoryDiv = document.createElement('div');
       categoryDiv.className = 'menu-category';
       categoryDiv.appendChild(categoryBtn);
-      categoryDiv.appendChild(subcategoriesDiv);
+
+      // Add brands as direct subcategory items (if any)
+      if (brands.length > 0) {
+        const brandsDiv = document.createElement('div');
+        brandsDiv.className = 'menu-subcategories';
+        
+        brands.forEach(brand => {
+          const brandBtn = document.createElement('button');
+          brandBtn.className = 'menu-subcategory-item';
+          brandBtn.textContent = brand;
+          brandBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeMenu();
+            // Navigate with category and brand filter
+            if (window.location.pathname.includes('productos.html')) {
+              if (typeof Store !== 'undefined' && Store.setActiveCategory) {
+                Store.setActiveCategory(category, null, { skipBrandDropdown: true, brand: brand });
+                Store.renderFeaturedProducts();
+              }
+            } else {
+              window.location.href = `productos.html?category=${encodeURIComponent(category)}&brand=${encodeURIComponent(brand)}`;
+            }
+          });
+          brandsDiv.appendChild(brandBtn);
+        });
+        
+        categoryDiv.appendChild(brandsDiv);
+      }
+
       content.appendChild(categoryDiv);
     });
   }

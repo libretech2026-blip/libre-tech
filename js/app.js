@@ -140,13 +140,18 @@ const Store = (() => {
     const safeCategory = category || 'all';
     const preserveBrand = options.preserveBrand === true;
     const skipBrandDropdown = options.skipBrandDropdown === true;
+    const brand = options.brand || undefined;
 
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
     const selectedChip = Array.from(document.querySelectorAll('.filter-chip')).find(c => (c.dataset.category || '') === safeCategory);
     if (selectedChip) selectedChip.classList.add('active');
 
     currentCategory = safeCategory;
-    if (!preserveBrand) currentBrand = 'all';
+    if (!preserveBrand) {
+      currentBrand = brand || 'all';
+    } else if (brand) {
+      currentBrand = brand;
+    }
 
     if (skipBrandDropdown) {
       const dd = document.getElementById('brandDropdown');
@@ -166,10 +171,13 @@ const Store = (() => {
     const dots = document.getElementById('categoryBubblesDots');
     if (!track || !dots) return;
 
-    // Generar categorías dinámicamente desde productos (sin 'all')
+    // Generar categorías dinámicamente desde productos
     const activeProducts = getActiveProducts();
     const dynamicCategories = [...new Set(activeProducts.map(p => p.category).filter(Boolean))];
-    const allCategories = dynamicCategories.sort(); // Eliminamos 'all'
+    let allCategories = dynamicCategories.sort();
+    
+    // Agregar "Destacados" como primera categoría
+    allCategories = ['Destacados', ...allCategories];
     
     const uiCfg = getVisualUiConfig();
     const bubbleImages = uiCfg.categoryBubbleImages || {};
@@ -181,7 +189,18 @@ const Store = (() => {
     }
 
     track.innerHTML = pages.map(page => {
-      const cards = page.map(cat => {
+      // Asegurar que la página tenga 4 slots (dejando espacios vacíos si es necesario)
+      const paddedPage = [...page];
+      while (paddedPage.length < 4) {
+        paddedPage.push(null);
+      }
+      
+      const cards = paddedPage.map(cat => {
+        if (!cat) {
+          // Espacio vacío
+          return `<div class="category-bubble-item-empty"></div>`;
+        }
+        
         const label = cat.charAt(0).toUpperCase() + cat.slice(1);
         const key = normalizeCategoryKey(cat);
         const img = bubbleImages[key] || '';
@@ -200,12 +219,15 @@ const Store = (() => {
       return `<div class="category-bubbles-page">${cards}</div>`;
     }).join('');
 
+    // Count pages and set track width accordingly
+    const pageCount = pages.length;
+    track.style.width = (pageCount * 100) + '%';
+
     dots.innerHTML = pages.map((_, i) => `
       <button class="category-bubbles-dot${i === 0 ? ' active' : ''}" data-page="${i}" aria-label="Ir al grupo ${i + 1}"></button>
     `).join('');
 
     categoryCarouselPage = 0;
-    const pageCount = pages.length;
 
     function updateCategoryCarousel() {
       track.style.transform = `translateX(-${categoryCarouselPage * 100}%)`;
@@ -229,7 +251,7 @@ const Store = (() => {
       clearInterval(categoryCarouselAutoInterval);
     }
 
-    startCategoryAutoRotate();
+    // startCategoryAutoRotate(); // Autoplay desactivado
 
     let _activeBubbleBtn = null;
 
@@ -269,6 +291,15 @@ const Store = (() => {
       if (_activeBubbleBtn === btn) { closeSubDropdown(); return; }
       closeSubDropdown();
 
+      // Destacados clears filters and shows all featured products
+      if (cat === 'Destacados') {
+        currentCategory = 'all';
+        currentBrand = 'all';
+        setActiveCategory('all');
+        return;
+      }
+
+      // Regular categories with brands
       if (cat === 'all') { setActiveCategory('all'); return; }
 
       const brands = [...new Set(
@@ -678,9 +709,19 @@ const Store = (() => {
           ${renderStars(rating.avg, rating.count)}
           <p class="product-description">${Cart.escapeHTML(product.description || '')}</p>
           <div class="product-price-row">
-            ${product.offerActive && product.offerPrice
-              ? `<span class="product-price offer-price">${Cart.formatPrice(product.offerPrice)}</span><span class="product-price-original">${Cart.formatPrice(product.price)}</span>`
-              : `<span class="product-price">${Cart.formatPrice(product.price)}</span>`
+            <span class="product-price-wrapper">
+              ${product.offerActive && product.offerPrice
+                ? `<div style="display:flex;flex-direction:column;gap:4px"><span class="product-price offer-price">${Cart.formatPrice(product.offerPrice)}</span><span class="product-price-original">${Cart.formatPrice(product.price)}</span></div>`
+                : `<span class="product-price">${Cart.formatPrice(product.price)}</span>`
+              }
+            </span>
+            ${isOutOfStock
+              ? `<button class="btn-add-cart disabled" disabled title="Agotado" aria-label="Producto agotado">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>`
+              : `<button class="btn-add-cart" data-product-id="${product.id}" title="Agregar" aria-label="Agregar ${Cart.escapeAttr(product.name)}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>`
             }
           </div>
         </div>
@@ -688,14 +729,6 @@ const Store = (() => {
       ${Auth.isLoggedIn() ? `<button class="btn-wishlist-card${inWishlist ? ' active' : ''}" data-wishlist-id="${product.id}" title="${inWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos'}" aria-label="Favoritos">
         <svg viewBox="0 0 24 24" fill="${inWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
       </button>` : ''}
-      ${isOutOfStock
-        ? `<button class="btn-add-cart disabled" disabled title="Agotado" aria-label="Producto agotado">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>`
-        : `<button class="btn-add-cart" data-product-id="${product.id}" title="Agregar" aria-label="Agregar ${Cart.escapeAttr(product.name)}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          </button>`
-      }
     `;
     return card;
   }
@@ -1494,7 +1527,55 @@ const Store = (() => {
     }
   }
 
-  return { init, renderProducts, renderCategories, getProductRating, renderStars, getActiveProducts, getProducts, isInWishlist, toggleWishlist, updateWishlistBadge, openWishlist, closeWishlist, renderWishlistSidebar, renderSocialLinks, renderPromoPhotoBanners, updateWishlistVisibility, setHeroBackgroundImage, setActiveCategory, renderBannerCarousel, renderCustomerReviews };
+  // Inicializar página de productos (todos con filtros)
+  function initProductsPage() {
+    // Show all products on this page
+    showAll = true;
+    
+    // Read URL parameters for category and brand filters
+    const params = new URLSearchParams(window.location.search);
+    const categoryParam = params.get('category');
+    const brandParam = params.get('brand');
+    
+    // Apply category filter if provided
+    if (categoryParam) {
+      currentCategory = decodeURIComponent(categoryParam);
+    }
+    
+    // Apply brand filter if provided
+    if (brandParam) {
+      currentBrand = decodeURIComponent(brandParam);
+    }
+    
+    seedReviews();
+    renderCategoryBubbleCarousel();
+    renderFeaturedProducts();
+    renderPromoBanners();
+    renderCustomerReviews();
+    bindEvents();
+    initHeaderScroll();
+    applyHeaderInnerCustomization();
+    updateWishlistBadge();
+    updateWishlistVisibility();
+    renderSocialLinks();
+    renderFooterSocialIcons();
+    renderPromoPhotoBanners();
+
+    // Load banners and social links from Supabase
+    loadSiteConfigFromDB();
+
+    // Notify that products are loaded/ready
+    notifyProductsUpdated();
+
+    // Re-render when auth state changes
+    document.addEventListener('auth-changed', () => {
+      updateWishlistVisibility();
+      renderFeaturedProducts();
+      renderCategoryBubbleCarousel();
+    });
+  }
+
+  return { init, initProductsPage, renderProducts, renderCategories, getProductRating, renderStars, getActiveProducts, getProducts, isInWishlist, toggleWishlist, updateWishlistBadge, openWishlist, closeWishlist, renderWishlistSidebar, renderSocialLinks, renderPromoPhotoBanners, updateWishlistVisibility, setHeroBackgroundImage, setActiveCategory, renderBannerCarousel, renderCustomerReviews };
 })();
 
 // --- Theme toggle function ---

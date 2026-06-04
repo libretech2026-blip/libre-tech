@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="LIBRE TECH - Ofertas exclusivas en tecnología. Compra los mejores productos al mejor precio.">
+  <meta name="description" content="LIBRE TECH - Todos nuestros productos de tecnología. Celulares, audífonos, accesorios tech y más.">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#1a4b8c">
-  <title>Ofertas | LIBRE TECH</title>
+  <title>Todos los Productos | LIBRE TECH</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -94,28 +94,49 @@
   <nav class="breadcrumb container" id="breadcrumb" aria-label="Navegación">
     <a href="index.html">Inicio</a>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-    <span>Ofertas</span>
+    <span>Productos</span>
   </nav>
 
-  <!-- ==================== OFFERS PAGE ==================== -->
+  <!-- ==================== PRODUCTOS PAGE ==================== -->
   <main class="products-section container" id="productos">
-    <div class="section-main-content">
-      <!-- Header: Título Ofertas -->
-      <div class="featured-header" style="margin-bottom:var(--spacing-2xl)">
-        <h1 class="featured-title">Ofertas Especiales</h1>
-        <p style="color:var(--text-secondary);margin-top:var(--spacing-md);">Descubre nuestros productos con descuentos exclusivos.</p>
-      </div>
+    <div class="section-with-banner">
+      <!-- Left: Banners laterales izquierdos -->
+      <aside class="promo-banner promo-banner--left" id="promoBannerLeft">
+        <!-- Rendered by JS for left admin banners -->
+        <div id="promoBannerLeftAdminStack" class="promo-side-placeholder"><!-- Rendered by JS --></div>
+      </aside>
 
-      <!-- Grid de productos -->
-      <div class="products-grid" id="offersGrid"></div>
+      <!-- Center: Todos los productos (filtrados por categorías y marcas) -->
+      <div class="section-main-content">
+        <!-- Header: Título Productos -->
+        <div class="featured-header" style="margin-bottom:var(--spacing-2xl)">
+          <h1 class="featured-title">Todos los Productos</h1>
+        </div>
 
-      <!-- Sin resultados -->
-      <div id="noOffers" style="display:none; text-align:center; padding: 4rem 1rem; color: var(--text-tertiary);">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:1rem;opacity:.3">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <p style="font-size:1.1rem;margin-bottom:.5rem;">No hay ofertas disponibles</p>
-        <small>Vuelve más tarde para nuevas sorpresas</small>
+        <!-- Filtros por categoría (rendered by JS) -->
+        <div class="filters-bar" id="filtersBar" style="display:none">
+          <button class="filter-chip active" data-category="all">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Todos
+          </button>
+        </div>
+
+        <!-- Brand dropdown (rendered by JS when clicking a category) -->
+        <div class="brand-dropdown" id="brandDropdown" style="display:none">
+          <div class="brand-dropdown-content" id="brandDropdownContent"></div>
+        </div>
+
+        <!-- Grid de productos -->
+        <div class="products-grid" id="productsGrid"></div>
+
+        <!-- Sin resultados -->
+        <div id="noResults" style="display:none; text-align:center; padding: 4rem 1rem; color: var(--text-tertiary);">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:1rem;opacity:.3">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <p style="font-size:1.1rem;margin-bottom:.5rem;">No se encontraron productos</p>
+          <small>Intenta con otro término de búsqueda o categoría</small>
+        </div>
       </div>
     </div>
   </main>
@@ -147,7 +168,7 @@
           <div class="footer-col">
             <h4 class="footer-col-title">Comprar</h4>
             <ul class="footer-links-list">
-              <li><a href="index.html#productos">Todos los productos</a></li>
+              <li><a href="productos.html">Todos los productos</a></li>
               <li><a href="ofertas.html">Ofertas</a></li>
               <li><a href="destacados.html">Productos destacados</a></li>
             </ul>
@@ -219,123 +240,13 @@
       try { await SB.syncProducts(); } catch (e) { console.warn('SB sync:', e); }
       Cart.init();
       Auth.init();
-
-      const offersGrid = document.getElementById('offersGrid');
-      const noOffers = document.getElementById('noOffers');
       
-      if (!offersGrid) return;
-
-      let attempts = 0;
-      const maxAttempts = 50;
-      
-      const loadOffers = async () => {
-        try {
-          // Get all products
-          const allProducts = (Store && Store.getProducts) ? Store.getProducts() : [];
-          
-          if (!allProducts || allProducts.length === 0) {
-            if (attempts < maxAttempts) {
-              attempts++;
-              setTimeout(loadOffers, 100);
-              return;
-            }
-            noOffers.style.display = 'block';
-            return;
-          }
-
-          // Filter products with discount > 0 or marked as offer or with offerPrice
-          let offers = allProducts
-            .filter(p => {
-              // Check multiple discount indicators
-              const hasDiscount = p.discount_percentage && p.discount_percentage > 0;
-              const hasOfferPrice = p.offerActive === true && p.offerPrice && p.offerPrice < p.price;
-              const isMarkedAsOffer = p.oferta === true || p.is_oferta === true;
-              return hasDiscount || hasOfferPrice || isMarkedAsOffer;
-            })
-            .sort((a, b) => {
-              // Sort by discount percentage or calculated discount
-              const discountA = a.discount_percentage || (a.offerActive && a.offerPrice ? Math.round((1 - a.offerPrice / a.price) * 100) : 0);
-              const discountB = b.discount_percentage || (b.offerActive && b.offerPrice ? Math.round((1 - b.offerPrice / b.price) * 100) : 0);
-              return discountB - discountA;
-            });
-
-          // If no offers with discount, show fallback message but allow admin to add offers
-          if (!offers || offers.length === 0) {
-            // Try to get products marked as featured as alternative
-            const fallback = allProducts
-              .filter(p => p.is_featured === true || p.featured === true)
-              .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-              .slice(0, 12);
-            
-            if (fallback && fallback.length > 0) {
-              offers = fallback;
-              // Still show them but with different messaging
-            } else {
-              noOffers.style.display = 'block';
-              noOffers.innerHTML = `
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:1rem;opacity:.3">
-                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <p style="font-size:1.1rem;margin-bottom:.5rem;">No hay ofertas disponibles</p>
-                <small>Por favor, ve a Administración y marca algunos productos con descuento</small>
-              `;
-              return;
-            }
-          }
-
-          // Render products
-          offersGrid.innerHTML = offers.map(product => {
-            const imageUrl = product.image || (product.images && product.images.length > 0 ? product.images[0] : 'LOGO_LIBRETECH.png');
-            const stock = product.stock ?? 0;
-            const isOutOfStock = stock <= 0;
-            
-            return `
-              <article class="product-card" data-product-id="${product.id}">
-                <a href="producto.html?id=${encodeURIComponent(product.id)}" class="product-card-link">
-                  <div class="product-card-image">
-                    ${isOutOfStock ? '<span class="product-badge out-of-stock">Agotado</span>' : ''}
-                    ${product.offerActive && product.offerPrice ? '<span class="product-badge sale">Oferta</span>' : ''}
-                    ${isOutOfStock ? '<div class="product-sold-out-overlay"></div>' : ''}
-                    <img src="${imageUrl}" alt="${product.name}" class="product-image" loading="lazy" width="260" height="260" onerror="this.src='LOGO_LIBRETECH.png'">
-                  </div>
-                  <div class="product-card-body">
-                    <span class="product-category">${product.category || ''}</span>
-                    <h3 class="product-name">${product.name}</h3>
-                    <p class="product-description">${product.description || ''}</p>
-                    <div class="product-price-row">
-                      <span class="product-price-wrapper">
-                        ${product.offerActive && product.offerPrice
-                          ? `<div style="display:flex;flex-direction:column;gap:4px"><span class="product-price offer-price">$${product.offerPrice.toFixed(2)}</span><span class="product-price-original">$${product.price.toFixed(2)}</span></div>`
-                          : `<span class="product-price">$${product.price.toFixed(2)}</span>`
-                        }
-                      </span>
-                      ${isOutOfStock
-                        ? `<button class="btn-add-cart disabled" disabled title="Agotado" aria-label="Producto agotado">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          </button>`
-                        : `<button class="btn-add-cart" data-product-id="${product.id}" title="Agregar" aria-label="Agregar ${product.name}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                          </button>`
-                      }
-                    </div>
-                  </div>
-                </a>
-              </article>
-            `;
-          }).join('');
-
-
-          // No necesitamos la función addToCartFromOffers, los botones usan data-product-id
-        } catch (e) {
-          console.warn('Error loading offers:', e);
-          if (attempts < maxAttempts) {
-            attempts++;
-            setTimeout(loadOffers, 100);
-          }
-        }
-      };
-
-      loadOffers();
+      // Usar la función Store.init() de app.js pero mostrar todos los productos
+      if (Store && typeof Store.initProductsPage === 'function') {
+        Store.initProductsPage();
+      } else if (Store && typeof Store.init === 'function') {
+        Store.init();
+      }
     });
   </script>
 </body>
