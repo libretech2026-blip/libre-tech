@@ -1889,7 +1889,7 @@ input, select, textarea {
 }
 
 .product-card-body {
-  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg) 0;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1931,32 +1931,17 @@ input, select, textarea {
 
 .product-price-row {
   display: flex;
-  flex-direction: row;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-top: auto;
+  align-items: center;
+  justify-content: flex-start;
   gap: var(--spacing-md);
   width: 100%;
-  min-height: 48px;
-}
-
-@media (max-width: 480px) {
-  .product-price-row {
-    justify-content: flex-end;
-    gap: var(--spacing-sm);
-  }
-  
-  .product-card-actions {
-    padding: 0 var(--spacing-md) var(--spacing-sm);
-    gap: var(--spacing-sm);
-  }
+  margin-top: var(--spacing-md);
 }
 
 .product-price-wrapper {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--spacing-sm);
-  min-height: 48px;
 }
 
 .product-price {
@@ -2512,7 +2497,7 @@ input, select, textarea {
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
-  z-index: 3000;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4111,9 +4096,10 @@ input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 0 var(--spacing-lg) var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
   gap: var(--spacing-md);
   flex-shrink: 0;
+  border-top: 1px solid var(--border-light);
 }
 
 /* Product card with actions row */
@@ -4807,55 +4793,6 @@ input, select, textarea {
     gap: var(--spacing-md);
   }
 }
-
-.top-categories-section .promo-banner--right {
-  position: static;
-  width: 200px;
-  margin-right: -50px;
-  padding-right: 50px;
-}
-
-@media (max-width: 768px) {
-  .top-categories-section .promo-banner--right {
-    position: static;
-    width: 100%;
-    margin-right: 0;
-    padding-right: 0;
-    display: flex;
-    flex-direction: row;
-    gap: var(--spacing-md);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: var(--spacing-xs);
-  }
-  .top-categories-section .promo-banner--right #promoBannerRightAdminStack {
-    display: flex;
-    flex-direction: row;
-    gap: var(--spacing-md);
-    width: 100%;
-  }
-  .top-categories-section .promo-banner--right .promo-banner-link {
-    flex: 0 0 auto;
-    width: 140px;
-  }
-}
-
-@media (max-width: 480px) {
-  .top-categories-section .promo-banner--right {
-    position: static;
-    width: 100%;
-    margin-right: 0;
-    padding-right: 0;
-    display: flex;
-    flex-direction: row;
-    gap: var(--spacing-sm);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-}
-
 
 .top-category-block {
   margin-top: var(--spacing-3xl);
@@ -6118,13 +6055,18 @@ input, select, textarea {
   box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
   z-index: 1500;
   cursor: grab;
-  transition: box-shadow var(--transition-fast);
   text-decoration: none;
   border: none;
   user-select: none;
-  touch-action: none;
+  touch-action: manipulation;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+}
+
+.whatsapp-bubble.dragging {
+  transition: none;
+  cursor: grabbing;
+  box-shadow: 0 8px 32px rgba(37, 211, 102, 0.6);
 }
 
 .whatsapp-bubble:active {

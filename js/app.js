@@ -1580,7 +1580,7 @@ const Store = (() => {
     });
   }
 
-  return { init, initProductsPage, renderProducts, renderCategories, getProductRating, renderStars, getActiveProducts, getProducts, isInWishlist, toggleWishlist, updateWishlistBadge, openWishlist, closeWishlist, renderWishlistSidebar, renderSocialLinks, renderPromoPhotoBanners, updateWishlistVisibility, setHeroBackgroundImage, setActiveCategory, renderBannerCarousel, renderCustomerReviews };
+  return { init, initProductsPage, renderProducts, renderCategories, getProductRating, renderStars, getActiveProducts, getProducts, isInWishlist, toggleWishlist, updateWishlistBadge, openWishlist, closeWishlist, renderWishlistSidebar, renderSocialLinks, renderPromoPhotoBanners, updateWishlistVisibility, setHeroBackgroundImage, setActiveCategory, renderBannerCarousel, renderCustomerReviews, bindEvents };
 })();
 
 // --- Theme toggle function ---
