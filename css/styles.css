@@ -6948,66 +6948,6 @@ input, select, textarea {
   }
 }
 
-/* ==================== WISHLIST DETAIL BUTTON ==================== */
-.btn-wishlist-detail {
-  width: 48px;
-  height: 48px;
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-secondary);
-  color: var(--text-tertiary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.25s;
-}
-
-.btn-wishlist-detail svg {
-  width: 22px;
-  height: 22px;
-  transition: fill 0.2s, stroke 0.2s;
-}
-
-.btn-wishlist-detail:hover {
-  border-color: #ff3b5c;
-  color: #ff3b5c;
-  background: rgba(255, 59, 92, 0.05);
-}
-
-.btn-wishlist-detail.active {
-  background: rgba(255, 59, 92, 0.1);
-  border-color: #ff3b5c;
-  color: #ff3b5c;
-}
-
-.btn-wishlist-detail.active svg {
-  fill: #ff3b5c;
-  stroke: #ff3b5c;
-}
-
-/* ==================== WISHLIST BADGE ==================== */
-.wishlist-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: #ff3b5c;
-  color: #fff;
-  font-size: 0.65rem;
-  font-weight: 700;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.wishlist-badge:empty {
-  display: none;
-}
-
 /* ==================== CUSTOMER REVIEWS SECTION ==================== */
 .customer-reviews-section {
   padding: var(--spacing-3xl) var(--spacing-lg);

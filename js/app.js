@@ -674,7 +674,6 @@ const Store = (() => {
     const rating = getProductRating(product.id);
     const stock = product.stock ?? 0;
     const isOutOfStock = stock <= 0;
-    const inWishlist = isInWishlist(product.id);
 
     card.innerHTML = `
       <a href="${detailLink}" class="product-card-link">
@@ -946,15 +945,6 @@ const Store = (() => {
         btn.classList.remove('added');
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
       }, 1200);
-    });
-
-    // Wishlist toggle from product cards
-    document.addEventListener('click', e => {
-      const btn = e.target.closest('.btn-wishlist-card');
-      if (!btn) return;
-      e.preventDefault();
-      e.stopPropagation();
-      toggleWishlist(btn.dataset.wishlistId);
     });
 
     // Category filter chips
@@ -1402,8 +1392,6 @@ const Store = (() => {
     bindEvents();
     initHeaderScroll();
     applyHeaderInnerCustomization();
-    updateWishlistBadge();
-    updateWishlistVisibility();
     renderSocialLinks();
     renderFooterSocialIcons();
     renderPromoPhotoBanners();
@@ -1416,7 +1404,6 @@ const Store = (() => {
 
     // Re-render when auth state changes
     document.addEventListener('auth-changed', () => {
-      updateWishlistVisibility();
       renderFeaturedProducts();
       renderCategoryBubbleCarousel();
     });
