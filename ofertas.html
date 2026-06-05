@@ -706,8 +706,8 @@
                     <div class="product-price-row">
                       <span class="product-price-wrapper">
                         ${product.offerActive && product.offerPrice
-                          ? `<div style="display:flex;flex-direction:column;gap:4px"><span class="product-price offer-price">$${product.offerPrice.toFixed(2)}</span><span class="product-price-original">$${product.price.toFixed(2)}</span></div>`
-                          : `<span class="product-price">$${product.price.toFixed(2)}</span>`
+                          ? `<div style="display:flex;flex-direction:column;gap:4px"><span class="product-price offer-price">${Cart.formatPrice(product.offerPrice)}</span><span class="product-price-original">${Cart.formatPrice(product.price)}</span></div>`
+                          : `<span class="product-price">${Cart.formatPrice(product.price)}</span>`
                         }
                       </span>
                     </div>
