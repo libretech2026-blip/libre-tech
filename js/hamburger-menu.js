@@ -125,9 +125,17 @@ const HamburgerMenu = (() => {
     allCategoryDiv.appendChild(allBtn);
     content.appendChild(allCategoryDiv);
 
-    // Add categories with brands (displayed inline, NO popups)
+    // Add categories with brands (collapsed by default)
     categories.forEach(category => {
       const brands = Array.from(categoryMap.get(category)).sort();
+
+      // Category container
+      const categoryDiv = document.createElement('div');
+      categoryDiv.className = 'menu-category';
+
+      // Category header (with toggle if has brands)
+      const categoryHeaderDiv = document.createElement('div');
+      categoryHeaderDiv.className = 'menu-category-header';
 
       // Category button
       const categoryBtn = document.createElement('button');
@@ -146,16 +154,27 @@ const HamburgerMenu = (() => {
         }
       });
 
-      // Category container
-      const categoryDiv = document.createElement('div');
-      categoryDiv.className = 'menu-category';
-      categoryDiv.appendChild(categoryBtn);
+      categoryHeaderDiv.appendChild(categoryBtn);
 
-      // Add brands as direct subcategory items (if any)
+      // Add toggle button if has brands
       if (brands.length > 0) {
-        const brandsDiv = document.createElement('div');
-        brandsDiv.className = 'menu-subcategories';
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'menu-category-toggle';
+        toggleBtn.setAttribute('aria-label', `Expandir/contraer ${category}`);
+        toggleBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
         
+        const brandsDiv = document.createElement('div');
+        brandsDiv.className = 'menu-subcategories collapsed';
+        
+        toggleBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          brandsDiv.classList.toggle('collapsed');
+          toggleBtn.classList.toggle('expanded');
+        });
+
+        categoryHeaderDiv.appendChild(toggleBtn);
+
+        // Add brands as subcategory items
         brands.forEach(brand => {
           const brandBtn = document.createElement('button');
           brandBtn.className = 'menu-subcategory-item';
@@ -175,8 +194,11 @@ const HamburgerMenu = (() => {
           });
           brandsDiv.appendChild(brandBtn);
         });
-        
+
+        categoryDiv.appendChild(categoryHeaderDiv);
         categoryDiv.appendChild(brandsDiv);
+      } else {
+        categoryDiv.appendChild(categoryHeaderDiv);
       }
 
       content.appendChild(categoryDiv);
