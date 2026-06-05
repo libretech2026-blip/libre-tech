@@ -9,13 +9,7 @@ const Store = (() => {
 
   const PRODUCTS_KEY = 'libretech_products';
   const RATINGS_KEY  = 'libretech_ratings';
-  const WISHLIST_KEY_BASE = 'libretech_wishlist';
   const SOCIAL_KEY   = 'libretech_social_links';
-
-  function getWishlistKey() {
-    const user = Auth && Auth.getUser && Auth.getUser();
-    return user ? WISHLIST_KEY_BASE + '_' + user.id : WISHLIST_KEY_BASE;
-  }
 
   // Productos vienen de Supabase (cacheados en localStorage por SB.syncProducts())
 
@@ -48,8 +42,6 @@ const Store = (() => {
     initHeaderScroll();
     applyHeaderInnerCustomization();
     updateHeroStats();
-    updateWishlistBadge();
-    updateWishlistVisibility();
     renderSocialLinks();
     renderFooterSocialIcons();
     renderPromoPhotoBanners();
@@ -61,9 +53,8 @@ const Store = (() => {
     // Notify that products are loaded/ready
     notifyProductsUpdated();
 
-    // Re-render wishlist hearts when auth state changes
+    // Re-render on auth state changes
     document.addEventListener('auth-changed', () => {
-      updateWishlistVisibility();
       renderFeaturedProducts();
       // renderTopCategories(); // Eliminado: Top por categorías
       renderCategoryBubbleCarousel();
@@ -686,9 +677,6 @@ const Store = (() => {
     const inWishlist = isInWishlist(product.id);
 
     card.innerHTML = `
-      ${Auth.isLoggedIn() ? `<button class="btn-wishlist-card${inWishlist ? ' active' : ''}" data-wishlist-id="${product.id}" title="${inWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos'}" aria-label="Favoritos">
-        <svg viewBox="0 0 24 24" fill="${inWishlist ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-      </button>` : ''}
       <a href="${detailLink}" class="product-card-link">
         <div class="product-card-image">
           ${isOutOfStock ? '<span class="product-badge out-of-stock">Agotado</span>' : ''}
@@ -969,25 +957,6 @@ const Store = (() => {
       toggleWishlist(btn.dataset.wishlistId);
     });
 
-    // Wishlist sidebar events
-    document.getElementById('btnOpenWishlist')?.addEventListener('click', openWishlist);
-    document.getElementById('btnCloseWishlist')?.addEventListener('click', closeWishlist);
-    document.getElementById('wishlistOverlay')?.addEventListener('click', closeWishlist);
-
-    // Wishlist item actions (add to cart, remove)
-    document.getElementById('wishlistItems')?.addEventListener('click', e => {
-      const cartBtn = e.target.closest('.wishlist-item-cart');
-      if (cartBtn) {
-        e.preventDefault();
-        Cart.addItem(cartBtn.dataset.productId);
-      }
-      const removeBtn = e.target.closest('.wishlist-item-remove');
-      if (removeBtn) {
-        e.preventDefault();
-        toggleWishlist(removeBtn.dataset.wishlistRemove);
-      }
-    });
-
     // Category filter chips
     document.getElementById('filtersBar')?.addEventListener('click', e => {
       const chip = e.target.closest('.filter-chip');
@@ -1167,134 +1136,7 @@ const Store = (() => {
         ticking = true;
       }
     }, { passive: true });
-  }
-
-  // ===================== WISHLIST =====================
-  function getWishlist() {
-    try { return JSON.parse(localStorage.getItem(getWishlistKey()) || '[]'); } catch { return []; }
-  }
-
-  function saveWishlist(list) {
-    localStorage.setItem(getWishlistKey(), JSON.stringify(list));
-  }
-
-  function isInWishlist(productId) {
-    return getWishlist().includes(productId);
-  }
-
-  function toggleWishlist(productId) {
-    // Require login to use wishlist
-    if (!Auth.isLoggedIn()) {
-      Auth.openLoginDropdown();
-      Cart.showToast('Inicia sesión para agregar a favoritos', 'info');
-      return;
-    }
-
-    let list = getWishlist();
-    const idx = list.indexOf(productId);
-    if (idx > -1) {
-      list.splice(idx, 1);
-      Cart.showToast('Eliminado de favoritos', 'info');
-    } else {
-      list.push(productId);
-      Cart.showToast('Agregado a favoritos', 'success');
-    }
-    saveWishlist(list);
-    updateWishlistBadge();
-    renderWishlistSidebar();
-    // Update heart icons on cards
-    document.querySelectorAll('.btn-wishlist-card').forEach(btn => {
-      const id = btn.dataset.wishlistId;
-      const active = list.includes(id);
-      btn.classList.toggle('active', active);
-      btn.title = active ? 'Quitar de favoritos' : 'Agregar a favoritos';
-      const svg = btn.querySelector('svg');
-      if (svg) svg.setAttribute('fill', active ? 'currentColor' : 'none');
-    });
-  }
-
-  function updateWishlistBadge() {
-    const badge = document.getElementById('wishlistBadge');
-    if (!badge) return;
-    const count = getWishlist().length;
-    badge.textContent = count;
-    badge.style.display = count > 0 ? 'flex' : 'none';
-  }
-
-  function renderWishlistSidebar() {
-    const container = document.getElementById('wishlistItems');
-    const emptyEl = document.getElementById('wishlistEmpty');
-    const countEl = document.getElementById('wishlistItemsCount');
-    if (!container) return;
-
-    const list = getWishlist();
-    const products = getActiveProducts();
-
-    console.log('[Wishlist Debug] List IDs:', list);
-    console.log('[Wishlist Debug] Available products:', products.map(p => p.id));
-    
-    if (countEl) countEl.textContent = list.length > 0 ? `(${list.length})` : '';
-    if (list.length === 0) {
-      if (emptyEl) emptyEl.style.display = '';
-      // Remove all items except empty
-      container.querySelectorAll('.wishlist-item').forEach(el => el.remove());
-      return;
-    }
-
-    if (emptyEl) emptyEl.style.display = 'none';
-    // Remove old items
-    container.querySelectorAll('.wishlist-item').forEach(el => el.remove());
-
-    list.forEach(pid => {
-      const p = products.find(x => x.id === pid);
-      console.log(`[Wishlist Debug] Looking for product ${pid}: ${p ? 'Found' : 'NOT Found'}`);
-      if (!p) return;
-      const div = document.createElement('div');
-      div.className = 'wishlist-item';
-      div.innerHTML = `
-        <a href="producto.html?id=${encodeURIComponent(p.id)}" class="wishlist-item-link">
-          <div class="wishlist-item-img">
-            ${p.image ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy">` : '<div class="product-no-image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>'}
-          </div>
-          <div class="wishlist-item-info">
-            <div class="wishlist-item-name">${Cart.escapeHTML(p.name)}</div>
-            <div class="wishlist-item-price">${p.offerActive && p.offerPrice ? Cart.formatPrice(p.offerPrice) : Cart.formatPrice(p.price)}</div>
-          </div>
-        </a>
-        <div class="wishlist-item-actions">
-          <button class="wishlist-item-cart" data-product-id="${p.id}" title="Agregar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
-          </button>
-          <button class="wishlist-item-remove" data-wishlist-remove="${p.id}" title="Eliminar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-      `;
-      container.appendChild(div);
-    });
-  }
-
-  function openWishlist() {
-    document.getElementById('wishlistSidebar')?.classList.add('active');
-    document.getElementById('wishlistOverlay')?.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    renderWishlistSidebar();
-  }
-
-  function closeWishlist() {
-    document.getElementById('wishlistSidebar')?.classList.remove('active');
-    document.getElementById('wishlistOverlay')?.classList.remove('active');
-    document.body.style.overflow = '';
-  }
-
-  // --- Update wishlist button visibility based on login state ---
-  function updateWishlistVisibility() {
-    const loggedIn = Auth.isLoggedIn();
-    const headerWishBtn = document.getElementById('btnOpenWishlist');
-    if (headerWishBtn) {
-      headerWishBtn.style.display = loggedIn ? '' : 'none';
-    }
-  }
+  };
 
   // ===================== SOCIAL MEDIA (FOOTER) =====================
   const SOCIAL_ICONS = {
@@ -1580,7 +1422,7 @@ const Store = (() => {
     });
   }
 
-  return { init, initProductsPage, renderProducts, renderCategories, getProductRating, renderStars, getActiveProducts, getProducts, isInWishlist, toggleWishlist, updateWishlistBadge, openWishlist, closeWishlist, renderWishlistSidebar, renderSocialLinks, renderPromoPhotoBanners, updateWishlistVisibility, setHeroBackgroundImage, setActiveCategory, renderBannerCarousel, renderCustomerReviews, bindEvents };
+  return { init, initProductsPage, renderProducts, renderCategories, getProductRating, renderStars, getActiveProducts, getProducts, renderSocialLinks, renderPromoPhotoBanners, setHeroBackgroundImage, setActiveCategory, renderBannerCarousel, renderCustomerReviews, bindEvents };
 })();
 
 // --- Theme toggle function ---
