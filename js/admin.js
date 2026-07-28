@@ -1113,6 +1113,14 @@ const Admin = (() => {
 
     }
 
+    if (typeof window === 'undefined' || !window.XLSX) {
+
+      showToast('No se pudo cargar la librería de Excel. Recarga la página e intenta de nuevo.', 'error');
+
+      return;
+
+    }
+
 
 
     const reader = new FileReader();
