@@ -900,53 +900,134 @@ const Admin = (() => {
 
   // --- Excel Parsing (SheetJS) ---
 
-  function parseExcel(data) {
+  function normalizeHeader(value) {
+
+    if (!value) return '';
+
+    return String(value)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '')
+      .trim();
+
+  }
+
+
+
+  function getRowValue(row, aliases) {
+
+    if (!row || typeof row !== 'object') return '';
+
+    for (const [key, value] of Object.entries(row)) {
+
+      if (aliases.includes(normalizeHeader(key))) return value;
+
+    }
+
+    return '';
+
+  }
+
+
+
+  function parseNumber(value) {
+
+    if (value === null || value === undefined || value === '') return 0;
+
+    if (typeof value === 'number' && Number.isFinite(value)) return Math.round(value);
+
+    const cleaned = String(value).replace(/[^\d.-]/g, '');
+
+    const parsed = parseFloat(cleaned);
+
+    return Number.isFinite(parsed) ? Math.round(parsed) : 0;
+
+  }
+
+
+
+  function parseExcel(data, fileName = '') {
 
     try {
 
-      const workbook = XLSX.read(data, { type: 'array', codepage: 65001 });
+      if (typeof window === 'undefined' || !window.XLSX) {
 
-      const sheetName = workbook.SheetNames[0];
+        throw new Error('SheetJS no está disponible');
+
+      }
+
+      const isTextFile = typeof data === 'string' || /\.csv$/i.test(fileName || '');
+
+      const workbook = XLSX.read(data, {
+
+        type: isTextFile ? 'string' : 'array',
+
+        codepage: 65001,
+
+        cellDates: true
+
+      });
+
+      const sheetName = workbook.SheetNames.find(name => workbook.Sheets[name] && Object.keys(workbook.Sheets[name]).length > 0) || workbook.SheetNames[0];
 
       const sheet = workbook.Sheets[sheetName];
 
       const json = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
 
-
-
       const products = [];
 
       json.forEach(row => {
 
-        const name = cleanText(row.nombre || row.Nombre || row.name || row.Name || '');
+        if (!row || typeof row !== 'object') return;
 
-        const price = parseInt(row.precio || row.Precio || row.price || row.Price || 0) || 0;
+        const hasAnyValue = Object.values(row).some(value => String(value || '').trim() !== '');
 
-        const description = cleanText(row.descripcion || row.Descripcion || row.description || row.Description || '');
+        if (!hasAnyValue) return;
 
-        const category = cleanText(row.categoria || row.Categoria || row.category || row.Category || '');
 
-        const brand = cleanText(row.marca || row.Marca || row.brand || row.Brand || '');
 
-        const stock = parseInt(row.stock || row.Stock || 0) || 0;
+        const name = cleanText(
+          getRowValue(row, ['nombre', 'producto', 'titulo', 'item', 'title', 'name']) || ''
+        );
 
-        const colorRaw = cleanText(row.color || row.Color || row.colores || row.Colores || '');
+        const price = parseNumber(
+          getRowValue(row, ['precio', 'preciounitario', 'preciounitario', 'price', 'valor', 'unitprice', 'valorunitario', 'preciofinal']) || 0
+        );
+
+        const description = cleanText(
+          getRowValue(row, ['descripcion', 'description', 'detalles', 'detalle', 'resumen']) || ''
+        );
+
+        const category = cleanText(
+          getRowValue(row, ['categoria', 'category', 'familia', 'tipo', 'linea', 'departamento']) || ''
+        );
+
+        const brand = cleanText(
+          getRowValue(row, ['marca', 'brand', 'fabricante', 'proveedor']) || ''
+        );
+
+        const stock = parseNumber(
+          getRowValue(row, ['stock', 'inventario', 'cantidad', 'existencias', 'disponibilidad']) || 0
+        );
+
+        const colorRaw = cleanText(
+          getRowValue(row, ['color', 'colores', 'colors', 'colorprincipal']) || ''
+        );
 
         const colors = colorRaw ? colorRaw.split(/[,;|]/).map(c => c.trim()).filter(Boolean) : [];
 
 
 
-        // Specs: columns like spec1, spec2... or especificacion1, etc.
-
         const specs = [];
 
-        for (const key of Object.keys(row)) {
+        for (const [key, value] of Object.entries(row)) {
 
-          const kl = key.toLowerCase();
+          const kl = normalizeHeader(key);
 
-          if ((kl.startsWith('spec') || kl.startsWith('especificacion') || kl.startsWith('especificación')) && row[key]) {
+          if ((kl.startsWith('spec') || kl.startsWith('especificacion') || kl.startsWith('especificación') || kl.startsWith('caracteristica') || kl.startsWith('detalle')) && value) {
 
-            const val = cleanText(String(row[key]));
+            const val = cleanText(String(value));
 
             if (val) {
 
@@ -970,7 +1051,7 @@ const Admin = (() => {
 
 
 
-        if (name && price > 0) {
+        if (name && (price > 0 || description || category || brand || stock > 0 || colors.length || specs.length)) {
 
           products.push({ name, price, description, category, brand, stock, image: '', active: true, colors, specs });
 
@@ -1022,21 +1103,35 @@ const Admin = (() => {
 
     if (!file) return;
 
+    const fileName = (file.name || '').toLowerCase();
+
+    if (!/(xlsx|xls|xlsm|csv)$/i.test(fileName)) {
+
+      showToast('Selecciona un archivo Excel o CSV válido', 'error');
+
+      return;
+
+    }
+
 
 
     const reader = new FileReader();
 
     reader.onload = e => {
 
-      const data = new Uint8Array(e.target.result);
+      const result = e.target?.result;
 
-      csvParsedData = parseExcel(data);
+      const isCsv = /\.csv$/i.test(fileName);
+
+      const data = isCsv ? result : (typeof result === 'string' ? result : new Uint8Array(result || []));
+
+      csvParsedData = parseExcel(data, fileName);
 
 
 
       if (csvParsedData.length === 0) {
 
-        showToast('No se encontraron productos v\u00e1lidos en el archivo Excel', 'error');
+        showToast('No se encontraron productos válidos en el archivo. Revisa los encabezados o usa una tabla con columnas como nombre, precio y categoría.', 'error');
 
         return;
 
@@ -1050,7 +1145,20 @@ const Admin = (() => {
 
     };
 
-    reader.readAsArrayBuffer(file);
+    reader.onerror = () => {
+
+      showToast('No se pudo leer el archivo. Intenta de nuevo.', 'error');
+    };
+
+    if (/\.csv$/i.test(fileName)) {
+
+      reader.readAsText(file, 'utf-8');
+
+    } else {
+
+      reader.readAsArrayBuffer(file);
+
+    }
 
   }
 
