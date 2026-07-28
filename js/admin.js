@@ -973,63 +973,96 @@ const Admin = (() => {
 
       const sheet = workbook.Sheets[sheetName];
 
-      const json = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false, header: 1 });
 
       const products = [];
 
-      json.forEach(row => {
+      const headerCandidates = ['nombre', 'producto', 'titulo', 'item', 'title', 'name', 'descripcion', 'description', 'detalles', 'detalle', 'resumen', 'categoria', 'category', 'familia', 'tipo', 'linea', 'departamento', 'precio', 'price', 'valor', 'unitprice', 'valorunitario', 'preciofinal', 'stock', 'inventario', 'cantidad', 'existencias', 'disponibilidad', 'marca', 'brand', 'fabricante', 'proveedor', 'color', 'colores', 'colors'];
 
-        if (!row || typeof row !== 'object') return;
+      const headerRowIndex = rows.findIndex(row => Array.isArray(row) && row.some(value => {
 
-        const hasAnyValue = Object.values(row).some(value => String(value || '').trim() !== '');
+        const text = String(value || '').trim();
+
+        return text && headerCandidates.some(candidate => normalizeHeader(text).includes(candidate));
+
+      }));
+
+      const headerRow = headerRowIndex >= 0 ? rows[headerRowIndex] : [];
+      const startIndex = headerRowIndex >= 0 ? headerRowIndex + 1 : 0;
+
+      const indexes = {};
+
+      if (Array.isArray(headerRow)) {
+
+        headerRow.forEach((value, idx) => {
+
+          const header = normalizeHeader(String(value || ''));
+
+          if (!header) return;
+
+          if (['nombre', 'producto', 'titulo', 'item', 'title', 'name'].includes(header)) indexes.name = idx;
+          if (['precio', 'preciounitario', 'price', 'valor', 'unitprice', 'valorunitario', 'preciofinal'].includes(header)) indexes.price = idx;
+          if (['descripcion', 'description', 'detalles', 'detalle', 'resumen'].includes(header)) indexes.description = idx;
+          if (['categoria', 'category', 'familia', 'tipo', 'linea', 'departamento'].includes(header)) indexes.category = idx;
+          if (['marca', 'brand', 'fabricante', 'proveedor'].includes(header)) indexes.brand = idx;
+          if (['stock', 'inventario', 'cantidad', 'existencias', 'disponibilidad'].includes(header)) indexes.stock = idx;
+          if (['color', 'colores', 'colors', 'colorprincipal'].includes(header)) indexes.color = idx;
+
+        });
+
+      }
+
+      rows.slice(startIndex).forEach(row => {
+
+        if (!Array.isArray(row)) return;
+
+        const hasAnyValue = row.some(value => String(value || '').trim() !== '');
 
         if (!hasAnyValue) return;
 
+        const values = row.map(value => cleanText(String(value ?? '')));
 
-
-        const name = cleanText(
-          getRowValue(row, ['nombre', 'producto', 'titulo', 'item', 'title', 'name']) || ''
-        );
-
-        const price = parseNumber(
-          getRowValue(row, ['precio', 'preciounitario', 'preciounitario', 'price', 'valor', 'unitprice', 'valorunitario', 'preciofinal']) || 0
-        );
-
-        const description = cleanText(
-          getRowValue(row, ['descripcion', 'description', 'detalles', 'detalle', 'resumen']) || ''
-        );
-
-        const category = cleanText(
-          getRowValue(row, ['categoria', 'category', 'familia', 'tipo', 'linea', 'departamento']) || ''
-        );
-
-        const brand = cleanText(
-          getRowValue(row, ['marca', 'brand', 'fabricante', 'proveedor']) || ''
-        );
-
-        const stock = parseNumber(
-          getRowValue(row, ['stock', 'inventario', 'cantidad', 'existencias', 'disponibilidad']) || 0
-        );
-
-        const colorRaw = cleanText(
-          getRowValue(row, ['color', 'colores', 'colors', 'colorprincipal']) || ''
-        );
-
-        const colors = colorRaw ? colorRaw.split(/[,;|]/).map(c => c.trim()).filter(Boolean) : [];
-
-
+        let name = '';
+        let price = 0;
+        let description = '';
+        let category = '';
+        let brand = '';
+        let stock = 0;
+        let colorRaw = '';
 
         const specs = [];
 
-        for (const [key, value] of Object.entries(row)) {
+        if (indexes.name !== undefined) name = values[indexes.name] || '';
+        if (!name && values[0]) name = values[0];
 
-          const kl = normalizeHeader(key);
+        if (indexes.price !== undefined) price = parseNumber(values[indexes.price]);
+        if (!price && values[1]) price = parseNumber(values[1]);
 
-          if ((kl.startsWith('spec') || kl.startsWith('especificacion') || kl.startsWith('especificación') || kl.startsWith('caracteristica') || kl.startsWith('detalle')) && value) {
+        if (indexes.description !== undefined) description = values[indexes.description];
+        if (!description && values[2]) description = values[2];
 
-            const val = cleanText(String(value));
+        if (indexes.category !== undefined) category = values[indexes.category];
+        if (!category && values[3]) category = values[3];
 
-            if (val) {
+        if (indexes.brand !== undefined) brand = values[indexes.brand];
+
+        if (indexes.stock !== undefined) stock = parseNumber(values[indexes.stock]);
+        if (!stock && values[4]) stock = parseNumber(values[4]);
+
+        if (indexes.color !== undefined) colorRaw = values[indexes.color];
+        if (!colorRaw && values[5]) colorRaw = values[5];
+
+        if (Array.isArray(headerRow)) {
+
+          row.forEach((value, idx) => {
+
+            if (idx === indexes.name || idx === indexes.price || idx === indexes.description || idx === indexes.category || idx === indexes.brand || idx === indexes.stock || idx === indexes.color) return;
+
+            const header = headerRow[idx];
+            const kl = normalizeHeader(String(header || ''));
+            const val = cleanText(String(value ?? ''));
+
+            if ((kl.startsWith('spec') || kl.startsWith('especificacion') || kl.startsWith('especificación') || kl.startsWith('caracteristica') || kl.startsWith('detalle')) && val) {
 
               const parts = val.split(':');
 
@@ -1039,21 +1072,21 @@ const Admin = (() => {
 
               } else {
 
-                specs.push({ key: kl, value: val });
+                specs.push({ key: kl || `col${idx + 1}`, value: val });
 
               }
 
             }
 
-          }
+          });
 
         }
 
+        const colors = colorRaw ? colorRaw.split(/[,;|]/).map(c => c.trim()).filter(Boolean) : [];
 
+        if (name) {
 
-        if (name && (price > 0 || description || category || brand || stock > 0 || colors.length || specs.length)) {
-
-          products.push({ name, price, description, category, brand, stock, image: '', active: true, colors, specs });
+          products.push({ name: cleanText(name), price, description: cleanText(description), category: cleanText(category), brand: cleanText(brand), stock, image: '', active: true, colors, specs });
 
         }
 
@@ -1131,7 +1164,7 @@ const Admin = (() => {
 
       const isCsv = /\.csv$/i.test(fileName);
 
-      const data = isCsv ? result : (typeof result === 'string' ? result : new Uint8Array(result || []));
+      const data = result;
 
       csvParsedData = parseExcel(data, fileName);
 
