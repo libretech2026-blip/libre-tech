@@ -224,6 +224,7 @@
               <tbody></tbody>
             </table>
           </div>
+          <div id="pdRating"></div>
         </div>
       </div>
 
@@ -233,6 +234,7 @@
         <span class="pd-brand" id="pdBrand"></span>
         <h1 class="pd-name" id="pdName">Cargando...</h1>
         <div class="pd-price" id="pdPrice"></div>
+        <div class="pd-urgency" id="pdUrgencyMessage">Cargando actividad...</div>
 
         <div class="pd-stock" id="pdStock">
           <span class="pd-stock-dot"></span>
@@ -245,7 +247,7 @@
           <p id="pdDescription"></p>
         </div>
 
-        <div id="pdRating"></div>
+        
 
         <!-- Actions -->
         <div class="pd-actions">
@@ -257,20 +259,22 @@
             </div>
           </div>
 
-          <button class="btn-add-cart-lg btn-full" id="pdAddCart" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
-            </svg>
-            Agregar al carrito
-          </button>
+          <div class="pd-action-row pd-action-row-buttons">
+            <button class="btn-add-cart-lg btn-full" id="pdAddCart" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+              </svg>
+              Agregar al carrito
+            </button>
 
-          <button class="btn-buy-now btn-full" id="pdBuyNowButton" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-            </svg>
-            Pide y paga en casa
-          </button>
+            <button class="btn-buy-now btn-full" id="pdBuyNowButton" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+              Pide y paga en casa
+            </button>
+          </div>
 
           <div class="trust-cards" id="pdTrustCards">
             <div class="trust-card">
@@ -312,9 +316,49 @@
 
           <button class="btn btn-secondary btn-full pd-continue" id="pdContinueShopping" type="button">SEGUIR COMPRANDO</button>
 
-          <div class="pd-urgency" id="pdUrgencyMessage">87 personas están comprando en este momento</div>
+            <a href="index.html" id="pdContinueLink" class="pd-continue-link">SEGUIR COMPRANDO</a>
+          </div>
+          <div id="pdTrustCardsWrapper">
+            <div class="trust-cards" id="pdTrustCards">
+              <div class="trust-card">
+                <span class="trust-icon">🚚</span>
+                <div>
+                  <strong>Envío nacional</strong>
+                  <p>A todo Colombia</p>
+                </div>
+              </div>
+              <div class="trust-card">
+                <span class="trust-icon">🔒</span>
+                <div>
+                  <strong>Pago seguro</strong>
+                  <p>Tus datos protegidos</p>
+                </div>
+              </div>
+              <div class="trust-card">
+                <span class="trust-icon">📦</span>
+                <div>
+                  <strong>Contra entrega</strong>
+                  <p>Paga al recibir</p>
+                </div>
+              </div>
+              <div class="trust-card">
+                <span class="trust-icon">🛡</span>
+                <div>
+                  <strong>Garantía 30 días</strong>
+                  <p>Cambios fáciles</p>
+                </div>
+              </div>
+              <div class="trust-card">
+                <span class="trust-icon">⚡</span>
+                <div>
+                  <strong>Envío hoy</strong>
+                  <p>Pedidos antes de las 2 pm</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pd-urgency" id="pdUrgencyMessage">Cargando actividad...</div>
         </div>
-      </div>
     </div>
   </main>
 

@@ -30,6 +30,7 @@ const ProductDetail = (() => {
     }
 
     render();
+    initUrgency();
     renderRecommended();
     bindEvents();
     initHeaderScroll();
@@ -158,32 +159,31 @@ const ProductDetail = (() => {
       document.getElementById('pdPrice').textContent = Cart.formatPrice(p.price);
     }
     document.getElementById('pdDescription').textContent = p.description || 'Sin descripción disponible.';
-    const urgencyEl = document.getElementById('pdUrgencyMessage');
-    if (urgencyEl) {
-      const counts = [87, 15, 30, 10, 5, 22, 18, 12, 40];
-      const count = counts[Math.floor(Math.random() * counts.length)];
-      urgencyEl.textContent = `${count} personas están comprando en este momento.`;
-    }
+    // Hide brand (user requested to remove marca)
+    const pdBrandEl = document.getElementById('pdBrand');
+    if (pdBrandEl) { pdBrandEl.textContent = ''; pdBrandEl.style.display = 'none'; }
 
     // Stock
     const stockEl = document.getElementById('pdStock');
     const stockText = document.getElementById('pdStockText');
     if (stockEl && stockText) {
       const stock = p.stock ?? 0;
-      if (stock > 10) {
+      if (stock > 200) {
         stockEl.className = 'pd-stock in-stock';
-        stockText.textContent = 'En stock';
-      } else if (stock > 0) {
-        stockEl.className = 'pd-stock low-stock';
-        stockText.textContent = `¡Solo quedan ${stock} unidades!`;
-      } else {
+        stockText.textContent = `Unidades disponibles: ${stock}`;
+      } else if (stock === 0) {
         stockEl.className = 'pd-stock out-of-stock';
         stockText.textContent = 'Agotado';
+      } else if (stock < 150) {
+        stockEl.className = 'pd-stock few-stock';
+        stockText.textContent = `¡Pocas unidades disponibles!`;
+      } else {
+        stockEl.className = 'pd-stock in-stock';
+        stockText.textContent = `En stock: ${stock}`;
       }
     }
 
-    // Rating
-    renderRatingUI();
+    // Rating will be rendered after specifications (below specs) to match requested order
 
     // Colors
     const colors = p.colors || [];
@@ -212,6 +212,10 @@ const ProductDetail = (() => {
           <td class="pd-spec-value">${Cart.escapeHTML(s.value)}</td>
         </tr>
       `).join('');
+    }
+
+    // Render reviews under specifications
+    renderRatingUI();
     }
   }
 
@@ -485,8 +489,10 @@ const ProductDetail = (() => {
       }
     });
 
-    document.getElementById('pdContinueShopping')?.addEventListener('click', () => {
-      window.location.href = 'index.html';
+    document.getElementById('pdContinueLink')?.addEventListener('click', (e) => {
+      // default anchor handles navigation; ensure any overlays are closed
+      document.getElementById('cartSidebar')?.classList.remove('active');
+      document.getElementById('cartOverlay')?.classList.remove('active');
     });
 
     document.getElementById('pdBuyNowButton')?.addEventListener('click', () => {
@@ -716,6 +722,22 @@ const ProductDetail = (() => {
       if (e.key === 'Escape') { closeZoom(); document.removeEventListener('keydown', onEsc); }
     });
   }
+
+    // --- Urgency / live viewers indicator ---
+    function initUrgency() {
+      const el = document.getElementById('pdUrgencyMessage');
+      if (!el) return;
+      function update() {
+        const min = 12; const max = 120;
+        const n = Math.floor(Math.random() * (max - min + 1)) + min;
+        el.textContent = `${n} personas están viendo este producto ahora`;
+      }
+      update();
+      // Update periodically with slight jitter
+      setInterval(() => {
+        update();
+      }, 8000 + Math.floor(Math.random() * 8000));
+    }
 
   return { init };
 })();
