@@ -3940,6 +3940,16 @@ input, select, textarea {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  grid-column: 2 / 3;
+}
+
+.pd-specs {
+  grid-column: 1 / 2;
+  margin-top: var(--spacing-sm);
+}
+
+.pd-reviews-card {
+  margin-top: var(--spacing-lg);
 }
 
 .pd-brand {
@@ -4098,7 +4108,53 @@ input, select, textarea {
   font-size: 0.95rem;
 }
 
-/* Actions */
+.pd-star-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.pd-star-icons {
+  color: #f5a623;
+  letter-spacing: 0.05em;
+  font-size: 1rem;
+}
+
+.pd-star-score {
+  font-weight: 700;
+}
+
+.pd-star-count {
+  color: var(--text-secondary);
+}
+
+.pd-secure-note {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.95rem 1rem;
+  background: rgba(7, 27, 47, 0.05);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.secure-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(7, 27, 47, 0.08);
+  color: #071b2f;
+  font-size: 1rem;
+}
+
 .pd-actions {
   display: flex;
   flex-direction: column;
@@ -4246,10 +4302,11 @@ input, select, textarea {
   font-weight:700;
 }
 
-.trust-cards {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--spacing-sm);
+.pd-trust-block {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
 }
 
 .trust-card {
@@ -4358,6 +4415,34 @@ input, select, textarea {
   margin-top: var(--spacing-lg);
 }
 
+.pd-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: var(--spacing-md);
+}
+
+.pd-spec-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border: 1px solid rgba(14, 29, 57, 0.08);
+  border-radius: var(--radius-xl);
+  background: var(--bg-primary);
+}
+
+.pd-spec-key {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.pd-spec-value {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
 @media (max-width: 1024px) {
   .pd-layout {
     grid-template-columns: 1fr;
@@ -4368,6 +4453,7 @@ input, select, textarea {
     top: auto;
   }
 
+  .pd-trust-block,
   .trust-cards {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -4390,6 +4476,7 @@ input, select, textarea {
     padding: var(--spacing-lg);
   }
 
+  .pd-trust-block,
   .trust-cards {
     grid-template-columns: 1fr;
   }

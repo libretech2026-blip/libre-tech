@@ -13,7 +13,7 @@ const STATIC_ASSETS = [
   '/js/auth.js',
   '/js/product-detail.js',
   '/js/supabase-client.js',
-  '/LOGO_LIBRETECH.png',
+  '/nuevos%20logos/JPG/Isotipo/1.jpg',
   '/manifest.json'
 ];
 

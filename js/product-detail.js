@@ -160,8 +160,10 @@ const ProductDetail = (() => {
     }
     document.getElementById('pdDescription').textContent = p.description || 'Sin descripción disponible.';
     // Hide brand (user requested to remove marca)
-    const pdBrandEl = document.getElementById('pdBrand');
     if (pdBrandEl) { pdBrandEl.textContent = ''; pdBrandEl.style.display = 'none'; }
+
+    // Initial star summary placeholder
+    renderStarSummary(0, 0);
 
     // Stock
     const stockEl = document.getElementById('pdStock');
@@ -203,20 +205,19 @@ const ProductDetail = (() => {
     // Specifications
     const specs = p.specs || [];
     const specsSection = document.getElementById('pdSpecsSection');
-    const specsTable = document.getElementById('pdSpecsTable');
-    if (specs.length > 0 && specsSection && specsTable) {
+    const specsGrid = document.getElementById('pdSpecsGrid');
+    if (specs.length > 0 && specsSection && specsGrid) {
       specsSection.style.display = 'block';
-      specsTable.querySelector('tbody').innerHTML = specs.map(s => `
-        <tr>
-          <td class="pd-spec-key">${Cart.escapeHTML(s.key)}</td>
-          <td class="pd-spec-value">${Cart.escapeHTML(s.value)}</td>
-        </tr>
+      specsGrid.innerHTML = specs.map(s => `
+        <div class="pd-spec-card">
+          <span class="pd-spec-key">${Cart.escapeHTML(s.key)}</span>
+          <span class="pd-spec-value">${Cart.escapeHTML(s.value)}</span>
+        </div>
       `).join('');
     }
 
     // Render reviews under specifications
     renderRatingUI();
-    }
   }
 
   // --- Common color name to hex ---
@@ -295,6 +296,24 @@ const ProductDetail = (() => {
     catch { return {}; }
   }
 
+  function renderStarSummary(avg, total) {
+    const starEl = document.getElementById('pdStars');
+    if (!starEl) return;
+    if (!avg || total === 0) {
+      starEl.innerHTML = '<span class="pd-star-empty">Sin valoraciones aún</span>';
+      return;
+    }
+    const rounded = Math.round(avg * 10) / 10;
+    const stars = Array.from({ length: 5 }, (_, i) => i < Math.round(avg) ? '★' : '☆').join('');
+    starEl.innerHTML = `
+      <div class="pd-star-summary">
+        <span class="pd-star-icons">${stars}</span>
+        <span class="pd-star-score">${rounded.toFixed(1)}</span>
+        <span class="pd-star-count">(${total} ${total === 1 ? 'voto' : 'votos'})</span>
+      </div>
+    `;
+  }
+
   async function renderRatingUI() {
     const container = document.getElementById('pdRating');
     if (!container || !currentProduct) return;
@@ -317,6 +336,8 @@ const ProductDetail = (() => {
     const avg = reviews.length > 0 ? sbAvg : localAvg;
     const totalVotes = reviews.length > 0 ? reviews.length : localArr.length;
     const userRated = localStorage.getItem('libretech_user_rated_' + currentProduct.id);
+
+    renderStarSummary(avg, totalVotes);
 
     let html = '<div class="pd-rating-interactive">';
     html += '<div class="pd-rate-stars">';
