@@ -212,19 +212,21 @@
         </div>
         <!-- Thumbnail strip (rendered by JS when multiple images) -->
         <div class="pd-thumbnails" id="pdThumbnails"></div>
-      </div>
+        <div class="pd-gallery-info" id="pdGalleryInfo">
+          <div class="pd-options">
+            <div class="pd-option-group" id="pdColorsGroup" style="display:none">
+              <label class="pd-option-label">Color</label>
+              <div class="pd-colors" id="pdColors"></div>
+            </div>
 
-      <div class="pd-gallery-info" id="pdGalleryInfo">
-        <div class="pd-options">
-          <div class="pd-option-group" id="pdColorsGroup" style="display:none">
-            <label class="pd-option-label">Color</label>
-            <div class="pd-colors" id="pdColors"></div>
+            <section class="pd-specs" id="pdSpecsSection" style="display:none">
+              <h3 class="pd-section-title">Especificaciones</h3>
+              <div class="pd-specs-grid" id="pdSpecsGrid"></div>
+            </section>
+
+            <!-- Product reviews inserted here under specifications -->
+            <section class="product-reviews" id="pdRating"></section>
           </div>
-
-          <section class="pd-specs" id="pdSpecsSection" style="display:none">
-            <h3 class="pd-section-title">Especificaciones</h3>
-            <div class="pd-specs-grid" id="pdSpecsGrid"></div>
-          </section>
         </div>
       </div>
 
@@ -308,7 +310,7 @@
     </div>
   </main>
 
-  <section class="product-reviews container" id="pdRating"></section>
+  
 
   <!-- ==================== RECOMMENDED PRODUCTS ==================== -->
   <section class="recommended-section container" id="recommendedSection">

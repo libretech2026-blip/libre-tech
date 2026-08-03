@@ -150,8 +150,50 @@ const ProductDetail = (() => {
     ).join('');
 
     if (thumbsContainer && allImages.length > 1) {
-      thumbsContainer.style.display = 'grid';
+      // render thumbnails and, if more than 3, wrap with nav buttons
       thumbsContainer.innerHTML = thumbsHtml;
+      // allow horizontal scrolling when needed
+      thumbsContainer.style.overflowX = 'auto';
+      thumbsContainer.style.scrollBehavior = 'smooth';
+      thumbsContainer.style.webkitOverflowScrolling = 'touch';
+
+      const thumbsCount = thumbsContainer.querySelectorAll('.pd-thumb').length;
+      if (thumbsCount > 3) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'pd-thumbnails-wrapper';
+        thumbsContainer.parentNode.insertBefore(wrapper, thumbsContainer);
+        wrapper.appendChild(thumbsContainer);
+
+        const prev = document.createElement('button');
+        prev.className = 'pd-thumb-nav pd-thumb-prev';
+        prev.setAttribute('aria-label', 'Anterior');
+        prev.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>';
+
+        const next = document.createElement('button');
+        next.className = 'pd-thumb-nav pd-thumb-next';
+        next.setAttribute('aria-label', 'Siguiente');
+        next.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+
+        wrapper.appendChild(prev);
+        wrapper.appendChild(next);
+
+        const scrollAmount = () => Math.floor(thumbsContainer.clientWidth / 3);
+        prev.addEventListener('click', () => thumbsContainer.scrollBy({ left: -scrollAmount(), behavior: 'smooth' }));
+        next.addEventListener('click', () => thumbsContainer.scrollBy({ left: scrollAmount(), behavior: 'smooth' }));
+
+        // update nav visibility based on scroll position
+        const updateNav = () => {
+          prev.disabled = thumbsContainer.scrollLeft <= 0;
+          next.disabled = thumbsContainer.scrollLeft + thumbsContainer.clientWidth >= thumbsContainer.scrollWidth - 1;
+        };
+        thumbsContainer.addEventListener('scroll', updateNav);
+        window.addEventListener('resize', updateNav);
+        // init
+        setTimeout(updateNav, 100);
+      } else {
+        // center when 3 or fewer
+        thumbsContainer.style.justifyContent = 'center';
+      }
     }
     if (thumbsContainerMobile && allImages.length > 1) {
       thumbsContainerMobile.style.display = 'flex';
