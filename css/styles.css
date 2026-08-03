@@ -3913,8 +3913,8 @@ input, select, textarea {
 
 /* Gallery */
 .pd-gallery {
-  position: sticky;
-  top: calc(var(--header-height) + var(--spacing-lg));
+  position: static;
+  top: auto;
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--spacing-lg);
@@ -8908,8 +8908,8 @@ input, select, textarea {
     width: 100%;
     grid-column: 1;
     grid-row: 1;
-    position: sticky;
-    top: calc(var(--header-height) + var(--spacing-lg));
+    position: static !important;
+    top: auto !important;
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--spacing-md);
@@ -8920,27 +8920,84 @@ input, select, textarea {
     display: none !important;
   }
 
+  /* Thumbnails below the main image on desktop */
+  .pd-thumbnails {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: var(--spacing-md);
+    overflow: visible;
+    max-height: none;
+  }
+
+  .pd-thumbnails .pd-thumb {
+    width: 100%;
+    height: 88px;
+  }
+
   .pd-info {
     grid-column: 2;
     grid-row: 1;
   }
 
-  /* put color and specs under the gallery (only in desktop) */
+  .pd-actions {
+    position: sticky;
+    top: calc(var(--header-height) + var(--spacing-lg));
+    align-self: start;
+    z-index: 10;
+    width: 100%;
+  }
+
+  .pd-action-row-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .pd-qty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.65rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    background: var(--bg-primary);
+    margin-right: auto;
+  }
+
+  .pd-qty .qty-value {
+    min-width: 36px;
+  }
+
+  .btn-add-cart-lg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+    font-size: 1rem;
+  }
+
+  .btn-add-cart-text {
+    display: inline;
+    white-space: nowrap;
+  }
+
+  .pd-action-row-buttons .btn-buy-now {
+    min-width: 0;
+    padding: 0.85rem 1rem;
+  }
+
   .pd-gallery-info {
     grid-column: 1;
     grid-row: 2;
     margin-top: var(--spacing-md);
     width: 100%;
     box-sizing: border-box;
-  }
-
-  .pd-thumbnails {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
-    gap: 0.75rem;
-    width: 100%;
-    padding: 0;
-    margin: 0;
   }
 
   .pd-main-image {
