@@ -124,10 +124,21 @@ const ProductDetail = (() => {
 
     // Main image (with zoom capability)
     const imgContainer = document.getElementById('pdMainImage');
+    const imgContainerMobile = document.getElementById('pdMainImageMobile');
+    const mainImageSrc = Cart.escapeAttr(allImages[0]);
     if (imgContainer && allImages.length > 0) {
-      imgContainer.innerHTML = `<img src="${Cart.escapeAttr(allImages[0])}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" id="pdMainImg" style="cursor:zoom-in;">`;
-      imgContainer.addEventListener('click', () => openImageZoom(document.getElementById('pdMainImg')?.src));
+      imgContainer.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" id="pdMainImg" style="cursor:zoom-in;">`;
     }
+    if (imgContainerMobile && allImages.length > 0) {
+      imgContainerMobile.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" id="pdMainImgMobile" style="cursor:zoom-in;">`;
+    }
+
+    const addZoomListeners = () => {
+      document.querySelectorAll('#pdMainImg, #pdMainImgMobile').forEach(img => {
+        img.addEventListener('click', () => openImageZoom(img.src));
+      });
+    };
+    addZoomListeners();
 
     // Thumbnails
     const thumbsContainer = document.getElementById('pdThumbnails');
@@ -536,7 +547,9 @@ const ProductDetail = (() => {
       const thumb = e.target.closest('.pd-thumb');
       if (!thumb) return;
       const mainImg = document.getElementById('pdMainImg');
+      const mainImgMobile = document.getElementById('pdMainImgMobile');
       if (mainImg) mainImg.src = thumb.dataset.src;
+      if (mainImgMobile) mainImgMobile.src = thumb.dataset.src;
       document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
       thumb.classList.add('active');
     });
