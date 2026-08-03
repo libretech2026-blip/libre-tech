@@ -1286,6 +1286,14 @@ input, select, textarea {
   gap: var(--spacing-md);
 }
 
+/* Ensure trust cards in product detail spread across the column on desktop */
+.product-detail .pd-trust-block {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
 .pd-action-row {
   display: flex;
   flex-wrap: wrap;
@@ -3862,7 +3870,7 @@ input, select, textarea {
 .pd-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
   align-items: start;
   max-width: 1300px;
 }
@@ -3908,9 +3916,11 @@ input, select, textarea {
 
 .pd-main-image img {
   width: auto;
-  max-width: 70%;
-  max-height: 70%;
+  max-width: 95%;
+  max-height: 95%;
   object-fit: contain;
+  margin: 0 auto;
+  display: block;
   padding: 0;
   transition: transform 300ms ease, opacity 250ms ease;
 }
@@ -4515,9 +4525,10 @@ input, select, textarea {
 
 .pd-main-image img {
   width: auto;
-  max-width: 90%;
-  max-height: 90%;
+  max-width: 95%;
+  max-height: 95%;
   object-fit: contain;
+  margin: 0 auto;
   display: block;
   padding: 0;
   transition: transform 300ms ease, opacity 250ms ease;
@@ -8588,6 +8599,18 @@ input, select, textarea {
     padding-top: 0 !important;
     clear: both;
     position: relative;
+  }
+}
+
+/* Mobile-specific: ensure gallery info and trust cards adapt to single-column layout */
+@media (max-width: 768px) {
+  .pd-gallery-info {
+    grid-column: 1 / -1 !important;
+  }
+
+  .product-detail .pd-trust-block {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: var(--spacing-sm) !important;
   }
 }
 
