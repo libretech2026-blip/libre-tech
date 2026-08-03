@@ -8955,6 +8955,11 @@ input, select, textarea {
     width: 100% !important;
   }
 
+  /* Hide desktop gallery on small screens to avoid duplicate main image */
+  .pd-gallery {
+    display: none !important;
+  }
+
   .pd-info {
     order: 2;
     width: 100% !important;
@@ -8967,9 +8972,7 @@ input, select, textarea {
   }
 
   .pd-gallery {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: var(--spacing-sm) !important;
+    display: none !important;
   }
 
   .pd-main-image--mobile {
@@ -8981,7 +8984,34 @@ input, select, textarea {
   .pd-thumbnails {
     order: 2;
     width: 100% !important;
+    display: none !important; /* hide desktop thumbnails strip on mobile */
   }
+
+  .pd-thumbnails-mobile {
+    display: flex !important;
+    order: 3;
+    width: 100% !important;
+    gap: 0.5rem !important;
+    overflow-x: auto !important;
+    padding-bottom: 0.25rem !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Force explicit visual order inside pd-info on mobile to avoid unexpected layout shifts */
+  .pd-info {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .pd-info .pd-name { order: 1; }
+  .pd-info .pd-stars { order: 2; }
+  .pd-info .pd-main-image--mobile { order: 3; }
+  .pd-info .pd-thumbnails-mobile { order: 4; }
+  .pd-info .pd-price { order: 5; }
+  .pd-info .pd-stock { order: 6; }
+  .pd-info .pd-urgency { order: 7; }
+  .pd-info .pd-description { order: 8; }
+  .pd-info .pd-actions { order: 9; }
+  .pd-info .pd-trust-block { order: 10; }
 
   /* Bottom fixed actions: quantity row above, buttons below */
   .pd-actions {
