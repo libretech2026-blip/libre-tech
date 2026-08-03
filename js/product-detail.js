@@ -34,6 +34,7 @@ const ProductDetail = (() => {
     renderRecommended();
     bindEvents();
     initHeaderScroll();
+    initMobileFooterScroll();
     initSearch();
     trackView(productId);
     initWishlistUI();
@@ -571,6 +572,45 @@ const ProductDetail = (() => {
         ticking = true;
       }
     }, { passive: true });
+  }
+
+  function initMobileFooterScroll() {
+    const footerBar = document.querySelector('.pd-actions');
+    if (!footerBar) return;
+
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    function updateFooter() {
+      const currentY = window.scrollY;
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      if (!isMobile) {
+        footerBar.classList.remove('hidden');
+        lastScrollY = currentY;
+        return;
+      }
+
+      if (currentY > lastScrollY + 10) {
+        footerBar.classList.add('hidden');
+      } else if (currentY < lastScrollY - 10) {
+        footerBar.classList.remove('hidden');
+      }
+      lastScrollY = currentY;
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(updateFooter);
+        ticking = true;
+      }
+    }, { passive: true });
+
+    window.addEventListener('resize', () => {
+      if (!window.matchMedia('(max-width: 768px)').matches) {
+        footerBar.classList.remove('hidden');
+      }
+    });
   }
 
   // --- Search (same as main page) ---

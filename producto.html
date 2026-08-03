@@ -200,7 +200,12 @@
   <!-- ==================== PRODUCT DETAIL ==================== -->
   <main class="product-detail container" id="productDetail">
     <div class="pd-layout">
-      <!-- Left: Image gallery -->
+      <div class="pd-summary">
+        <span class="product-category" id="pdCategory"></span>
+        <h1 class="pd-name" id="pdName">Cargando...</h1>
+        <div class="pd-stars" id="pdStars"></div>
+      </div>
+
       <div class="pd-gallery">
         <div class="pd-main-image" id="pdMainImage">
           <div class="product-no-image">
@@ -213,23 +218,9 @@
         </div>
         <!-- Thumbnail strip (rendered by JS when multiple images) -->
         <div class="pd-thumbnails" id="pdThumbnails" style="display:none"></div>
-        <div class="pd-options">
-          <div class="pd-option-group" id="pdColorsGroup" style="display:none">
-            <label class="pd-option-label">Color</label>
-            <div class="pd-colors" id="pdColors"></div>
-          </div>
-
-          <section class="pd-specs" id="pdSpecsSection" style="display:none">
-            <h3 class="pd-section-title">Especificaciones</h3>
-            <div class="pd-specs-grid" id="pdSpecsGrid"></div>
-          </section>
-        </div>
       </div>
 
-      <div class="pd-info">
-        <span class="product-category" id="pdCategory"></span>
-        <h1 class="pd-name" id="pdName">Cargando...</h1>
-        <div class="pd-stars" id="pdStars"></div>
+      <div class="pd-info-panel">
         <div class="pd-price" id="pdPrice"></div>
         <div class="pd-stock" id="pdStock">
           <span class="pd-stock-dot"></span>
@@ -242,35 +233,16 @@
           <p id="pdDescription"></p>
         </div>
 
-        <div class="pd-actions">
-          <div class="pd-action-row pd-action-row-main">
-            <div class="pd-qty">
-              <button class="qty-btn" id="pdQtyMinus" aria-label="Disminuir cantidad">−</button>
-              <span class="qty-value" id="pdQtyValue">1</span>
-              <button class="qty-btn" id="pdQtyPlus" aria-label="Aumentar cantidad">+</button>
-            </div>
+        <div class="pd-options">
+          <div class="pd-option-group" id="pdColorsGroup" style="display:none">
+            <label class="pd-option-label">Color</label>
+            <div class="pd-colors" id="pdColors"></div>
           </div>
 
-          <div class="pd-action-row pd-action-row-buttons">
-            <button class="btn-add-cart-lg btn-full" id="pdAddCart" type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-                <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
-              </svg>
-              AGREGAR AL CARRITO
-            </button>
-            <button class="btn-buy-now btn-full" id="pdBuyNowButton" type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-              </svg>
-              PIDE Y PAGA EN CASA
-            </button>
-          </div>
-
-          <div class="pd-secure-note">
-            <span class="secure-icon">🔒</span>
-            <span>Tu información está protegida</span>
-          </div>
+          <section class="pd-specs" id="pdSpecsSection" style="display:none">
+            <h3 class="pd-section-title">Especificaciones</h3>
+            <div class="pd-specs-grid" id="pdSpecsGrid"></div>
+          </section>
         </div>
 
         <div class="pd-trust-block">
@@ -301,6 +273,37 @@
               <strong>Envío hoy</strong>
               <p>Pedidos antes de las 2 pm</p>
             </div>
+          </div>
+        </div>
+
+        <div class="pd-actions">
+          <div class="pd-action-row pd-action-row-main">
+            <div class="pd-qty">
+              <button class="qty-btn" id="pdQtyMinus" aria-label="Disminuir cantidad">−</button>
+              <span class="qty-value" id="pdQtyValue">1</span>
+              <button class="qty-btn" id="pdQtyPlus" aria-label="Aumentar cantidad">+</button>
+            </div>
+          </div>
+
+          <div class="pd-action-row pd-action-row-buttons">
+            <button class="btn-add-cart-lg btn-full" id="pdAddCart" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+              </svg>
+              AGREGAR AL CARRITO
+            </button>
+            <button class="btn-buy-now btn-full" id="pdBuyNowButton" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+              PIDE Y PAGA EN CASA
+            </button>
+          </div>
+
+          <div class="pd-secure-note">
+            <span class="secure-icon">🔒</span>
+            <span>Tu información está protegida</span>
           </div>
         </div>
       </div>
