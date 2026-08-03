@@ -46,7 +46,7 @@
         <div class="logo-text">
           <div>
             <span class="logo-text-libre">LIBRE</span> <span class="logo-text-tech">TECH</span>
-            <span class="logo-subtitle">LA TECH QUE TE LIBERA</span>
+            <span class="logo-subtitle">Sé libre, elige Tech.</span>
           </div>
         </div>
       </a>
@@ -213,6 +213,18 @@
         </div>
         <!-- Thumbnail strip (rendered by JS when multiple images) -->
         <div class="pd-thumbnails" id="pdThumbnails" style="display:none"></div>
+        <div class="pd-gallery-info">
+          <div class="pd-option-group" id="pdColorsGroup" style="display:none">
+            <label class="pd-option-label">Color</label>
+            <div class="pd-colors" id="pdColors"></div>
+          </div>
+          <div class="pd-specs" id="pdSpecsSection" style="display:none">
+            <h3 class="pd-section-title">Especificaciones</h3>
+            <table class="pd-specs-table" id="pdSpecsTable">
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- Right: Product info -->
@@ -227,43 +239,35 @@
           <span id="pdStockText"></span>
         </div>
 
-        <!-- Rating -->
-        <div id="pdRating"></div>
-
-        <!-- Color selector -->
-        <div class="pd-option-group" id="pdColorsGroup" style="display:none">
-          <label class="pd-option-label">Color</label>
-          <div class="pd-colors" id="pdColors"></div>
-        </div>
-
-        <!-- Specifications table -->
-        <div class="pd-specs" id="pdSpecsSection" style="display:none">
-          <h3 class="pd-section-title">Especificaciones</h3>
-          <table class="pd-specs-table" id="pdSpecsTable">
-            <tbody></tbody>
-          </table>
-        </div>
-
         <!-- Description -->
         <div class="pd-description" id="pdDescSection">
           <h3 class="pd-section-title">Descripción</h3>
           <p id="pdDescription"></p>
         </div>
 
+        <div id="pdRating"></div>
+
         <!-- Actions -->
         <div class="pd-actions">
-          <div class="pd-qty">
-            <button class="qty-btn" id="pdQtyMinus" aria-label="Disminuir cantidad">−</button>
-            <span class="qty-value" id="pdQtyValue">1</span>
-            <button class="qty-btn" id="pdQtyPlus" aria-label="Aumentar cantidad">+</button>
+          <div class="pd-action-row">
+            <div class="pd-qty">
+              <button class="qty-btn" id="pdQtyMinus" aria-label="Disminuir cantidad">−</button>
+              <span class="qty-value" id="pdQtyValue">1</span>
+              <button class="qty-btn" id="pdQtyPlus" aria-label="Aumentar cantidad">+</button>
+            </div>
+            <button class="btn-add-cart-lg" id="pdAddCart">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+              </svg>
+              Agregar
+            </button>
           </div>
-          <button class="btn-add-cart-lg" id="pdAddCart">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
-            </svg>
-            Agregar
-          </button>
+          <div class="pd-action-row pd-action-row-secondary">
+            <button class="btn btn-secondary" id="pdContinueShopping" type="button">SEGUIR COMPRANDO</button>
+            <button class="btn-purchase-home" id="pdBuyNowButton" type="button">PIDE Y PAGA EN CASA</button>
+          </div>
+          <div class="pd-urgency" id="pdUrgencyMessage">87 personas están comprando en este momento</div>
         </div>
       </div>
     </div>

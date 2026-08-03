@@ -140,7 +140,17 @@ const ProductDetail = (() => {
 
     // Info
     document.getElementById('pdCategory').textContent = p.category || '';
-    document.getElementById('pdBrand').textContent = p.brand || '';
+    const pdBrandEl = document.getElementById('pdBrand');
+    const brandText = (p.brand || '').trim();
+    if (pdBrandEl) {
+      if (brandText && !['genérico', 'generico'].includes(brandText.toLowerCase())) {
+        pdBrandEl.textContent = brandText;
+        pdBrandEl.style.display = '';
+      } else {
+        pdBrandEl.textContent = '';
+        pdBrandEl.style.display = 'none';
+      }
+    }
     document.getElementById('pdName').textContent = p.name;
     if (p.offerActive && p.offerPrice) {
       document.getElementById('pdPrice').innerHTML = `<span class="offer-price">${Cart.formatPrice(p.offerPrice)}</span> <span class="product-price-original">${Cart.formatPrice(p.price)}</span>`;
@@ -148,6 +158,12 @@ const ProductDetail = (() => {
       document.getElementById('pdPrice').textContent = Cart.formatPrice(p.price);
     }
     document.getElementById('pdDescription').textContent = p.description || 'Sin descripción disponible.';
+    const urgencyEl = document.getElementById('pdUrgencyMessage');
+    if (urgencyEl) {
+      const counts = [87, 15, 30, 10, 5, 22, 18, 12, 40];
+      const count = counts[Math.floor(Math.random() * counts.length)];
+      urgencyEl.textContent = `${count} personas están comprando en este momento.`;
+    }
 
     // Stock
     const stockEl = document.getElementById('pdStock');
@@ -469,6 +485,15 @@ const ProductDetail = (() => {
       }
     });
 
+    document.getElementById('pdContinueShopping')?.addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
+    document.getElementById('pdBuyNowButton')?.addEventListener('click', () => {
+      if (!currentProduct || stock <= 0) return;
+      Cart.openOrderFormWithItems([{ productId: currentProduct.id, quantity }]);
+    });
+
     // Color selection
     document.getElementById('pdColors')?.addEventListener('click', e => {
       const btn = e.target.closest('.pd-color-btn');
@@ -566,7 +591,7 @@ const ProductDetail = (() => {
         <div class="search-dropdown-thumb">
           ${p.image
             ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy">`
-            : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`
+            : `<img src="nuevos logos/PNG/Isotipo/4.png" alt="Libre Tech" loading="lazy">`
           }
         </div>
         <div class="search-dropdown-info">

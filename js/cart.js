@@ -12,6 +12,7 @@ const Cart = (() => {
 
   let items = [];
   let appliedCoupon = null; // { id, code, type, value, discount }
+  let orderFormOverrideItems = null;
 
   function getStorageKey() {
     const user = (typeof Auth !== 'undefined') && Auth.getUser && Auth.getUser();
@@ -149,10 +150,14 @@ const Cart = (() => {
   }
 
   function getTotal() {
+    return getOrderTotal(items);
+  }
+
+  function getOrderTotal(orderItems) {
     const products = getProducts();
-    return items.reduce((sum, item) => {
+    return (orderItems || []).reduce((sum, item) => {
       const product = products.find(p => p.id === item.productId);
-      const price = product ? (product.offerActive && product.offerPrice ? product.offerPrice : product.price) : 0;
+      const price = product ? getEffectivePrice(product) : 0;
       return sum + (price * item.quantity);
     }, 0);
   }
@@ -360,11 +365,12 @@ const Cart = (() => {
   }
 
   // --- Descontar stock tras orden (Supabase + localStorage) ---
-  function decrementStock() {
+  function decrementStock(orderItems) {
     try {
       const products = getProducts();
       const sbItems = [];
-      items.forEach(item => {
+      const itemsToDecrement = orderItems || items;
+      itemsToDecrement.forEach(item => {
         const product = products.find(p => p.id === item.productId);
         if (product) {
           product.stock = Math.max(0, (product.stock ?? 0) - item.quantity);
@@ -393,7 +399,7 @@ const Cart = (() => {
     if (!input || !input.value.trim()) { if (statusEl) statusEl.innerHTML = '<span style="color:#ef4444">Ingresa un codigo</span>'; return; }
     if (typeof SB === 'undefined' || !SB.validateCoupon) { if (statusEl) statusEl.innerHTML = '<span style="color:#ef4444">Servicio no disponible</span>'; return; }
     try {
-      const total = getTotal();
+      const total = getOrderTotal(orderFormOverrideItems || items);
       const coupon = await SB.validateCoupon(input.value, total);
       const discount = coupon.type === 'percentage' ? Math.round(total * coupon.value / 100) : Math.min(coupon.value, total);
       appliedCoupon = { id: coupon.id, code: coupon.code, type: coupon.type, value: coupon.value, discount };
@@ -451,8 +457,9 @@ const Cart = (() => {
     const summaryEl = document.getElementById('orderSummary');
     if (summaryEl) {
       const products = getProducts();
+      const orderItems = orderFormOverrideItems || items;
       let html = '<p style="font-weight:600;font-size:0.9rem;margin:0 0 8px;color:var(--text-primary)">Resumen del pedido:</p>';
-      items.forEach((item, i) => {
+      orderItems.forEach((item, i) => {
         const product = products.find(p => p.id === item.productId);
         if (!product) return;
         const ep = getEffectivePrice(product);
@@ -462,7 +469,7 @@ const Cart = (() => {
         </div>`;
       });
       html += `<div style="border-top:1px solid var(--border-color);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;font-weight:700;color:var(--text-primary)">
-        <span>Subtotal</span><span>${formatPrice(getTotal())}</span>
+        <span>Subtotal</span><span>${formatPrice(getOrderTotal(orderItems))}</span>
       </div>`;
 
       // Coupon input
@@ -481,11 +488,11 @@ const Cart = (() => {
           <span>Cupon (${escapeHTML(appliedCoupon.code)})</span><span>-${formatPrice(appliedCoupon.discount)}</span>
         </div>`;
         html += `<div style="display:flex;justify-content:space-between;font-weight:700;color:var(--text-primary);font-size:1rem;padding-top:4px">
-          <span>Total</span><span>${formatPrice(getTotal() - appliedCoupon.discount)}</span>
+          <span>Total</span><span>${formatPrice(getOrderTotal(orderItems) - appliedCoupon.discount)}</span>
         </div>`;
       } else {
         html += `<div style="display:flex;justify-content:space-between;font-weight:700;color:var(--text-primary);font-size:1rem;padding-top:4px">
-          <span>Total</span><span>${formatPrice(getTotal())}</span>
+          <span>Total</span><span>${formatPrice(getOrderTotal(orderItems))}</span>
         </div>`;
       }
 
@@ -508,9 +515,16 @@ const Cart = (() => {
   }
 
   function closeOrderForm() {
+    orderFormOverrideItems = null;
     const modal = document.getElementById('orderFormModal');
     if (modal) modal.classList.remove('active');
     document.body.style.overflow = '';
+  }
+
+  function openOrderFormWithItems(customItems) {
+    if (!Array.isArray(customItems) || customItems.length === 0) return;
+    orderFormOverrideItems = customItems.map(item => ({ ...item }));
+    openOrderForm();
   }
 
   // --- Submit order via WhatsApp ---
@@ -532,6 +546,7 @@ const Cart = (() => {
 
     const orderNumber = generateOrderNumber();
     const products = getProducts();
+    const orderItems = orderFormOverrideItems || items;
 
     // Save profile if logged in and checkbox is checked
     const user = (typeof Auth !== 'undefined' && Auth.getUser) ? Auth.getUser() : null;
@@ -564,7 +579,7 @@ const Cart = (() => {
     if (notes) message += `Observaciones: ${notes}\n`;
     message += `\n*PRODUCTOS*\n\n`;
 
-    items.forEach((item, i) => {
+    orderItems.forEach((item, i) => {
       const product = products.find(p => p.id === item.productId);
       if (!product) return;
       const ep = getEffectivePrice(product);
@@ -573,7 +588,7 @@ const Cart = (() => {
     });
 
     message += `--------------------------------\n`;
-    const subtotal = getTotal();
+    const subtotal = getOrderTotal(orderItems);
     if (appliedCoupon) {
       message += `Subtotal: ${formatPrice(subtotal).replace(/\s/g, '')}\n`;
       message += `Cupon ${appliedCoupon.code}: -${formatPrice(appliedCoupon.discount).replace(/\s/g, '')}\n`;
@@ -594,8 +609,8 @@ const Cart = (() => {
     message += `Gracias por comprar en LIBRE TECH`;
 
     // Save order and decrement stock
-    saveOrder(orderNumber, 'whatsapp');
-    decrementStock();
+    saveOrder(orderNumber, 'whatsapp', orderItems);
+    decrementStock(orderItems);
 
     // Increment coupon usage
     if (appliedCoupon && typeof SB !== 'undefined' && SB.incrementCouponUse) {
@@ -608,8 +623,11 @@ const Cart = (() => {
     // Clean up
     appliedCoupon = null;
     closeOrderForm();
-    clear();
-    close();
+    if (!orderFormOverrideItems) {
+      clear();
+      close();
+    }
+    orderFormOverrideItems = null;
     showToast(`Pedido ${orderNumber} enviado`, 'success');
   }
 
@@ -630,9 +648,10 @@ const Cart = (() => {
   }
 
   // --- Guardar orden en historial (localStorage + Supabase) ---
-  function saveOrder(orderNumber, method) {
+  function saveOrder(orderNumber, method, orderItems) {
     const products = getProducts();
-    const orderItems = items.map(item => {
+    orderItems = orderItems || items;
+    const mappedItems = orderItems.map(item => {
       const product = products.find(p => p.id === item.productId);
       return {
         productId: item.productId,
@@ -646,8 +665,11 @@ const Cart = (() => {
       id: orderNumber || generateOrderNumber(),
       date: new Date().toISOString(),
       method: method || 'contraentrega',
-      items: orderItems,
-      total: getTotal()
+      items: mappedItems,
+      total: orderItems.reduce((sum, item) => {
+        const product = products.find(p => p.id === item.productId);
+        return sum + (product ? getEffectivePrice(product) * item.quantity : 0);
+      }, 0)
     };
 
     // Save to localStorage (legacy)
@@ -725,6 +747,7 @@ const Cart = (() => {
     formatPrice,
     open,
     close,
+    openOrderFormWithItems,
     showToast,
     escapeHTML,
     escapeAttr
