@@ -1297,8 +1297,7 @@ input, select, textarea {
 
 /* Align trust cards to the action box margins on desktop */
 .product-detail .pd-trust-block {
-  margin-left: var(--spacing-lg);
-  margin-right: var(--spacing-lg);
+  margin: var(--spacing-lg) 0 0;
   box-sizing: border-box;
   justify-items: start;
 }
@@ -3937,6 +3936,7 @@ input, select, textarea {
 
 .pd-main-image--mobile {
   display: none;
+  grid-column: 1 / -1;
   width: 100%;
   background: var(--bg-secondary);
   border-radius: var(--radius-xl);
@@ -8906,6 +8906,23 @@ input, select, textarea {
     order: 3;
     width: 100% !important;
     margin-top: 0.5rem !important;
+  }
+
+  .pd-gallery {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--spacing-sm) !important;
+  }
+
+  .pd-main-image--mobile {
+    order: 1;
+    display: flex !important;
+    margin: 0 !important;
+  }
+
+  .pd-thumbnails {
+    order: 2;
+    width: 100% !important;
   }
 
   /* Bottom fixed actions: quantity row above, buttons below */
