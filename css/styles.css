@@ -8423,15 +8423,15 @@ input, select, textarea {
   .recommended-section,
   main,
   section {
-    max-width: 100vw;
+    max-width: 100%;
     overflow-x: hidden;
   }
 }
 
 @media (max-width: 768px) {
   .cart-sidebar {
-    width: 100vw !important;
-    max-width: 100vw !important;
+    width: 100% !important;
+    max-width: 100% !important;
     right: 0 !important;
     box-sizing: border-box;
   }
@@ -9012,6 +9012,23 @@ input, select, textarea {
   .pd-info .pd-description { order: 8; }
   .pd-info .pd-actions { order: 9; }
   .pd-info .pd-trust-block { order: 10; }
+
+  /* Global mobile overflow safety: prevent horizontal clipping on some phones */
+  html, body {
+    max-width: 100%;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure header/footer respect viewport width and box-sizing */
+  .site-header,
+  .site-footer,
+  footer {
+    box-sizing: border-box;
+    left: 0;
+    right: 0;
+    width: 100%;
+  }
 
   /* Bottom fixed actions: quantity row above, buttons below */
   .pd-actions {
