@@ -8736,6 +8736,10 @@ input, select, textarea {
     gap: var(--spacing-md) !important;
   }
 
+  .pd-gallery {
+    display: none !important;
+  }
+
   .pd-main-image {
     display: none !important;
   }
@@ -8746,7 +8750,24 @@ input, select, textarea {
   }
 
   .pd-thumbnails {
+    display: none !important;
     width: 100% !important;
+  }
+
+  .pd-thumbnails-mobile {
+    display: flex !important;
+    gap: 0.65rem !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 0.65rem 0 !important;
+    scroll-snap-type: x mandatory;
+  }
+
+  .pd-thumbnails-mobile .pd-thumb {
+    flex: 0 0 56px !important;
+    width: 56px !important;
+    height: 56px !important;
+    scroll-snap-align: start !important;
   }
 
   .pd-specs-grid {

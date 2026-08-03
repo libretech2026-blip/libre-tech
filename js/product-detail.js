@@ -496,10 +496,18 @@ const ProductDetail = (() => {
     }
 
     // Quantity
+    const qtyValueEl = document.getElementById('pdQtyValue');
+    const qtyInputEl = document.getElementById('pdQtyInput');
+
+    const syncQtyDisplay = () => {
+      if (qtyValueEl) qtyValueEl.textContent = quantity;
+      if (qtyInputEl) qtyInputEl.value = quantity;
+    };
+
     document.getElementById('pdQtyMinus')?.addEventListener('click', () => {
       if (quantity > 1) {
         quantity--;
-        document.getElementById('pdQtyValue').textContent = quantity;
+        syncQtyDisplay();
       }
     });
 
@@ -507,11 +515,27 @@ const ProductDetail = (() => {
       const maxQty = stock - Cart.getCartQty(currentProduct.id);
       if (quantity < maxQty) {
         quantity++;
-        document.getElementById('pdQtyValue').textContent = quantity;
+        syncQtyDisplay();
       } else {
         Cart.showToast(`Solo hay ${stock} unidades disponibles`, 'error');
       }
     });
+
+    if (qtyInputEl) {
+      qtyInputEl.addEventListener('change', () => {
+        const parsed = parseInt(qtyInputEl.value, 10);
+        const maxQty = stock - Cart.getCartQty(currentProduct.id);
+        if (Number.isNaN(parsed) || parsed < 1) {
+          quantity = 1;
+        } else if (parsed > maxQty) {
+          quantity = Math.max(1, maxQty);
+          Cart.showToast(`Solo hay ${stock} unidades disponibles`, 'error');
+        } else {
+          quantity = parsed;
+        }
+        syncQtyDisplay();
+      });
+    }
 
     // Add to cart
     document.getElementById('pdAddCart')?.addEventListener('click', () => {
