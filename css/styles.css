@@ -1281,6 +1281,7 @@ input, select, textarea {
 
 .pd-gallery-info {
   margin-top: var(--spacing-md);
+  grid-column: 2 / 3;
   display: grid;
   gap: var(--spacing-md);
 }
