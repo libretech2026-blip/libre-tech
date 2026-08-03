@@ -3935,7 +3935,7 @@ input, select, textarea {
 }
 
 .pd-main-image--mobile {
-  display: none;
+  display: none !important;
   grid-column: 1 / -1;
   width: 100%;
   background: var(--bg-secondary);
@@ -3948,7 +3948,7 @@ input, select, textarea {
 }
 
 .pd-thumbnails-mobile {
-  display: none;
+  display: none !important;
   width: 100%;
 }
 
@@ -8825,6 +8825,29 @@ input, select, textarea {
     font-size: 0.85rem !important;
     height: 52px !important;
     padding: 0 0.65rem !important;
+  }
+
+  /* Compact qty control for mobile bottom bar */
+  .pd-qty-compact {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+    padding: 0.15rem 0.25rem !important;
+    border-radius: 10px !important;
+    background: var(--bg-primary) !important;
+    border: 1px solid var(--border-light) !important;
+  }
+
+  .pd-qty-compact .qty-btn {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 1.2rem !important;
+  }
+
+  .pd-qty-compact .qty-value {
+    min-width: 36px !important;
+    font-size: 0.95rem !important;
+    text-align: center !important;
   }
 }
 

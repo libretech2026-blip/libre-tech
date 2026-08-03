@@ -247,25 +247,18 @@
         </div>
 
         <div class="pd-actions">
-          <div class="pd-action-row pd-action-row-main">
-            <div class="pd-qty">
+          <div class="pd-action-row pd-action-row-buttons">
+            <div class="pd-qty pd-qty-compact" id="pdQtyWrapper">
               <button class="qty-btn" id="pdQtyMinus" aria-label="Disminuir cantidad">−</button>
               <span class="qty-value" id="pdQtyValue">1</span>
               <button class="qty-btn" id="pdQtyPlus" aria-label="Aumentar cantidad">+</button>
-            </div>
-
-          </div>
-
-          <div class="pd-action-row pd-action-row-buttons">
-            <div class="pd-qty pd-qty-mobile" id="pdQtyMobileWrapper">
-              <input type="number" id="pdQtyInput" class="qty-input" min="1" value="1" aria-label="Cantidad" />
+              
             </div>
             <button class="btn-add-cart-lg btn-full" id="pdAddCart" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
                 <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
               </svg>
-              <span class="btn-add-cart-text">AGREGAR AL CARRITO</span>
             </button>
             <button class="btn-buy-now btn-full" id="pdBuyNowButton" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -274,7 +267,6 @@
               PIDE Y PAGA EN CASA
             </button>
           </div>
-
           <div class="pd-secure-note">
             <span class="secure-icon">🔒</span>
             <span>Tu información está protegida</span>
