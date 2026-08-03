@@ -257,6 +257,10 @@ const Cart = (() => {
     if (footer) {
       footer.style.display = items.length > 0 ? 'block' : 'none';
     }
+    const contWrap = document.getElementById('cartContinueWrapper');
+    if (contWrap) {
+      contWrap.style.display = items.length > 0 ? 'block' : 'none';
+    }
     if (totalEl) {
       totalEl.textContent = formatPrice(getTotal());
     }
@@ -321,6 +325,13 @@ const Cart = (() => {
 
     // Botón pagar en línea
     document.getElementById('btnPayOnline')?.addEventListener('click', payOnline);
+
+    // Seguir comprando desde el carrito
+    document.getElementById('btnContinueShoppingCart')?.addEventListener('click', () => {
+      // Close cart and go to products lobby
+      close();
+      window.location.href = 'index.html';
+    });
 
     // Order form events
     document.getElementById('btnCloseOrderForm')?.addEventListener('click', closeOrderForm);
