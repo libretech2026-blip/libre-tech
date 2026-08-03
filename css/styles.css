@@ -3916,13 +3916,14 @@ input, select, textarea {
   position: sticky;
   top: calc(var(--header-height) + var(--spacing-lg));
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: 1fr;
   gap: var(--spacing-lg);
-  max-width: 600px;
+  max-width: 440px;
+  width: 100%;
 }
 
 .pd-main-image {
-  grid-column: 2;
+  grid-column: 1;
   background: var(--bg-secondary);
   border-radius: var(--radius-xl);
   overflow: hidden;
@@ -3963,13 +3964,13 @@ input, select, textarea {
 }
 
 .pd-gallery {
-  grid-template-columns: auto minmax(0, 0.45fr);
-  max-width: 360px;
+  grid-template-columns: 1fr;
+  max-width: 440px;
   gap: var(--spacing-md);
 }
 
 .pd-main-image {
-  min-height: 260px;
+  min-height: 280px;
 }
 
 .pd-main-image .product-no-image {
@@ -3982,7 +3983,7 @@ input, select, textarea {
 .pd-thumbnails {
   display: grid;
   gap: var(--spacing-sm);
-  grid-auto-rows: 64px;
+  grid-template-columns: minmax(0, 1fr);
   margin-top: var(--spacing-md);
   overflow-y: auto;
   max-height: 560px;
@@ -8896,21 +8897,26 @@ input, select, textarea {
 @media (min-width: 1025px) {
   .pd-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr)  minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-auto-rows: auto;
     gap: var(--spacing-lg);
   }
 
-  /* keep gallery column narrower so image appears smaller (~50%) */
+  /* keep gallery column on the left with an adequate desktop width */
   .pd-gallery {
-    max-width: 360px;
+    max-width: 440px;
+    width: 100%;
     grid-column: 1;
     grid-row: 1;
     position: sticky;
     top: calc(var(--header-height) + var(--spacing-lg));
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
   }
 
-  .pd-main-image--mobile {
+  .pd-main-image--mobile,
+  .pd-thumbnails-mobile {
     display: none !important;
   }
 
@@ -8928,15 +8934,24 @@ input, select, textarea {
     box-sizing: border-box;
   }
 
+  .pd-thumbnails {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
   .pd-main-image {
-    min-height: 320px;
+    min-height: 360px;
     max-width: 100%;
   }
 
   .pd-main-image img {
-    width: auto;
+    width: 100%;
     height: auto;
-    max-width: 50%;
+    max-width: 100%;
     max-height: 100%;
     object-fit: contain;
   }
