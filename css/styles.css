@@ -3947,6 +3947,11 @@ input, select, textarea {
   min-height: 320px;
 }
 
+.pd-thumbnails-mobile {
+  display: none;
+  width: 100%;
+}
+
 .pd-main-image img,
 .pd-main-image--mobile img {
   width: 100%;
@@ -8782,7 +8787,7 @@ input, select, textarea {
   }
 
   .pd-action-row-buttons .btn-add-cart-lg {
-    flex-direction: column !important;
+    flex-direction: row !important;
     padding: 0.35rem 0.75rem !important;
   }
 
@@ -8793,9 +8798,12 @@ input, select, textarea {
   }
 
   .pd-action-row-buttons .btn-buy-now {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
     flex-direction: row !important;
     font-size: 0.85rem !important;
     height: 52px !important;
+    padding: 0 0.65rem !important;
   }
 }
 
@@ -8854,6 +8862,12 @@ input, select, textarea {
     max-width: 360px;
     grid-column: 1;
     grid-row: 1;
+    position: sticky;
+    top: calc(var(--header-height) + var(--spacing-lg));
+  }
+
+  .pd-main-image--mobile {
+    display: none !important;
   }
 
   .pd-info {
@@ -8971,6 +8985,9 @@ input, select, textarea {
   .pd-action-row-buttons {
     order: 2;
     display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
     gap: 0.5rem !important;
     width: 100%;
     align-items: center !important;
@@ -8978,9 +8995,9 @@ input, select, textarea {
 
   /* cart button narrow, buy button takes remaining space */
   .pd-action-row-buttons .btn-add-cart-lg {
-    flex: 0 0 56px !important;
-    width: 56px !important;
-    height: 52px !important;
+    flex: 0 0 52px !important;
+    width: 52px !important;
+    height: 48px !important;
     padding: 0 !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -8989,8 +9006,11 @@ input, select, textarea {
 
   .pd-action-row-buttons .btn-buy-now {
     flex: 1 1 auto !important;
-    height: 52px !important;
-    padding: 0 0.75rem !important;
+    min-width: 0 !important;
+    max-width: calc(100% - 56px) !important;
+    height: 48px !important;
+    padding: 0 0.6rem !important;
+    font-size: 0.82rem !important;
   }
 
   /* hide desktop text on cart button; leave only icon */

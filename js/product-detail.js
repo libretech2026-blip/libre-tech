@@ -142,13 +142,20 @@ const ProductDetail = (() => {
 
     // Thumbnails
     const thumbsContainer = document.getElementById('pdThumbnails');
+    const thumbsContainerMobile = document.getElementById('pdThumbnailsMobile');
+    const thumbsHtml = allImages.map((img, i) =>
+      `<button class="pd-thumb${i === 0 ? ' active' : ''}" data-index="${i}" data-src="${Cart.escapeAttr(img)}" aria-label="Ver imagen ${i + 1}">
+        <img src="${Cart.escapeAttr(img)}" alt="Foto ${i + 1}" loading="lazy">
+      </button>`
+    ).join('');
+
     if (thumbsContainer && allImages.length > 1) {
-      thumbsContainer.style.display = 'flex';
-      thumbsContainer.innerHTML = allImages.map((img, i) =>
-        `<button class="pd-thumb${i === 0 ? ' active' : ''}" data-index="${i}" data-src="${Cart.escapeAttr(img)}" aria-label="Ver imagen ${i + 1}">
-          <img src="${Cart.escapeAttr(img)}" alt="Foto ${i + 1}" loading="lazy">
-        </button>`
-      ).join('');
+      thumbsContainer.style.display = 'grid';
+      thumbsContainer.innerHTML = thumbsHtml;
+    }
+    if (thumbsContainerMobile && allImages.length > 1) {
+      thumbsContainerMobile.style.display = 'flex';
+      thumbsContainerMobile.innerHTML = thumbsHtml;
     }
 
     // Info
@@ -543,15 +550,17 @@ const ProductDetail = (() => {
     });
 
     // Thumbnail gallery navigation
-    document.getElementById('pdThumbnails')?.addEventListener('click', e => {
-      const thumb = e.target.closest('.pd-thumb');
-      if (!thumb) return;
-      const mainImg = document.getElementById('pdMainImg');
-      const mainImgMobile = document.getElementById('pdMainImgMobile');
-      if (mainImg) mainImg.src = thumb.dataset.src;
-      if (mainImgMobile) mainImgMobile.src = thumb.dataset.src;
-      document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
-      thumb.classList.add('active');
+    document.querySelectorAll('#pdThumbnails, #pdThumbnailsMobile').forEach(container => {
+      container?.addEventListener('click', e => {
+        const thumb = e.target.closest('.pd-thumb');
+        if (!thumb) return;
+        const mainImg = document.getElementById('pdMainImg');
+        const mainImgMobile = document.getElementById('pdMainImgMobile');
+        if (mainImg) mainImg.src = thumb.dataset.src;
+        if (mainImgMobile) mainImgMobile.src = thumb.dataset.src;
+        document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+      });
     });
 
     // Add to cart from recommended section
