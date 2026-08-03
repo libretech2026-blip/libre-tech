@@ -1281,9 +1281,10 @@ input, select, textarea {
 
 .pd-gallery-info {
   margin-top: var(--spacing-md);
-  grid-column: 2 / 3;
   display: grid;
   gap: var(--spacing-md);
+  grid-column: 1 / 2;
+  grid-row: 2;
 }
 
 /* Ensure trust cards in product detail spread across the column on desktop */
@@ -2444,6 +2445,8 @@ input, select, textarea {
   border-top: 1px solid var(--border-light);
   padding: var(--spacing-lg);
   flex-shrink: 0;
+  display: grid;
+  gap: var(--spacing-sm);
 }
 
 .cart-subtotal {
@@ -2451,6 +2454,15 @@ input, select, textarea {
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-md);
+}
+
+.cart-footer button,
+.cart-footer .btn {
+  width: 100%;
+}
+
+#cartContinueWrapper {
+  padding: 0;
 }
 
 .cart-subtotal-label {
@@ -3920,38 +3932,29 @@ input, select, textarea {
   align-items: center;
   justify-content: center;
   min-height: 560px;
-}
+    width: 100%;
+  }
 
-.pd-main-image--mobile {
-  display: none;
-  width: 100%;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 320px;
-}
+  .pd-main-image--mobile {
+    display: none;
+    width: 100%;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    aspect-ratio: 1;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+  }
 
-.pd-main-image img,
-.pd-main-image--mobile img {
-  width: auto;
-  max-width: 95%;
-  max-height: 95%;
-  object-fit: contain;
-  margin: 0 auto;
-  display: block;
-  padding: 0;
-  transition: transform 300ms ease, opacity 250ms ease;
-}
-
-/* Desktop: keep image natural size (no visual scaling) */
-@media (min-width: 769px) {
-  .pd-main-image img {
-    transform: none;
-    transform-origin: center center;
+  .pd-main-image img,
+  .pd-main-image--mobile img {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    margin: 0;
   }
   .pd-gallery {
     grid-template-columns: auto minmax(0, 0.45fr);
@@ -4401,6 +4404,14 @@ input, select, textarea {
 .btn-buy-now svg {
   width: 20px;
   height: 20px;
+}
+
+.btn-add-cart-text {
+  display: inline-flex;
+}
+
+.btn-add-cart-mobile {
+  display: none;
 }
 
 .btn-secondary.btn-full {
@@ -8633,26 +8644,31 @@ input, select, textarea {
     margin-bottom: 0 !important;
   }
 
-  .pd-add-cart-label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
+  .btn-add-cart-text {
+    display: none !important;
+  }
+
+  .btn-add-cart-mobile {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
     line-height: 1;
   }
 
-  .pd-add-cart-label span {
-    font-size: 0.8rem;
-    font-weight: 800;
-    text-transform: uppercase;
+  .btn-add-cart-mobile span {
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
   }
 
-  .pd-add-cart-label small {
-    display: block;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.01em;
+  .btn-add-cart-mobile small {
+    display: block !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.01em !important;
     margin-top: 0;
   }
 
@@ -8729,13 +8745,17 @@ input, select, textarea {
     gap: var(--spacing-md) !important;
   }
 
-  .pd-gallery {
+  .pd-main-image {
     display: none !important;
   }
 
   .pd-main-image--mobile {
     display: flex !important;
     margin: var(--spacing-md) 0 !important;
+  }
+
+  .pd-thumbnails {
+    width: 100% !important;
   }
 
   .pd-specs-grid {
@@ -8784,31 +8804,6 @@ input, select, textarea {
     width: 20px !important;
     height: 20px !important;
     margin-bottom: 0 !important;
-  }
-
-  .btn-add-cart-label {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 0 !important;
-    line-height: 1;
-  }
-
-  .btn-add-cart-label span {
-    font-size: 0.75rem !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    margin: 0 !important;
-  }
-
-  .btn-add-cart-label small {
-    display: block !important;
-    font-size: 0.65rem !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.02em !important;
-    margin: 0 !important;
   }
 
   .pd-action-row-buttons .btn-buy-now {
