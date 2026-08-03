@@ -3878,7 +3878,7 @@ input, select, textarea {
 .pd-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: var(--spacing-xs);
+  gap: var(--spacing-lg);
   align-items: start;
   max-width: 1300px;
 }
@@ -3933,10 +3933,10 @@ input, select, textarea {
   transition: transform 300ms ease, opacity 250ms ease;
 }
 
-/* Desktop: enlarge image visually (double size) while keeping container size */
+/* Desktop: keep image natural size (no visual scaling) */
 @media (min-width: 769px) {
   .pd-main-image img {
-    transform: scale(2);
+    transform: none;
     transform-origin: center center;
   }
 }
@@ -8516,47 +8516,43 @@ input, select, textarea {
   }
 
   .pd-actions {
-    position: fixed !important;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 9999;
+    /* keep actions in normal flow on mobile */
+    position: static !important;
     margin: 0;
-    padding: var(--spacing-xs) var(--spacing-sm) var(--spacing-sm) !important;
-    background: rgba(255,255,255,0.98);
-    border-top: 1px solid var(--border-light);
-    box-shadow: 0 -12px 32px rgba(15,23,42,0.12);
+    padding: var(--spacing-md) var(--spacing-sm) !important;
+    background: var(--bg-primary);
+    border-top: none;
+    box-shadow: none;
     display: flex !important;
-    flex-direction: row !important;
-    gap: 0.65rem !important;
-    align-items: center;
-    justify-content: space-between;
-    transition: transform 220ms ease, opacity 220ms ease;
+    flex-direction: column !important;
+    gap: var(--spacing-md) !important;
+    align-items: stretch;
+    justify-content: flex-start;
+    transition: none;
   }
 
   .pd-actions.hidden {
-    transform: translateY(110%);
-    opacity: 0;
-    pointer-events: none;
+    display: none !important;
   }
 
   .pd-actions .pd-action-row.pd-action-row-main {
-    display: none !important;
+    display: flex !important;
   }
 
   .pd-action-row-buttons {
     display: flex !important;
     gap: 0.65rem !important;
     width: 100%;
+    flex-direction: row;
   }
 
   .btn-add-cart-lg,
   .btn-buy-now {
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
-    height: 52px !important;
-    padding: 0 0.75rem !important;
-    font-size: 0.92rem !important;
+    height: auto !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.95rem !important;
   }
 
   .btn-add-cart-lg svg,
@@ -8573,46 +8569,35 @@ input, select, textarea {
 /* Mobile: Taller bottom action bar and button layout */
 @media (max-width: 768px) {
   .pd-actions {
-    height: 80px !important; /* make the bar a bit taller */
-    padding: 10px 12px !important;
-    align-items: center !important;
+    height: auto !important;
+    padding: var(--spacing-md) !important;
+    align-items: stretch !important;
   }
 
   .pd-action-row-buttons {
     display: flex !important;
     gap: 0.5rem !important;
     width: 100%;
-    align-items: stretch !important;
+    align-items: center !important;
   }
 
   .pd-action-row-buttons .btn-add-cart-lg,
   .pd-action-row-buttons .btn-buy-now {
-    flex: 1 1 0 !important;
+    flex: 1 1 auto !important;
     min-width: 0 !important;
-    height: 56px !important;
-    padding: 6px 8px !important;
+    height: auto !important;
+    padding: 0.5rem 0.75rem !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 6px !important;
-  }
-
-  /* Cart button: icon above text, very small text */
-  .pd-action-row-buttons .btn-add-cart-lg {
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    height: 64px !important;
-    font-size: 0.65rem !important;
-    font-weight: 700 !important;
-    line-height: 1 !important;
-    padding: 6px 8px !important;
+    font-size: 0.95rem !important;
   }
 
   .pd-action-row-buttons .btn-add-cart-lg svg {
-    width: 20px !important;
-    height: 20px !important;
-    margin-bottom: 4px !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-bottom: 0 !important;
   }
 
   /* Ensure buy-now stays horizontal and legible */
