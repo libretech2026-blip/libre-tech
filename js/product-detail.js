@@ -748,16 +748,16 @@ const ProductDetail = (() => {
     function initUrgency() {
       const el = document.getElementById('pdUrgencyMessage');
       if (!el) return;
-      function update() {
-        const min = 12; const max = 120;
-        const n = Math.floor(Math.random() * (max - min + 1)) + min;
-        el.textContent = `${n} personas están viendo este producto ahora`;
-      }
+      let current = Math.floor(Math.random() * 31) + 45; // 45-75 initial viewers
+      const update = () => {
+        el.textContent = `${current} personas están viendo este producto ahora`;
+      };
       update();
-      // Update periodically with slight jitter
       setInterval(() => {
+        const delta = Math.floor(Math.random() * 5) - 2; // -2..+2
+        current = Math.max(35, Math.min(80, current + delta));
         update();
-      }, 8000 + Math.floor(Math.random() * 8000));
+      }, 30000 + Math.floor(Math.random() * 5000));
     }
 
   return { init };

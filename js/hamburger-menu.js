@@ -84,16 +84,14 @@ const HamburgerMenu = (() => {
       products = Store.getActiveProducts();
     }
 
-    // Extract unique categories and their brands
+    // Extract unique categories and their products
     const categoryMap = new Map();
     products.forEach(p => {
-      if (!p.category) return;
+      if (!p.category || !p.id || !p.name) return;
       if (!categoryMap.has(p.category)) {
-        categoryMap.set(p.category, new Set());
+        categoryMap.set(p.category, []);
       }
-      if (p.brand) {
-        categoryMap.get(p.category).add(p.brand);
-      }
+      categoryMap.get(p.category).push({ id: p.id, name: p.name });
     });
 
     // Sort categories
@@ -108,14 +106,11 @@ const HamburgerMenu = (() => {
     allBtn.textContent = 'Todos los productos';
     allBtn.addEventListener('click', () => {
       closeMenu();
-      // Navigate to productos.html
       if (window.location.pathname.includes('productos.html')) {
-        // Already on productos page, just set category
         if (typeof Store !== 'undefined' && Store.setActiveCategory) {
           Store.setActiveCategory('all', null, { skipBrandDropdown: true });
         }
       } else {
-        // Navigate to productos.html
         window.location.href = 'productos.html';
       }
     });
@@ -125,15 +120,15 @@ const HamburgerMenu = (() => {
     allCategoryDiv.appendChild(allBtn);
     content.appendChild(allCategoryDiv);
 
-    // Add categories with brands (collapsed by default)
+    // Add categories with products (collapsed by default)
     categories.forEach(category => {
-      const brands = Array.from(categoryMap.get(category)).sort();
+      const productsForCategory = categoryMap.get(category).sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
 
       // Category container
       const categoryDiv = document.createElement('div');
       categoryDiv.className = 'menu-category';
 
-      // Category header (with toggle if has brands)
+      // Category header (with toggle if has products)
       const categoryHeaderDiv = document.createElement('div');
       categoryHeaderDiv.className = 'menu-category-header';
 
@@ -144,7 +139,6 @@ const HamburgerMenu = (() => {
       categoryBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         closeMenu();
-        // Navigate to productos.html with category filter
         if (window.location.pathname.includes('productos.html')) {
           if (typeof Store !== 'undefined' && Store.setActiveCategory) {
             Store.setActiveCategory(category, null, { skipBrandDropdown: true });
@@ -156,47 +150,37 @@ const HamburgerMenu = (() => {
 
       categoryHeaderDiv.appendChild(categoryBtn);
 
-      // Add toggle button if has brands
-      if (brands.length > 0) {
+      if (productsForCategory.length > 0) {
         const toggleBtn = document.createElement('button');
         toggleBtn.className = 'menu-category-toggle';
         toggleBtn.setAttribute('aria-label', `Expandir/contraer ${category}`);
         toggleBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
         
-        const brandsDiv = document.createElement('div');
-        brandsDiv.className = 'menu-subcategories collapsed';
+        const productsDiv = document.createElement('div');
+        productsDiv.className = 'menu-subcategories collapsed';
         
         toggleBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          brandsDiv.classList.toggle('collapsed');
+          productsDiv.classList.toggle('collapsed');
           toggleBtn.classList.toggle('expanded');
         });
 
         categoryHeaderDiv.appendChild(toggleBtn);
 
-        // Add brands as subcategory items
-        brands.forEach(brand => {
-          const brandBtn = document.createElement('button');
-          brandBtn.className = 'menu-subcategory-item';
-          brandBtn.textContent = brand;
-          brandBtn.addEventListener('click', (e) => {
+        productsForCategory.forEach(product => {
+          const productBtn = document.createElement('button');
+          productBtn.className = 'menu-subcategory-item';
+          productBtn.textContent = product.name;
+          productBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             closeMenu();
-            // Navigate with category and brand filter
-            if (window.location.pathname.includes('productos.html')) {
-              if (typeof Store !== 'undefined' && Store.setActiveCategory) {
-                Store.setActiveCategory(category, null, { skipBrandDropdown: true, brand: brand });
-                Store.renderFeaturedProducts();
-              }
-            } else {
-              window.location.href = `productos.html?category=${encodeURIComponent(category)}&brand=${encodeURIComponent(brand)}`;
-            }
+            window.location.href = `producto.html?id=${encodeURIComponent(product.id)}`;
           });
-          brandsDiv.appendChild(brandBtn);
+          productsDiv.appendChild(productBtn);
         });
 
         categoryDiv.appendChild(categoryHeaderDiv);
-        categoryDiv.appendChild(brandsDiv);
+        categoryDiv.appendChild(productsDiv);
       } else {
         categoryDiv.appendChild(categoryHeaderDiv);
       }

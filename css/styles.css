@@ -1937,7 +1937,7 @@ input, select, textarea {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(286px, 1fr));
   gap: var(--spacing-lg);
   width: 100%;
   max-width: 100%;
@@ -1968,7 +1968,7 @@ input, select, textarea {
 .product-card-image {
   position: relative;
   width: 100%;
-  padding-top: 100%; /* 1:1 ratio */
+  padding-top: 140%; /* 40% larger image container */
   background: var(--bg-secondary);
   overflow: hidden;
 }
@@ -4334,6 +4334,14 @@ input, select, textarea {
   height: 48px;
 }
 
+#cartContinueWrapper {
+  width: 100%;
+}
+
+#cartContinueWrapper .btn-full {
+  width: 100%;
+}
+
 .pd-continue {
   display:none;
 }
@@ -4433,9 +4441,22 @@ input, select, textarea {
 
 .pd-urgency {
   font-size: 0.95rem;
-  color: var(--primary-blue-dark);
-  font-weight: 600;
+  color: #7b1934;
+  font-weight: 700;
   padding-top: var(--spacing-sm);
+  animation: urgency-pulse 1.8s ease-in-out infinite;
+  text-shadow: 0 0 8px rgba(59,130,246,0.4);
+}
+
+@keyframes urgency-pulse {
+  0%, 100% {
+    color: #7b1934;
+    text-shadow: 0 0 8px rgba(59,130,246,0.35);
+  }
+  50% {
+    color: #8f2043;
+    text-shadow: 0 0 18px rgba(59,130,246,0.75);
+  }
 }
 
 .pd-gallery {
