@@ -1294,6 +1294,14 @@ input, select, textarea {
   width: 100%;
 }
 
+/* Align trust cards to the action box margins on desktop */
+.product-detail .pd-trust-block {
+  margin-left: var(--spacing-lg);
+  margin-right: var(--spacing-lg);
+  box-sizing: border-box;
+  justify-items: start;
+}
+
 .pd-action-row {
   display: flex;
   flex-wrap: wrap;
@@ -3870,7 +3878,7 @@ input, select, textarea {
 .pd-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: var(--spacing-md);
+  gap: var(--spacing-xs);
   align-items: start;
   max-width: 1300px;
 }
@@ -3923,6 +3931,14 @@ input, select, textarea {
   display: block;
   padding: 0;
   transition: transform 300ms ease, opacity 250ms ease;
+}
+
+/* Desktop: enlarge image visually (double size) while keeping container size */
+@media (min-width: 769px) {
+  .pd-main-image img {
+    transform: scale(2);
+    transform-origin: center center;
+  }
 }
 
 .pd-main-image .product-no-image {
@@ -8554,6 +8570,59 @@ input, select, textarea {
   }
 }
 
+/* Mobile: Taller bottom action bar and button layout */
+@media (max-width: 768px) {
+  .pd-actions {
+    height: 80px !important; /* make the bar a bit taller */
+    padding: 10px 12px !important;
+    align-items: center !important;
+  }
+
+  .pd-action-row-buttons {
+    display: flex !important;
+    gap: 0.5rem !important;
+    width: 100%;
+    align-items: stretch !important;
+  }
+
+  .pd-action-row-buttons .btn-add-cart-lg,
+  .pd-action-row-buttons .btn-buy-now {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    height: 56px !important;
+    padding: 6px 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+
+  /* Cart button: icon above text, very small text */
+  .pd-action-row-buttons .btn-add-cart-lg {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 64px !important;
+    font-size: 0.65rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    padding: 6px 8px !important;
+  }
+
+  .pd-action-row-buttons .btn-add-cart-lg svg {
+    width: 20px !important;
+    height: 20px !important;
+    margin-bottom: 4px !important;
+  }
+
+  /* Ensure buy-now stays horizontal and legible */
+  .pd-action-row-buttons .btn-buy-now {
+    flex-direction: row !important;
+    font-size: 0.92rem !important;
+    height: 56px !important;
+  }
+}
+
 /* ==================== CATEGORY BUBBLES — NAV ABAJO Y CENTRADA ==================== */
 .category-bubbles-section {
   display: flex;
@@ -8611,6 +8680,11 @@ input, select, textarea {
   .product-detail .pd-trust-block {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: var(--spacing-sm) !important;
+  }
+  /* Force single-column layout on mobile only */
+  .pd-layout {
+    grid-template-columns: 1fr !important;
+    gap: var(--spacing-md) !important;
   }
 }
 
