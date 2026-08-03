@@ -3866,6 +3866,8 @@ input, select, textarea {
 .pd-gallery {
   position: sticky;
   top: calc(var(--header-height) + var(--spacing-lg));
+  display: grid;
+  gap: var(--spacing-lg);
 }
 
 .pd-main-image {
@@ -4447,8 +4449,8 @@ input, select, textarea {
 
 .pd-main-image img {
   width: auto;
-  max-width: 45%;
-  max-height: 45%;
+  max-width: 36%;
+  max-height: 36%;
   object-fit: contain;
   display: block;
   padding: 0;
