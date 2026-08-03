@@ -4165,6 +4165,43 @@ input, select, textarea {
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-card);
   margin-top: var(--spacing-lg);
+  width: 100%;
+  max-width: 100%;
+}
+
+.pd-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  width: 100%;
+}
+
+.pd-option-group {
+  width: 100%;
+}
+
+.pd-specs {
+  width: 100%;
+  padding: var(--spacing-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+}
+
+.pd-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: var(--spacing-md);
+}
+
+.pd-spec-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.95rem;
+  border: 1px solid rgba(14, 29, 57, 0.08);
+  border-radius: var(--radius-xl);
+  background: var(--bg-primary);
 }
 
 .pd-action-row {
@@ -4232,8 +4269,8 @@ input, select, textarea {
   align-items: center;
   justify-content: center;
   gap: var(--spacing-sm);
-  height: 56px;
-  padding: 0 var(--spacing-lg);
+  height: 60px;
+  padding: 0 var(--spacing-xl);
   background: #071b2f;
   color: #fff;
   border-radius: var(--radius-lg);
@@ -4260,8 +4297,8 @@ input, select, textarea {
   align-items: center;
   justify-content: center;
   gap: var(--spacing-sm);
-  height: 56px;
-  padding: 0 var(--spacing-lg);
+  height: 60px;
+  padding: 0 var(--spacing-xl);
   background: linear-gradient(90deg,#39ff14 0%,#00e676 50%,#00d27a 100%);
   color: #04120a;
   border-radius: var(--radius-lg);
@@ -4304,7 +4341,8 @@ input, select, textarea {
 
 .pd-trust-block {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(5, 110px);
+    justify-content: center;
     gap: var(--spacing-sm);
     margin-top: var(--spacing-lg);
 }
@@ -4313,14 +4351,51 @@ input, select, textarea {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
-  gap: 8px;
-  padding: var(--spacing-md);
+  gap: 6px;
+  min-width: 110px;
+  max-width: 110px;
+  aspect-ratio: 1 / 1;
+  padding: 0.9rem;
   background: #fff;
   border: 1px solid #e8e8ed;
   border-radius: var(--radius-xl);
   box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
   transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.trust-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(26, 75, 140, 0.12);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+}
+
+.trust-icon {
+  font-size: 1.45rem;
+  color: #fff;
+  background: var(--primary-blue);
+  padding: 10px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  line-height: 1;
+}
+
+.trust-card strong {
+  font-size: 0.9rem;
+  line-height: 1.2;
+  color: #071b2f;
+}
+
+.trust-card p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
 }
 
 .trust-card:hover {
@@ -4367,13 +4442,13 @@ input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 560px;
+  min-height: 520px;
 }
 
 .pd-main-image img {
   width: auto;
-  max-width: 72%;
-  max-height: 72%;
+  max-width: 45%;
+  max-height: 45%;
   object-fit: contain;
   display: block;
   padding: 0;
@@ -4508,27 +4583,29 @@ input, select, textarea {
   color: var(--text-primary);
 }
 
-.btn-add-cart-lg {
+..btn-add-cart-lg {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-sm);
-  height: 48px;
-  background: var(--primary-blue);
+  height: 60px;
+  padding: 0 var(--spacing-xl);
+  background: #071b2f;
   color: #fff;
-  border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255,255,255,0.08);
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
 }
 
 .btn-add-cart-lg:hover {
-  background: #15407a;
+  background: #0a2642;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+  box-shadow: 0 10px 30px rgba(7, 27, 47, 0.2);
 }
 
 .btn-add-cart-lg svg {
