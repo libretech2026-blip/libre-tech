@@ -202,9 +202,33 @@ const Store = (() => {
     
     // Agregar "Destacados" como primera categoría
     allCategories = ['Destacados', ...allCategories];
-    
+
     const uiCfg = getVisualUiConfig();
     const bubbleImages = uiCfg.categoryBubbleImages || {};
+
+    // Orden y visibilidad definidos en Admin → Visualización → Header y categorías.
+    // Las categorías nuevas (aún sin ordenar en el panel) van al final.
+    const bubbleOrder = Array.isArray(uiCfg.categoryBubbleOrder) ? uiCfg.categoryBubbleOrder : [];
+    const bubbleHidden = Array.isArray(uiCfg.categoryBubbleHidden) ? uiCfg.categoryBubbleHidden : [];
+
+    if (bubbleHidden.length) {
+      allCategories = allCategories.filter(cat => !bubbleHidden.includes(normalizeCategoryKey(cat)));
+    }
+
+    if (bubbleOrder.length) {
+      const rank = new Map(bubbleOrder.map((key, i) => [key, i]));
+      const at = cat => (rank.has(normalizeCategoryKey(cat)) ? rank.get(normalizeCategoryKey(cat)) : Number.MAX_SAFE_INTEGER);
+      allCategories = [...allCategories].sort((a, b) => at(a) - at(b));
+    }
+
+    const section = document.getElementById('categoryBubblesSection');
+    if (allCategories.length === 0) {
+      track.innerHTML = '';
+      dots.innerHTML = '';
+      if (section) section.style.display = 'none';
+      return;
+    }
+    if (section) section.style.display = '';
 
     const pageSize = 4;
     const pages = [];
@@ -227,7 +251,8 @@ const Store = (() => {
         
         const label = cat.charAt(0).toUpperCase() + cat.slice(1);
         const key = normalizeCategoryKey(cat);
-        const img = bubbleImages[key] || '';
+        // 'all' es la clave antigua de la primera burbuja (se llamaba "Todos")
+        const img = bubbleImages[key] || (key === 'destacados' ? (bubbleImages.all || '') : '') || '';
         return `
           <button class="category-bubble-item" data-category="${Cart.escapeAttr(cat)}" aria-label="Filtrar por ${Cart.escapeAttr(label)}">
             <span class="category-bubble-avatar${img ? ' has-image' : ''}">
@@ -795,19 +820,22 @@ const Store = (() => {
     // el orden manual de destacados definido en el panel de administración.
     products = sortProducts(products);
 
+    // El encabezado aloja el botón de ordenar, así que permanece visible;
+    // el título "Destacados" solo aparece cuando se listan los destacados.
+    const featuredTitle = document.getElementById('featuredTitle');
+    if (featuredTitle) {
+      featuredTitle.style.visibility = isShowingFeaturedOnly ? 'visible' : 'hidden';
+    }
+
     grid.innerHTML = '';
     if (products.length === 0) {
       if (noResults) noResults.style.display = 'block';
-      if (featuredHeader) featuredHeader.style.display = 'none';
       updateProductsCount();
       return;
     }
     if (noResults) noResults.style.display = 'none';
 
-    // Show featured header only when showing featured products OR when showing all products
-    if (featuredHeader) {
-      featuredHeader.style.display = isShowingFeaturedOnly || showAll ? 'flex' : 'none';
-    }
+    if (featuredHeader) featuredHeader.style.display = 'flex';
 
     products.forEach((product, i) => {
       const card = createProductCard(product);
@@ -817,19 +845,6 @@ const Store = (() => {
     });
     updateProductsCount();
     observeReveals(grid);
-
-    // Show/hide "Ver todos" button - shown when showing featured OR when showing all products
-    const btnViewAll = document.getElementById('btnViewAll');
-    if (btnViewAll) {
-      if (isShowingFeaturedOnly || showAll) {
-        const totalActive = getActiveProducts().length;
-        const featuredCount = getActiveProducts().filter(p => p.featured === true).length;
-        btnViewAll.style.display = totalActive > featuredCount ? '' : 'none';
-        btnViewAll.textContent = showAll ? 'Destacados' : 'Todos';
-      } else {
-        btnViewAll.style.display = 'none';
-      }
-    }
   }
 
   // Alias for external calls
@@ -893,7 +908,7 @@ const Store = (() => {
     card.innerHTML = `
       <button class="product-share-btn" type="button" data-share="product" data-share-id="${product.id}"
               title="Compartir ${Cart.escapeAttr(product.name)}" aria-label="Compartir ${Cart.escapeAttr(product.name)}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       </button>
       <a href="${detailLink}" class="product-card-link">
         <div class="product-card-image">
@@ -1191,13 +1206,6 @@ const Store = (() => {
         const dd = document.getElementById('brandDropdown');
         if (dd) dd.style.display = 'none';
       }
-    });
-
-    // View all products / Back to featured
-    document.getElementById('btnViewAll')?.addEventListener('click', e => {
-      e.preventDefault();
-      showAll = !showAll;
-      renderFeaturedProducts();
     });
 
     // Search with debounce

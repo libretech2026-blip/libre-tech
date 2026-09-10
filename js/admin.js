@@ -1509,7 +1509,8 @@ const Admin = (() => {
 
 
 
-    const tabMap = { products: 'tabProducts', csv: 'tabCsv', orders: 'tabOrders', pages: 'tabPages', stats: 'tabStats', visual: 'tabVisual', pqrs: 'tabPqrs', social: 'tabSocial', users: 'tabUsers', reviews: 'tabReviews', coupons: 'tabCoupons', analytics: 'tabAnalytics', home: 'tabHome', shipping: 'tabShipping' };
+    // 'stats' se mantiene como alias: Estadisticas y Analiticas son ahora una sola seccion
+    const tabMap = { products: 'tabProducts', csv: 'tabCsv', orders: 'tabOrders', pages: 'tabPages', stats: 'tabAnalytics', visual: 'tabVisual', pqrs: 'tabPqrs', social: 'tabSocial', users: 'tabUsers', reviews: 'tabReviews', coupons: 'tabCoupons', analytics: 'tabAnalytics', home: 'tabHome', shipping: 'tabShipping' };
 
     const tabEl = document.getElementById(tabMap[tabName]);
 
@@ -1535,7 +1536,6 @@ const Admin = (() => {
 
     if (tabName === 'pages') renderPagesTable();
 
-    if (tabName === 'stats') renderStats();
 
     if (tabName === 'visual') {
       Promise.all([loadVisualBannersFromDB(), loadVisualUiFromDB()]).then(() => {
@@ -1555,7 +1555,7 @@ const Admin = (() => {
 
     if (tabName === 'coupons') renderCouponsTable();
 
-    if (tabName === 'analytics') renderAnalytics();
+    if (tabName === 'analytics' || tabName === 'stats') renderAnalytics();
 
   }
 
@@ -2521,118 +2521,9 @@ const Admin = (() => {
 
 
 
-  // ===== STATISTICS =====
-
-  function renderStats() {
-
-    const allOrders = getOrders();
-
-    const products = getProducts();
-
-    const views = getViews();
-
-    // Exclude cancelled orders from statistics
-    const orders = allOrders.filter(o => (o.status || 'pending') !== 'cancelled');
-
-    const totalRevenue = orders.reduce((s, o) => s + (o.total || 0), 0);
-
-    const totalSales = orders.length;
-
-    const avgOrder = totalSales > 0 ? Math.round(totalRevenue / totalSales) : 0;
-
-    const totalViews = Object.values(views).reduce((s, v) => s + v, 0);
-
-
-
-    document.getElementById('statTotalRevenue').textContent = formatPrice(totalRevenue);
-
-    document.getElementById('statTotalSales').textContent = totalSales;
-
-    document.getElementById('statAvgOrder').textContent = formatPrice(avgOrder);
-
-    document.getElementById('statTotalViews').textContent = totalViews;
-
-
-
-    // Most viewed
-
-    const viewEntries = Object.entries(views).sort((a, b) => b[1] - a[1]).slice(0, 10);
-
-    const mvEl = document.getElementById('mostViewedList');
-
-    if (mvEl) {
-
-      if (viewEntries.length === 0) { mvEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos a\u00fan</p>'; }
-
-      else { mvEl.innerHTML = viewEntries.map(([pid, count], i) => {
-
-        const p = products.find(x => x.id === pid);
-
-        return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:0.85rem;"><span>${i+1}. ${p ? escapeHTML(p.name) : pid}</span><strong>${count} vistas</strong></div>`;
-
-      }).join(''); }
-
-    }
-
-
-
-    // Top selling
-
-    const salesMap = {};
-
-    orders.forEach(o => (o.items || []).forEach(it => { salesMap[it.name] = (salesMap[it.name] || 0) + it.quantity; }));
-
-    const topSelling = Object.entries(salesMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
-
-    const tsEl = document.getElementById('topSellingList');
-
-    if (tsEl) {
-
-      if (topSelling.length === 0) { tsEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos a\u00fan</p>'; }
-
-      else { tsEl.innerHTML = topSelling.map(([name, qty], i) =>
-
-        `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:0.85rem;"><span>${i+1}. ${escapeHTML(name)}</span><strong>${qty} vendidos</strong></div>`
-
-      ).join(''); }
-
-    }
-
-
-
-    // Sales by category
-
-    const catMap = {};
-
-    orders.forEach(o => (o.items || []).forEach(it => {
-
-      const p = products.find(x => x.name === it.name);
-
-      const cat = p ? p.category : 'Otro';
-
-      catMap[cat] = (catMap[cat] || 0) + (it.price * it.quantity);
-
-    }));
-
-    const catEntries = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
-
-    const scEl = document.getElementById('salesByCategoryList');
-
-    if (scEl) {
-
-      if (catEntries.length === 0) { scEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos a\u00fan</p>'; }
-
-      else { scEl.innerHTML = catEntries.map(([cat, total]) =>
-
-        `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:0.85rem;"><span>${escapeHTML(cat)}</span><strong>${formatPrice(total)}</strong></div>`
-
-      ).join(''); }
-
-    }
-
-  }
-
-
+  // ===== ESTADÍSTICAS =====
+  // La antigua funcion renderStats() se unifico dentro de renderAnalytics():
+  // ambas secciones calculaban lo mismo desde fuentes distintas.
 
   function getViews() {
 
@@ -2721,17 +2612,50 @@ const Admin = (() => {
       .replace(/^-+|-+$/g, '');
   }
 
-  function getStoreCategoriesWithAll() {
-    const products = getProducts();
+  /**
+   * Burbujas que muestra la tienda, en el mismo orden que las genera
+   * app.js: "Destacados" primero y despues las categorias de los productos.
+   * @returns {Array<{key:string, label:string}>}
+   */
+  function getStoreBubbleCategories() {
+    const products = getProducts().filter(p => p.active !== false);
     const dynamic = [...new Set(products.map(p => p.category).filter(Boolean))].sort();
-    return ['Todos', ...dynamic];
+    return ['Destacados', ...dynamic].map(cat => ({
+      key: normalizeCategoryKey(cat),
+      label: cat.charAt(0).toUpperCase() + cat.slice(1)
+    }));
+  }
+
+  /**
+   * Imagen guardada para una burbuja. La primera burbuja se guardaba antes
+   * bajo la clave 'all' (se llamaba "Todos"), asi que se acepta como respaldo.
+   */
+  function getBubbleImage(images, key) {
+    if (images[key]) return images[key];
+    if (key === 'destacados' && images.all) return images.all;
+    return '';
   }
 
   function renderCategoryBubblePreviewImage(image, label) {
     if (image) {
-      return `<img src="${escapeAttr(image)}" alt="${escapeAttr(label)}" style="width:58px;height:58px;border-radius:50%;object-fit:cover;border:2px solid var(--border-light)">`;
+      return `<img class="vui-bubble-thumb" src="${escapeAttr(image)}" alt="${escapeAttr(label)}">`;
     }
-    return `<div style="width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(26,75,140,0.16),rgba(232,119,34,0.18));font-weight:800;color:var(--primary-blue-dark)">${escapeHTML(label.charAt(0).toUpperCase())}</div>`;
+    return `<div class="vui-bubble-thumb vui-bubble-thumb--empty">${escapeHTML(label.charAt(0).toUpperCase())}</div>`;
+  }
+
+  // Estado de edicion de las burbujas de categoria (se vuelca a visual_ui al guardar)
+  let bubbleOrder = [];
+  let bubbleHidden = [];
+
+  /** Burbujas en el orden elegido en el panel; las nuevas van al final. */
+  function getBubblesInOrder() {
+    const bubbles = getStoreBubbleCategories();
+    const rank = new Map(bubbleOrder.map((key, i) => [key, i]));
+    return bubbles.sort((a, b) => {
+      const ra = rank.has(a.key) ? rank.get(a.key) : Number.MAX_SAFE_INTEGER;
+      const rb = rank.has(b.key) ? rank.get(b.key) : Number.MAX_SAFE_INTEGER;
+      return ra - rb;
+    });
   }
 
   function renderVisualUiForm() {
@@ -2742,31 +2666,71 @@ const Admin = (() => {
 
     const cfg = getVisualUiConfig();
     const safeColor = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test((cfg.headerInnerColor || '').trim()) ? cfg.headerInnerColor.trim() : '#e87722';
-    const images = cfg.categoryBubbleImages && typeof cfg.categoryBubbleImages === 'object' ? cfg.categoryBubbleImages : {};
 
     colorInput.value = safeColor;
     colorText.value = safeColor;
 
-    const categories = getStoreCategoriesWithAll();
-    list.innerHTML = categories.map(cat => {
-      const key = normalizeCategoryKey(cat === 'Todos' ? 'all' : cat);
-      const saved = images[key] || '';
+    if (Array.isArray(cfg.categoryBubbleOrder)) bubbleOrder = [...cfg.categoryBubbleOrder];
+    if (Array.isArray(cfg.categoryBubbleHidden)) bubbleHidden = [...cfg.categoryBubbleHidden];
+
+    renderCategoryBubblesList();
+  }
+
+  /** Lista ordenable de burbujas: arrastrar, flechas, ocultar/mostrar e imagen. */
+  function renderCategoryBubblesList() {
+    const list = document.getElementById('visualCategoryBubblesList');
+    if (!list) return;
+
+    const cfg = getVisualUiConfig();
+    const images = cfg.categoryBubbleImages && typeof cfg.categoryBubbleImages === 'object' ? cfg.categoryBubbleImages : {};
+
+    const bubbles = getBubblesInOrder();
+    bubbleOrder = bubbles.map(b => b.key);
+
+    list.innerHTML = bubbles.map((bubble, i) => {
+      const hidden = bubbleHidden.includes(bubble.key);
+      const saved = getBubbleImage(images, bubble.key);
       return `
-        <div class="admin-panel" style="padding:var(--spacing-md)">
-          <div style="display:flex;align-items:center;gap:var(--spacing-sm);margin-bottom:var(--spacing-sm)">
-            ${renderCategoryBubblePreviewImage(saved, cat)}
-            <div>
-              <div style="font-weight:700;font-size:0.88rem">${escapeHTML(cat)}</div>
-              <div style="font-size:0.75rem;color:var(--text-tertiary)">Clave: ${escapeHTML(key)}</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:var(--spacing-sm)">
-            <input type="file" accept="image/*" class="form-input vui-cat-file" data-cat-key="${escapeAttr(key)}" style="font-size:0.78rem;padding:8px">
-            <button type="button" class="btn btn-secondary vui-cat-clear" data-cat-key="${escapeAttr(key)}">Quitar</button>
-          </div>
-        </div>
+        <li class="sortable-item${hidden ? ' is-hidden' : ''}" draggable="true" data-id="${escapeAttr(bubble.key)}" data-index="${i}">
+          <span class="sortable-handle" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+          </span>
+          <span class="sortable-pos">${i + 1}</span>
+          ${renderCategoryBubblePreviewImage(saved, bubble.label)}
+          <span class="sortable-label">
+            <strong>${escapeHTML(bubble.label)}</strong>
+            <small>Clave: ${escapeHTML(bubble.key)}${saved ? '' : ' \u00b7 sin imagen'}</small>
+          </span>
+          <span class="sortable-actions">
+            <label class="btn btn-secondary btn-sm vui-cat-upload" title="Subir o cambiar la imagen de la burbuja">
+              Imagen
+              <input type="file" accept="image/*" class="vui-cat-file" data-cat-key="${escapeAttr(bubble.key)}" hidden>
+            </label>
+            <button type="button" class="table-btn vui-cat-clear" data-cat-key="${escapeAttr(bubble.key)}" ${saved ? '' : 'disabled'} title="Quitar imagen">Quitar</button>
+            <label class="sortable-switch" title="${hidden ? 'Mostrar la burbuja en la tienda' : 'Ocultar la burbuja en la tienda'}">
+              <input type="checkbox" data-toggle-bubble ${hidden ? '' : 'checked'}>
+              <span>${hidden ? 'Oculta' : 'Visible'}</span>
+            </label>
+            <button type="button" class="table-btn" data-move="up" ${i === 0 ? 'disabled' : ''} aria-label="Subir">\u2191</button>
+            <button type="button" class="table-btn" data-move="down" ${i === bubbles.length - 1 ? 'disabled' : ''} aria-label="Bajar">\u2193</button>
+          </span>
+        </li>
       `;
     }).join('');
+
+    initSortableList(list, newOrder => {
+      bubbleOrder = newOrder;
+      renderCategoryBubblesList();
+    });
+
+    list.querySelectorAll('[data-toggle-bubble]').forEach(input => {
+      input.addEventListener('change', e => {
+        const key = e.target.closest('.sortable-item').dataset.id;
+        if (e.target.checked) bubbleHidden = bubbleHidden.filter(k => k !== key);
+        else if (!bubbleHidden.includes(key)) bubbleHidden.push(key);
+        renderCategoryBubblesList();
+      });
+    });
   }
 
   function collectVisualUiConfigFromForm() {
@@ -2778,7 +2742,9 @@ const Admin = (() => {
     return {
       ...base,
       headerInnerColor: safeColor,
-      categoryBubbleImages: { ...(base.categoryBubbleImages || {}) }
+      categoryBubbleImages: { ...(base.categoryBubbleImages || {}) },
+      categoryBubbleOrder: [...bubbleOrder],
+      categoryBubbleHidden: [...bubbleHidden]
     };
   }
 
@@ -2816,7 +2782,7 @@ const Admin = (() => {
         cfg.categoryBubbleImages[key] = publicUrl;
         _visualUiInMemory = cfg;
         try { localStorage.setItem(VUI_KEY, JSON.stringify(cfg)); } catch (_) { /* ok */ }
-        renderVisualUiForm();
+        renderCategoryBubblesList();
         showToast('Imagen de categoría subida', 'success');
       } catch (err) {
         console.error('[Admin] Bubble upload error:', err);
@@ -2831,9 +2797,11 @@ const Admin = (() => {
       const key = btn.dataset.catKey;
       const cfg = collectVisualUiConfigFromForm();
       if (cfg.categoryBubbleImages[key]) delete cfg.categoryBubbleImages[key];
+      // La primera burbuja se guardaba antes bajo la clave 'all'
+      if (key === 'destacados' && cfg.categoryBubbleImages.all) delete cfg.categoryBubbleImages.all;
       _visualUiInMemory = cfg;
       try { localStorage.setItem(VUI_KEY, JSON.stringify(cfg)); } catch (e) { /* quota ok */ }
-      renderVisualUiForm();
+      renderCategoryBubblesList();
     });
 
     form?.addEventListener('submit', async e => {
@@ -4466,186 +4434,430 @@ const Admin = (() => {
 
 
   /* ----------------------------------------------------------
-     ADVANCED ANALYTICS
+     ANALÍTICAS Y ESTADÍSTICAS (sección unificada)
+     Antes vivían separadas en "Analíticas" y "Estadísticas" y
+     calculaban casi lo mismo con dos fuentes distintas. Ahora hay
+     un único dashboard: los pedidos vienen de Supabase (fuente de
+     verdad) y las vistas de producto del contador local.
   ---------------------------------------------------------- */
+
+  const AN_STATUS_LABELS = {
+    pending: 'Pendiente',
+    processing: 'Procesando',
+    confirmed: 'Confirmado',
+    shipped: 'Enviado',
+    delivered: 'Entregado',
+    completed: 'Completado',
+    cancelled: 'Cancelado'
+  };
+
+  const AN_STATUS_COLORS = {
+    pending: '#f59e0b',
+    processing: '#0ea5e9',
+    confirmed: '#3b82f6',
+    shipped: '#8b5cf6',
+    delivered: '#22c55e',
+    completed: '#22c55e',
+    cancelled: '#ef4444'
+  };
+
+  const AN_PALETTE = ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316', '#14b8a6'];
+
+  const AN_ICONS = {
+    revenue: '<path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>',
+    orders: '<path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>',
+    ticket: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+    units: '<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/>',
+    pending: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    done: '<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+    catalog: '<path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
+    views: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+  };
+
+  function anEmpty(message) {
+    return `<div class="an-empty">${escapeHTML(message)}</div>`;
+  }
+
+  function anCompactPrice(value) {
+    const n = Math.round(Number(value) || 0);
+    if (Math.abs(n) >= 1000000) return '$' + (n / 1000000).toFixed(1).replace('.0', '') + 'M';
+    if (Math.abs(n) >= 10000) return '$' + Math.round(n / 1000) + 'k';
+    return '$' + n.toLocaleString('es-CO');
+  }
+
+  function anPrice(value) {
+    return '$' + Math.round(Number(value) || 0).toLocaleString('es-CO');
+  }
+
+  /** Variación porcentual frente al periodo anterior del mismo tamaño. */
+  function anDelta(current, previous) {
+    if (!previous) return null;
+    return ((current - previous) / previous) * 100;
+  }
+
+  function anDeltaHTML(delta) {
+    if (delta === null || !Number.isFinite(delta)) return '';
+    const cls = delta > 0.5 ? 'up' : (delta < -0.5 ? 'down' : 'flat');
+    const arrow = cls === 'up' ? '↑' : (cls === 'down' ? '↓' : '→');
+    return `<div class="an-kpi-delta ${cls}">${arrow} ${Math.abs(delta).toFixed(1)}% vs. periodo anterior</div>`;
+  }
+
+  function anKpiCard(kpi) {
+    return `
+      <div class="an-kpi" style="--an-color:${kpi.color}">
+        <span class="an-kpi-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${AN_ICONS[kpi.icon] || ''}</svg>
+        </span>
+        <div class="an-kpi-info">
+          <div class="an-kpi-label">${escapeHTML(kpi.label)}</div>
+          <div class="an-kpi-value" title="${escapeAttr(String(kpi.title || kpi.value))}">${escapeHTML(String(kpi.value))}</div>
+          ${kpi.delta !== undefined ? anDeltaHTML(kpi.delta) : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  /** Gráfica de área en SVG puro (sin librerías) para los ingresos por día. */
+  function anAreaChart(entries) {
+    if (entries.length === 0) return anEmpty('Sin ventas en este periodo');
+
+    const W = 620;
+    const H = 200;
+    const padL = 46;
+    const padR = 12;
+    const padT = 14;
+    const padB = 26;
+    const maxVal = Math.max(...entries.map(e => e.value), 1);
+    const innerW = W - padL - padR;
+    const innerH = H - padT - padB;
+    const stepX = entries.length > 1 ? innerW / (entries.length - 1) : 0;
+
+    const pointAt = (i, val) => {
+      const x = entries.length > 1 ? padL + i * stepX : padL + innerW / 2;
+      const y = padT + innerH - (val / maxVal) * innerH;
+      return [x, y];
+    };
+
+    const points = entries.map((e, i) => pointAt(i, e.value));
+    const line = points.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+    const area = `${line} L${points[points.length - 1][0].toFixed(1)},${padT + innerH} L${points[0][0].toFixed(1)},${padT + innerH} Z`;
+
+    // Rejilla horizontal + escala del eje Y
+    const gridLines = [0, 0.5, 1].map(f => {
+      const y = padT + innerH - f * innerH;
+      return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}"/>
+              <text class="an-area-label" x="${padL - 6}" y="${(y + 3).toFixed(1)}" text-anchor="end">${anCompactPrice(maxVal * f)}</text>`;
+    }).join('');
+
+    // Como máximo 6 etiquetas en el eje X para que no se amontonen
+    const labelEvery = Math.max(1, Math.ceil(entries.length / 6));
+    const xLabels = entries.map((e, i) => {
+      if (i % labelEvery !== 0 && i !== entries.length - 1) return '';
+      const [x] = pointAt(i, e.value);
+      return `<text class="an-area-label" x="${x.toFixed(1)}" y="${H - 8}" text-anchor="middle">${escapeHTML(e.label)}</text>`;
+    }).join('');
+
+    const dots = points.map(([x, y], i) => `
+      <circle class="an-area-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3">
+        <title>${escapeHTML(entries[i].label)}: ${anPrice(entries[i].value)} (${entries[i].orders} pedido${entries[i].orders === 1 ? '' : 's'})</title>
+      </circle>
+    `).join('');
+
+    return `
+      <svg class="an-area" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Ingresos por día">
+        <defs>
+          <linearGradient id="anAreaGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--primary-blue)" stop-opacity="0.28"/>
+            <stop offset="100%" stop-color="var(--primary-blue)" stop-opacity="0.02"/>
+          </linearGradient>
+        </defs>
+        <g class="an-area-grid">${gridLines}</g>
+        <path class="an-area-fill" d="${area}"/>
+        <path class="an-area-line" d="${line}"/>
+        ${dots}
+        ${xLabels}
+      </svg>
+    `;
+  }
+
+  /** Donut en SVG con leyenda. entries: [{label, value, color}] */
+  function anDonutChart(entries, centerValue, centerLabel) {
+    if (entries.length === 0) return anEmpty('Sin datos en este periodo');
+
+    const total = entries.reduce((s, e) => s + e.value, 0) || 1;
+    const r = 15.915494; // circunferencia = 100 → el dasharray es directamente el %
+    let offset = 25;     // arranca en las 12 en punto
+
+    const segments = entries.map(e => {
+      const pct = (e.value / total) * 100;
+      const seg = `<circle cx="21" cy="21" r="${r}" fill="none" stroke="${e.color}" stroke-width="5.2"
+        stroke-dasharray="${pct.toFixed(2)} ${(100 - pct).toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}">
+        <title>${escapeHTML(e.label)}: ${e.value} (${Math.round(pct)}%)</title>
+      </circle>`;
+      offset -= pct;
+      return seg;
+    }).join('');
+
+    const legend = entries.map(e => `
+      <div class="an-legend-item">
+        <span class="an-legend-dot" style="background:${e.color}"></span>
+        <span class="an-legend-label">${escapeHTML(e.label)}</span>
+        <span class="an-legend-value">${escapeHTML(String(e.display !== undefined ? e.display : e.value))}</span>
+        <span class="an-legend-pct">${Math.round((e.value / total) * 100)}%</span>
+      </div>
+    `).join('');
+
+    return `
+      <div class="an-donut-wrap">
+        <svg class="an-donut" viewBox="0 0 42 42" role="img" aria-label="${escapeAttr(centerLabel)}">
+          <circle cx="21" cy="21" r="${r}" fill="none" stroke="var(--bg-secondary)" stroke-width="5.2"/>
+          ${segments}
+          <text class="an-donut-center-value" x="21" y="21" text-anchor="middle">${escapeHTML(String(centerValue))}</text>
+          <text class="an-donut-center-label" x="21" y="25.5" text-anchor="middle">${escapeHTML(centerLabel)}</text>
+        </svg>
+        <div class="an-legend">${legend}</div>
+      </div>
+    `;
+  }
+
+  /** Filas con barra de progreso. rows: [{name, value, sub, ratio, color, rank}] */
+  function anBarRows(rows, emptyMessage) {
+    if (rows.length === 0) return anEmpty(emptyMessage);
+    return `<div class="an-rows">${rows.map(row => `
+      <div class="an-row" style="--an-color:${row.color || 'var(--primary-blue)'}">
+        ${row.rank ? `<span class="an-row-rank">${row.rank}</span>` : ''}
+        <div class="an-row-main">
+          <div class="an-row-top">
+            <span class="an-row-name" title="${escapeAttr(row.name)}">${escapeHTML(row.name)}</span>
+            <span class="an-row-value">${escapeHTML(String(row.value))}</span>
+          </div>
+          <div class="an-bar"><span style="width:${Math.max(2, Math.round(row.ratio * 100))}%"></span></div>
+          ${row.sub ? `<div class="an-row-sub">${escapeHTML(row.sub)}</div>` : ''}
+        </div>
+      </div>
+    `).join('')}</div>`;
+  }
+
+  /** Precio unitario efectivo de un ítem del pedido (con respaldo en el catálogo). */
+  function anItemPrice(item, product) {
+    const raw = parseFloat(item.price);
+    if (Number.isFinite(raw) && raw > 0) return raw;
+    if (!product) return 0;
+    return parseFloat(product.offerActive && product.offerPrice ? product.offerPrice : product.price) || 0;
+  }
+
   async function renderAnalytics() {
     const kpisEl = document.getElementById('analyticsKpis');
-    const salesEl = document.getElementById('analyticsSalesChart');
-    const topEl = document.getElementById('analyticsTopProducts');
-    const catEl = document.getElementById('analyticsCategoryChart');
-    const statusEl = document.getElementById('analyticsOrderStatus');
-    const activityEl = document.getElementById('analyticsRecentActivity');
     if (!kpisEl) return;
 
     const rangeDays = document.getElementById('analyticsDateRange')?.value || '30';
     let orders = [];
-    try { orders = await SB.getAllOrders(); } catch (e) { console.warn('Analytics orders:', e); }
+    try {
+      orders = await SB.getAllOrders();
+    } catch (e) {
+      console.warn('[Admin] Analíticas: pedidos de Supabase:', e);
+    }
+    // Respaldo: caché local de pedidos (la escribe refreshOrders)
+    if (!Array.isArray(orders) || orders.length === 0) orders = getOrders();
 
-    const products = JSON.parse(localStorage.getItem('libretech_products') || '[]');
-    const now = new Date();
-    const rangeMs = rangeDays === 'all' ? Infinity : parseInt(rangeDays) * 86400000;
-    const filtered = orders.filter(o => {
-      if (o.status === 'cancelled') return false;
-      if (rangeMs === Infinity) return true;
-      return (now - new Date(o.created_at)) <= rangeMs;
+    const products = getProducts();
+    const productById = new Map(products.map(p => [p.id, p]));
+    const productByName = new Map(products.map(p => [p.name, p]));
+    const now = Date.now();
+    const rangeMs = rangeDays === 'all' ? Infinity : parseInt(rangeDays, 10) * 86400000;
+
+    const orderTime = o => new Date(o.created_at || o.createdAt || o.date || 0).getTime();
+    const notCancelled = o => (o.status || 'pending') !== 'cancelled';
+
+    const inRange = orders.filter(o => rangeMs === Infinity || (now - orderTime(o)) <= rangeMs);
+    const filtered = inRange.filter(notCancelled);
+    // Periodo anterior del mismo tamaño, para la comparación de los KPIs
+    const previous = rangeMs === Infinity ? [] : orders.filter(o => {
+      const age = now - orderTime(o);
+      return age > rangeMs && age <= rangeMs * 2 && notCancelled(o);
     });
 
-    // KPI calculations
-    const totalRevenue = filtered.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+    const sumTotal = list => list.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+    const totalRevenue = sumTotal(filtered);
     const totalOrders = filtered.length;
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-    const pendingOrders = filtered.filter(o => o.status === 'pending').length;
-    const completedOrders = filtered.filter(o => o.status === 'completed' || o.status === 'delivered').length;
-    const totalProducts = products.filter(p => p.active !== false).length;
+    const prevRevenue = sumTotal(previous);
+    const prevOrders = previous.length;
 
-    const fmtPrice = (v) => '$' + Math.round(v).toLocaleString('es-CO');
+    const itemsOf = o => (Array.isArray(o.items) ? o.items : []);
+    const totalUnits = filtered.reduce((s, o) => s + itemsOf(o).reduce((n, it) => n + (parseInt(it.quantity, 10) || 1), 0), 0);
+    const pendingOrders = filtered.filter(o => (o.status || 'pending') === 'pending').length;
+    const completedOrders = filtered.filter(o => ['completed', 'delivered'].includes(o.status)).length;
+    const cancelledOrders = inRange.length - filtered.length;
+    const activeProducts = products.filter(p => p.active !== false).length;
 
+    const views = getViews();
+    const totalViews = Object.values(views).reduce((s, v) => s + (parseInt(v, 10) || 0), 0);
+
+    // --- Encabezado del rango ---
+    const rangeLabel = document.getElementById('analyticsRangeLabel');
+    if (rangeLabel) {
+      const rangeText = rangeDays === 'all' ? 'todo el historial' : `los últimos ${rangeDays} días`;
+      rangeLabel.textContent = `${totalOrders} pedido${totalOrders === 1 ? '' : 's'} en ${rangeText}`
+        + (cancelledOrders > 0 ? ` · ${cancelledOrders} cancelado${cancelledOrders === 1 ? '' : 's'} (excluido${cancelledOrders === 1 ? '' : 's'})` : '');
+    }
+
+    // --- KPIs ---
     kpisEl.innerHTML = [
-      { label: 'Ingresos totales', value: fmtPrice(totalRevenue), color: '#22c55e' },
-      { label: 'Pedidos', value: totalOrders, color: '#3b82f6' },
-      { label: 'Ticket promedio', value: fmtPrice(avgOrderValue), color: '#8b5cf6' },
-      { label: 'Pendientes', value: pendingOrders, color: '#f59e0b' },
-      { label: 'Completados', value: completedOrders, color: '#22c55e' },
-      { label: 'Productos activos', value: totalProducts, color: '#06b6d4' }
-    ].map(k => `
-      <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:var(--spacing-lg);border-left:4px solid ${k.color}">
-        <div style="font-size:0.8rem;color:var(--text-tertiary);margin-bottom:4px">${k.label}</div>
-        <div style="font-size:1.5rem;font-weight:800;color:var(--text-primary)">${k.value}</div>
-      </div>
-    `).join('');
+      { label: 'Ingresos', value: anPrice(totalRevenue), title: anPrice(totalRevenue), color: '#22c55e', icon: 'revenue', delta: anDelta(totalRevenue, prevRevenue) },
+      { label: 'Pedidos', value: totalOrders, color: '#3b82f6', icon: 'orders', delta: anDelta(totalOrders, prevOrders) },
+      { label: 'Ticket promedio', value: anPrice(avgOrderValue), color: '#8b5cf6', icon: 'ticket' },
+      { label: 'Unidades vendidas', value: totalUnits, color: '#0ea5e9', icon: 'units' },
+      { label: 'Pendientes', value: pendingOrders, color: '#f59e0b', icon: 'pending' },
+      { label: 'Completados', value: completedOrders, color: '#22c55e', icon: 'done' },
+      { label: 'Productos activos', value: activeProducts, color: '#06b6d4', icon: 'catalog' },
+      { label: 'Vistas de producto', value: totalViews, color: '#ec4899', icon: 'views' }
+    ].map(anKpiCard).join('');
 
-    // Sales by day (bar chart via CSS)
+    // --- Ingresos por día ---
+    const salesEl = document.getElementById('analyticsSalesChart');
     if (salesEl) {
-      const dayMap = {};
+      const dayMap = new Map();
       filtered.forEach(o => {
-        const day = new Date(o.created_at).toLocaleDateString('es-CO', { month: 'short', day: 'numeric' });
-        dayMap[day] = (dayMap[day] || 0) + (parseFloat(o.total) || 0);
+        const d = new Date(orderTime(o));
+        const key = d.toISOString().slice(0, 10);
+        const entry = dayMap.get(key) || { label: d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }), value: 0, orders: 0 };
+        entry.value += parseFloat(o.total) || 0;
+        entry.orders += 1;
+        dayMap.set(key, entry);
       });
-      const entries = Object.entries(dayMap).slice(-15);
-      const maxVal = Math.max(...entries.map(e => e[1]), 1);
-      if (entries.length === 0) {
-        salesEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos</p>';
-      } else {
-        salesEl.innerHTML = `<div style="display:flex;align-items:flex-end;gap:4px;height:180px">
-          ${entries.map(([day, val]) => `
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
-              <span style="font-size:0.65rem;color:var(--text-tertiary)">${fmtPrice(val)}</span>
-              <div style="width:100%;background:var(--primary-blue);border-radius:4px 4px 0 0;height:${Math.max(4, (val / maxVal) * 150)}px;transition:height 0.3s"></div>
-              <span style="font-size:0.6rem;color:var(--text-tertiary);white-space:nowrap">${day}</span>
-            </div>
-          `).join('')}
-        </div>`;
+      const entries = [...dayMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).slice(-30).map(e => e[1]);
+      salesEl.innerHTML = anAreaChart(entries);
+
+      const meta = document.getElementById('analyticsSalesMeta');
+      if (meta) {
+        const best = entries.reduce((acc, e) => (e.value > (acc?.value || 0) ? e : acc), null);
+        meta.textContent = best ? `Mejor día: ${best.label} · ${anPrice(best.value)}` : '';
       }
     }
 
-    // Top selling products
-    if (topEl) {
-      const productSales = {};
-      filtered.forEach(o => {
-        const items = o.items || [];
-        items.forEach(item => {
-          const pid = item.productId || item.product_id;
-          productSales[pid] = (productSales[pid] || 0) + (item.quantity || 1);
-        });
+    // --- Pedidos por estado (donut) ---
+    const statusEl = document.getElementById('analyticsOrderStatus');
+    if (statusEl) {
+      const statusMap = {};
+      inRange.forEach(o => {
+        const st = o.status || 'pending';
+        statusMap[st] = (statusMap[st] || 0) + 1;
       });
-      const sorted = Object.entries(productSales)
-        .map(([pid, qty]) => ({ product: products.find(p => p.id === pid), qty }))
-        .filter(e => e.product)
-        .sort((a, b) => b.qty - a.qty)
-        .slice(0, 10);
+      const statusEntries = Object.entries(statusMap)
+        .sort((a, b) => b[1] - a[1])
+        .map(([status, count]) => ({
+          label: AN_STATUS_LABELS[status] || status,
+          value: count,
+          color: AN_STATUS_COLORS[status] || '#94a3b8'
+        }));
+      // El donut incluye los cancelados, por eso el total puede superar el KPI "Pedidos"
+      statusEl.innerHTML = anDonutChart(statusEntries, inRange.length, 'en total');
 
-      // Se guarda en memoria para poder publicarlo como ranking de la tienda
-      lastTopProducts = sorted.map(e => ({ id: e.product.id, qty: e.qty }));
-
-      if (sorted.length === 0) {
-        topEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos</p>';
-      } else {
-        const maxQty = sorted[0].qty;
-        topEl.innerHTML = sorted.map((e, i) => `
-          <div style="display:flex;align-items:center;gap:var(--spacing-sm);margin-bottom:8px">
-            <span style="font-size:0.75rem;font-weight:700;color:var(--text-tertiary);width:20px">${i + 1}</span>
-            <div style="flex:1">
-              <div style="font-size:0.8rem;font-weight:600;margin-bottom:2px">${escapeHTML(e.product.name)}</div>
-              <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden">
-                <div style="height:100%;width:${(e.qty / maxQty) * 100}%;background:var(--primary-blue);border-radius:3px"></div>
-              </div>
-            </div>
-            <span style="font-size:0.8rem;font-weight:700;color:var(--text-primary)">${e.qty}</span>
-          </div>
-        `).join('');
+      const meta = document.getElementById('analyticsStatusMeta');
+      if (meta) {
+        const rate = inRange.length ? Math.round((completedOrders / inRange.length) * 100) : 0;
+        meta.textContent = inRange.length ? `${rate}% completados` : '';
       }
     }
 
-    // Sales by category
+    // --- Ventas por categoría ---
+    const catEl = document.getElementById('analyticsCategoryChart');
     if (catEl) {
       const catSales = {};
       filtered.forEach(o => {
-        (o.items || []).forEach(item => {
-          const p = products.find(pr => pr.id === (item.productId || item.product_id));
-          if (p) {
-            const cat = p.category || 'Sin categoria';
-            catSales[cat] = (catSales[cat] || 0) + (parseFloat(item.quantity || 1) * parseFloat(p.offerActive && p.offerPrice ? p.offerPrice : p.price));
-          }
+        itemsOf(o).forEach(item => {
+          const product = productById.get(item.productId || item.product_id) || productByName.get(item.name);
+          const cat = (product && product.category) || 'Sin categoría';
+          const qty = parseInt(item.quantity, 10) || 1;
+          catSales[cat] = (catSales[cat] || 0) + anItemPrice(item, product) * qty;
         });
       });
       const catEntries = Object.entries(catSales).sort((a, b) => b[1] - a[1]);
       const catTotal = catEntries.reduce((s, [, v]) => s + v, 0) || 1;
-      const colors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
+      const maxCat = catEntries.length ? catEntries[0][1] : 1;
 
-      if (catEntries.length === 0) {
-        catEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos</p>';
-      } else {
-        catEl.innerHTML = catEntries.map(([cat, val], i) => `
-          <div style="display:flex;align-items:center;gap:var(--spacing-sm);margin-bottom:8px">
-            <div style="width:12px;height:12px;border-radius:50%;background:${colors[i % colors.length]};flex-shrink:0"></div>
-            <span style="font-size:0.8rem;flex:1">${escapeHTML(cat)}</span>
-            <span style="font-size:0.8rem;font-weight:700">${fmtPrice(val)}</span>
-            <span style="font-size:0.7rem;color:var(--text-tertiary)">${Math.round((val / catTotal) * 100)}%</span>
-          </div>
-        `).join('');
-      }
+      catEl.innerHTML = anBarRows(catEntries.map(([cat, val], i) => ({
+        name: cat,
+        value: anPrice(val),
+        sub: `${Math.round((val / catTotal) * 100)}% de las ventas`,
+        ratio: val / maxCat,
+        color: AN_PALETTE[i % AN_PALETTE.length]
+      })), 'Sin ventas por categoría en este periodo');
+
+      const meta = document.getElementById('analyticsCategoryMeta');
+      if (meta) meta.textContent = catEntries.length ? `${catEntries.length} categoría${catEntries.length === 1 ? '' : 's'}` : '';
     }
 
-    // Orders by status
-    if (statusEl) {
-      const statusMap = {};
-      filtered.forEach(o => { statusMap[o.status || 'pending'] = (statusMap[o.status || 'pending'] || 0) + 1; });
-      const statusLabels = { pending: 'Pendiente', confirmed: 'Confirmado', shipped: 'Enviado', delivered: 'Entregado', completed: 'Completado', cancelled: 'Cancelado' };
-      const statusColors = { pending: '#f59e0b', confirmed: '#3b82f6', shipped: '#8b5cf6', delivered: '#22c55e', completed: '#22c55e', cancelled: '#ef4444' };
-      const statusEntries = Object.entries(statusMap).sort((a, b) => b[1] - a[1]);
-      const maxStatus = Math.max(...statusEntries.map(e => e[1]), 1);
+    // --- Productos más vendidos ---
+    const topEl = document.getElementById('analyticsTopProducts');
+    if (topEl) {
+      const productSales = new Map();
+      filtered.forEach(o => {
+        itemsOf(o).forEach(item => {
+          const product = productById.get(item.productId || item.product_id) || productByName.get(item.name);
+          if (!product) return;
+          const prev = productSales.get(product.id) || { product, qty: 0, revenue: 0 };
+          const qty = parseInt(item.quantity, 10) || 1;
+          prev.qty += qty;
+          prev.revenue += anItemPrice(item, product) * qty;
+          productSales.set(product.id, prev);
+        });
+      });
+      const sorted = [...productSales.values()].sort((a, b) => b.qty - a.qty).slice(0, 10);
 
-      if (statusEntries.length === 0) {
-        statusEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos</p>';
-      } else {
-        statusEl.innerHTML = statusEntries.map(([status, count]) => `
-          <div style="display:flex;align-items:center;gap:var(--spacing-sm);margin-bottom:8px">
-            <span style="font-size:0.8rem;width:90px;color:${statusColors[status] || '#666'};font-weight:600">${statusLabels[status] || status}</span>
-            <div style="flex:1;height:20px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden">
-              <div style="height:100%;width:${(count / maxStatus) * 100}%;background:${statusColors[status] || '#666'};border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px">
-                <span style="font-size:0.7rem;color:#fff;font-weight:700">${count}</span>
-              </div>
-            </div>
-          </div>
-        `).join('');
-      }
+      // Se guarda en memoria para poder publicarlo como ranking de la tienda
+      lastTopProducts = sorted.map(e => ({ id: e.product.id, qty: e.qty }));
+
+      const maxQty = sorted.length ? sorted[0].qty : 1;
+      topEl.innerHTML = anBarRows(sorted.map((e, i) => ({
+        rank: i + 1,
+        name: e.product.name,
+        value: `${e.qty} u.`,
+        sub: anPrice(e.revenue),
+        ratio: e.qty / maxQty,
+        color: 'var(--primary-blue)'
+      })), 'Sin ventas en este periodo');
     }
 
-    // Recent activity
+    // --- Productos más vistos (contador local) ---
+    const viewedEl = document.getElementById('analyticsMostViewed');
+    if (viewedEl) {
+      const viewEntries = Object.entries(views)
+        .map(([pid, count]) => ({ product: productById.get(pid), count: parseInt(count, 10) || 0, pid }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+      const maxViews = viewEntries.length ? viewEntries[0].count : 1;
+
+      viewedEl.innerHTML = anBarRows(viewEntries.map((e, i) => ({
+        rank: i + 1,
+        name: e.product ? e.product.name : 'Producto eliminado',
+        value: `${e.count} vista${e.count === 1 ? '' : 's'}`,
+        sub: e.product ? (e.product.category || 'Sin categoría') : '',
+        ratio: e.count / maxViews,
+        color: 'var(--primary-orange)'
+      })), 'Aún no se registran visitas a fichas de producto');
+    }
+
+    // --- Actividad reciente ---
+    const activityEl = document.getElementById('analyticsRecentActivity');
     if (activityEl) {
-      const recent = [...orders].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 15);
+      const recent = [...orders].sort((a, b) => orderTime(b) - orderTime(a)).slice(0, 15);
       if (recent.length === 0) {
-        activityEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin actividad</p>';
+        activityEl.innerHTML = anEmpty('Sin actividad todavía');
       } else {
-        activityEl.innerHTML = recent.map(o => {
-          const date = new Date(o.created_at).toLocaleString('es-CO', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-          const statusLabels2 = { pending: 'Pendiente', confirmed: 'Confirmado', shipped: 'Enviado', delivered: 'Entregado', completed: 'Completado', cancelled: 'Cancelado' };
-          return `<div style="display:flex;align-items:center;gap:var(--spacing-sm);padding:8px 0;border-bottom:1px solid var(--border-light)">
-            <span style="font-size:0.75rem;color:var(--text-tertiary);width:100px;flex-shrink:0">${date}</span>
-            <span style="font-size:0.8rem;flex:1">${escapeHTML(o.customer_name || 'Cliente')} - $${Math.round(parseFloat(o.total) || 0).toLocaleString('es-CO')}</span>
-            <span style="font-size:0.7rem;font-weight:600;color:var(--primary-blue)">${statusLabels2[o.status] || o.status}</span>
-          </div>`;
-        }).join('');
+        activityEl.innerHTML = `<div class="an-activity">${recent.map(o => {
+          const status = o.status || 'pending';
+          const date = new Date(orderTime(o)).toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+          return `
+            <div class="an-activity-item" style="--an-color:${AN_STATUS_COLORS[status] || '#94a3b8'}">
+              <span class="an-activity-date">${escapeHTML(date)}</span>
+              <span class="an-activity-name">${escapeHTML(o.customer_name || o.customerName || 'Cliente')}</span>
+              <span class="an-activity-total">${anPrice(o.total)}</span>
+              <span class="an-status-pill">${escapeHTML(AN_STATUS_LABELS[status] || status)}</span>
+            </div>
+          `;
+        }).join('')}</div>`;
       }
     }
   }

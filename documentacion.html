@@ -242,7 +242,7 @@
   <div class="doc-header">
     <h1>📘 LIBRE TECH - Documentación</h1>
     <p>Documentación técnica y registro de cambios del proyecto</p>
-    <span class="version">v3.3.0 — Última actualización: 9 de septiembre de 2026</span>
+    <span class="version">v3.4.0 — Última actualización: 10 de septiembre de 2026</span>
   </div>
 
   <div class="doc-container">
@@ -471,7 +471,7 @@
         <li><strong>Productos relacionados</strong> — Sugerencias por categoría</li>
       </ul>
 
-      <h3>4.6 Admin (<code>admin.js</code>) — 14 secciones</h3>
+      <h3>4.6 Admin (<code>admin.js</code>) — 13 secciones</h3>
       <p>
         Panel con navegación lateral agrupada en <strong>Catálogo</strong>, <strong>Ventas</strong>, <strong>Tienda</strong> y <strong>Clientes</strong>,
         con buscador de secciones y menú desplegable en pantallas pequeñas:
@@ -485,14 +485,13 @@
           <tr><td><strong>CSV/Excel</strong></td><td>Importación masiva desde archivos CSV/TXT/Excel</td></tr>
           <tr><td><strong>Pedidos</strong></td><td>Gestión de pedidos (pendiente/procesando/enviado/entregado/cancelado)</td></tr>
           <tr><td><strong>Páginas</strong></td><td>Editor de páginas estáticas personalizadas</td></tr>
-          <tr><td><strong>Estadísticas</strong></td><td>Métricas: productos, pedidos, usuarios, ingresos</td></tr>
-          <tr><td><strong>Visualización</strong></td><td>Sistema de banners visual con minimapa de la página, drag & drop, reorden</td></tr>
+          <tr><td><strong>Visualización</strong></td><td>Sistema de banners visual con minimapa de la página, drag &amp; drop, reorden; color del header y burbujas de categorías (imagen, orden por drag &amp; drop y visibilidad individual)</td></tr>
           <tr><td><strong>PQRs</strong></td><td>Gestión de peticiones, quejas, reclamos y sugerencias (Supabase)</td></tr>
           <tr><td><strong>Redes Sociales</strong></td><td>Configuración de enlaces a redes sociales del footer</td></tr>
           <tr><td><strong>Usuarios</strong></td><td>Listado, cambio de contraseña y eliminación de usuarios (via RPCs)</td></tr>
           <tr><td><strong>Reseñas</strong></td><td>Moderación de todas las reseñas del sitio (Supabase)</td></tr>
           <tr><td><strong>Cupones</strong></td><td>Gestión de cupones de descuento: código, tipo (% o fijo), valor, compra mínima, límite de usos, fecha vencimiento, estado</td></tr>
-          <tr><td><strong>Analíticas</strong></td><td>Dashboard avanzado: KPIs, gráficos de ventas, top productos, ventas por categoría, pedidos por estado, filtro por fechas y publicación del ranking «Más vendidos» para la tienda</td></tr>
+          <tr><td><strong>Analíticas y estadísticas</strong></td><td>Sección única (antes «Analíticas» y «Estadísticas»): 8 KPIs con comparación frente al periodo anterior, ingresos por día (área SVG), pedidos por estado (donut), ventas por categoría, top de más vendidos y más vistos, actividad reciente, filtro por fechas y publicación del ranking «Más vendidos» para la tienda</td></tr>
         </tbody>
       </table>
     </section>
@@ -500,6 +499,54 @@
     <!-- 5. CHANGELOG -->
     <section class="doc-section" id="changelog">
       <h2>5. Registro de cambios (Changelog)</h2>
+
+      <div class="changelog-entry">
+        <span class="date">10 de septiembre de 2026</span>
+        <h4>v3.4.0 — Obsequios, compartir, lobby y panel unificado</h4>
+        <p>Cambios de esta versión:</p>
+        <ul>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>«🎁 Incluye de regalo:» solo con obsequio</strong> — La ficha de producto ocultaba el bloque con el atributo
+            <code>hidden</code>, pero <code>.pd-gift { display: flex }</code> ganaba sobre el <code>[hidden]</code> del navegador y la sección se veía
+            (vacía) en todos los productos. Ahora <code>.pd-gift[hidden]</code> la oculta por completo.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Tamaño de los iconos de compartir</strong> — Los <code>&lt;svg&gt;</code> en línea no traían <code>width</code>/<code>height</code>,
+            así que en los navegadores que no aplican la medida por CSS crecían hasta su tamaño por defecto. Se añadieron los atributos en el
+            marcado (tarjeta, ficha y modal) y las reglas fijan el cuadro por los cuatro lados con <code>flex: 0 0 auto</code>.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Ficha de producto en móvil</strong> — El obsequio y los botones de compartir se movieron justo debajo de
+            «X personas están viendo este producto ahora», y los botones de compartir quedan solo con el icono (con
+            <code>aria-label</code> para lectores de pantalla). La vista de escritorio no cambia.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>Lobby sin el filtro «Todos / Destacados»</strong> — Se eliminó el conmutador y el botón de ordenar pasó a ocupar su lugar,
+            en la misma fila del título «Destacados».
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Burbujas de categorías ordenables</strong> — En Admin → Visualización → Header y categorías las burbujas ahora son una lista
+            ordenable (drag &amp; drop y flechas) con interruptor para mostrarlas u ocultarlas una a una. Se guarda en
+            <code>visual_ui.categoryBubbleOrder</code> y <code>visual_ui.categoryBubbleHidden</code>; la tienda respeta orden y visibilidad, y las
+            categorías nuevas aparecen al final. La primera burbuja pasó a llamarse «Destacados» (como en la tienda) y sigue aceptando la imagen
+            guardada con la clave antigua <code>all</code>.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Analíticas y Estadísticas unificadas</strong> — Las dos secciones calculaban casi lo mismo con fuentes distintas
+            (Supabase una, localStorage la otra). Ahora hay un único dashboard con 8 KPIs (ingresos, pedidos, ticket promedio, unidades vendidas,
+            pendientes, completados, productos activos y vistas de producto) con comparación frente al periodo anterior, ingresos por día en una
+            gráfica de área SVG, pedidos por estado en donut, ventas por categoría, top 10 de más vendidos y de más vistos, y actividad reciente.
+            Los pedidos vienen de Supabase con respaldo en la caché local y las vistas del contador local; los cancelados se excluyen de ingresos y
+            ventas. La pestaña «Estadísticas» desapareció del menú y <code>stats</code> quedó como alias de <code>analytics</code>.
+          </li>
+        </ul>
+      </div>
 
       <div class="changelog-entry">
         <span class="date">9 de septiembre de 2026</span>
@@ -839,6 +886,13 @@
         <li><strong>Producto vinculado:</strong> Cada banner puede enlazar a un producto específico</li>
         <li><strong>Fechas:</strong> Programar banners con fecha de inicio y fin</li>
       </ul>
+      <p>
+        La misma pestaña incluye el bloque <strong>Header y categorías</strong>: color del header y la lista de burbujas de
+        categorías de la tienda. Cada burbuja acepta imagen, se reordena con drag &amp; drop o con las flechas ↑↓ y se puede
+        ocultar o mostrar con su interruptor. El orden y los ocultos se guardan en
+        <code>visual_ui.categoryBubbleOrder</code> y <code>visual_ui.categoryBubbleHidden</code>, y las categorías nuevas se
+        añaden al final de la lista.
+      </p>
 
       <h3>6.6 Sistema de PQRs</h3>
       <p>
@@ -901,17 +955,21 @@
       </ul>
       <p>Persistencia en Supabase (tabla <code>coupons</code>). Integrado con el formulario de pedido del carrito.</p>
 
-      <h3>6.11 Analíticas avanzadas</h3>
+      <h3>6.11 Analíticas y estadísticas</h3>
       <p>
-        Dashboard de analíticas en la pestaña "Analíticas" del panel admin con:
+        Dashboard único en la pestaña "Analíticas y estadísticas" del panel admin (antes eran dos pestañas separadas
+        que calculaban casi lo mismo con fuentes distintas). Los pedidos se leen de Supabase —con respaldo en la caché
+        local— y las vistas del contador local <code>libretech_views</code>. Los pedidos cancelados no cuentan para
+        ingresos ni ventas, pero sí aparecen en el reparto por estado.
       </p>
       <ul>
-        <li><strong>KPIs</strong> — Ingresos totales, total pedidos, ticket promedio, pedidos pendientes, completados, productos activos</li>
-        <li><strong>Gráfico de ventas</strong> — Ventas por día con barras CSS responsivas</li>
-        <li><strong>Top 10 productos</strong> — Los productos más vendidos con cantidad</li>
-        <li><strong>Ventas por categoría</strong> — Distribución con porcentajes</li>
-        <li><strong>Pedidos por estado</strong> — Pendiente, procesando, enviado, entregado, cancelado</li>
-        <li><strong>Actividad reciente</strong> — Últimos 15 pedidos con estado</li>
+        <li><strong>KPIs (8)</strong> — Ingresos, pedidos, ticket promedio, unidades vendidas, pendientes, completados, productos activos y vistas de producto. Ingresos y pedidos muestran la variación frente al periodo anterior del mismo tamaño</li>
+        <li><strong>Ingresos por día</strong> — Gráfica de área en SVG con escala, etiquetas de fecha y detalle por punto</li>
+        <li><strong>Pedidos por estado</strong> — Donut con leyenda, conteo y porcentaje por estado</li>
+        <li><strong>Ventas por categoría</strong> — Barras con importe y porcentaje sobre el total</li>
+        <li><strong>Top 10 más vendidos</strong> — Unidades e ingresos por producto (es el ranking que publica el botón «Publicar más vendidos»)</li>
+        <li><strong>Top 10 más vistos</strong> — Visitas a la ficha de producto</li>
+        <li><strong>Actividad reciente</strong> — Últimos 15 pedidos con cliente, total y estado</li>
         <li><strong>Filtro por fechas</strong> — 7, 30, 90, 365 días o todo el historial</li>
       </ul>
 

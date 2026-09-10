@@ -42,6 +42,12 @@
   - coupons (cupones de descuento con código, tipo, valor, vencimiento, usos)
 
   == ÚLTIMA ACTUALIZACIÓN ==
+  Septiembre 2026 — v3.4:
+  - Lobby sin el filtro "Todos / Destacados": el botón de ordenar ocupa su lugar
+    en la fila del título "Destacados"
+  - Burbujas de categorías con orden y visibilidad configurables desde
+    Admin → Visualización (visual_ui.categoryBubbleOrder / categoryBubbleHidden)
+
   Septiembre 2026 — v3.3:
   - Botón de ordenar: recomendados, recientes, A-Z, Z-A, precio y más vendidos
   - Textos del hero editables desde admin (visual_ui.heroTexts)
@@ -389,10 +395,10 @@
     <div class="section-with-banner">
       <!-- Center: Todos los productos (filtrados por categorías) -->
       <div class="section-main-content">
-        <!-- Header: Título Destacados + Botón Ver todos -->
-        <div class="featured-header" id="featuredHeader" style="display:none">
-          <h2 class="featured-title">Destacados</h2>
-          <a href="destacados.html" class="btn btn-secondary" id="btnViewAll" style="font-size:0.95rem;">Todos</a>
+        <!-- Header: Título Destacados + Botón de ordenar (renderizado por app.js) -->
+        <div class="featured-header" id="featuredHeader">
+          <h2 class="featured-title" id="featuredTitle">Destacados</h2>
+          <div class="sort-bar" id="sortBar"></div>
         </div>
 
         <!-- Filtros por categoría (rendered by JS only if no bubbles selected) -->
@@ -407,9 +413,6 @@
         <div class="brand-dropdown" id="brandDropdown" style="display:none">
           <div class="brand-dropdown-content" id="brandDropdownContent"></div>
         </div>
-
-        <!-- Botón de ordenar (renderizado por app.js) -->
-        <div class="sort-bar" id="sortBar"></div>
 
         <!-- Grid de productos -->
         <div class="products-grid" id="productsGrid"></div>

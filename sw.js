@@ -4,7 +4,7 @@
    ============================================================ */
 
 // Subir la versión invalida el caché anterior tras cada despliegue
-const CACHE_NAME = 'libretech-v4';
+const CACHE_NAME = 'libretech-v5';
 const STATIC_ASSETS = [
   '/index.html',
   '/producto.html',

@@ -25,9 +25,7 @@
   4. PQRs         — Peticiones, quejas, reclamos, sugerencias
   5. Reseñas      — Moderación de reseñas de productos
   6. Páginas      — Editor de páginas estáticas (Nosotros, Garantía, etc.)
-  7. Estadísticas — Ingresos, ventas, productos más vistos/vendidos, ventas por categoría
-                    (pedidos cancelados no se cuentan)
-  8. Usuarios     — Listado de usuarios registrados
+  7. Usuarios     — Listado de usuarios registrados
   9. Visualización — Gestión de banners del sitio:
       * Hero Carrusel (solo imagen de fondo)
       * Laterales izquierdo/derecho (múltiples banners por lado)
@@ -41,19 +39,22 @@
       * Estado activo/inactivo, conteo de usos
       * Integrado con carrito: input de cupón en formulario de pedido
       * Persistencia en Supabase (tabla coupons)
-  12. Analíticas  — Dashboard de analíticas avanzado:
-      * KPIs: ingresos, pedidos, ticket promedio, pendientes, completados, productos activos
-      * Gráfico de ventas por día (barras CSS)
-      * Top 10 productos más vendidos
-      * Ventas por categoría con porcentajes
-      * Pedidos por estado
+  12. Analíticas y estadísticas — Sección única (antes "Analíticas" y
+      "Estadísticas" por separado):
+      * KPIs: ingresos, pedidos, ticket promedio, unidades vendidas,
+        pendientes, completados, productos activos y vistas de producto,
+        con comparación frente al periodo anterior
+      * Ingresos por día (gráfica de área en SVG)
+      * Pedidos por estado (donut) y ventas por categoría (barras)
+      * Top 10 productos más vendidos y top 10 más vistos
       * Actividad reciente (últimos 15 pedidos)
       * Filtro por rango de fechas (7/30/90/365 días o todo)
+      * Pedidos cancelados excluidos de ingresos y ventas
 
   == ÚLTIMA ACTUALIZACIÓN ==
-  Septiembre 2026 — v3.3 (pestaña "Calculadora de envío" con zonas por
-  departamento/ciudad y probador, textos del hero editables, botón para
-  publicar el ranking de "Más vendidos" desde Analíticas)
+  Septiembre 2026 — v3.4 (Analíticas y Estadísticas unificadas en un solo
+  dashboard, burbujas de categorías reordenables y ocultables desde
+  Visualización)
   ============================================================
 -->
 <!DOCTYPE html>
@@ -216,12 +217,8 @@
                   <span>Pedidos</span>
                 </button>
                 <button class="admin-tab" data-tab="analytics">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg>
-                  <span>Analíticas</span>
-                </button>
-                <button class="admin-tab" data-tab="stats">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                  <span>Estadísticas</span>
+                  <span>Analíticas y estadísticas</span>
                 </button>
               </div>
 
@@ -608,50 +605,6 @@
         </div>
       </div>
 
-      <!-- ===== TAB: ESTADÍSTICAS ===== -->
-      <div class="admin-tab-content" id="tabStats" style="display:none">
-        <div class="admin-stats">
-          <div class="stat-card" style="border-left:4px solid var(--primary-blue)">
-            <div class="stat-card-value" id="statTotalRevenue">$0</div>
-            <div class="stat-card-label">Ingresos totales</div>
-          </div>
-          <div class="stat-card" style="border-left:4px solid var(--success)">
-            <div class="stat-card-value" id="statTotalSales">0</div>
-            <div class="stat-card-label">Ventas realizadas</div>
-          </div>
-          <div class="stat-card" style="border-left:4px solid var(--primary-orange)">
-            <div class="stat-card-value" id="statAvgOrder">$0</div>
-            <div class="stat-card-label">Ticket promedio</div>
-          </div>
-          <div class="stat-card" style="border-left:4px solid var(--info)">
-            <div class="stat-card-value" id="statTotalViews">0</div>
-            <div class="stat-card-label">Vistas totales</div>
-          </div>
-        </div>
-
-        <div class="admin-stats-grid">
-          <div class="admin-panel">
-            <div class="admin-panel-header"><h3>Productos más vistos</h3></div>
-            <div class="admin-panel-body">
-              <div id="mostViewedList"><p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos aún</p></div>
-            </div>
-          </div>
-          <div class="admin-panel">
-            <div class="admin-panel-header"><h3>Productos más vendidos</h3></div>
-            <div class="admin-panel-body">
-              <div id="topSellingList"><p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos aún</p></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="admin-panel" style="margin-top:var(--spacing-lg)">
-          <div class="admin-panel-header"><h3>Ventas por categoría</h3></div>
-          <div class="admin-panel-body">
-            <div id="salesByCategoryList"><p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos aún</p></div>
-          </div>
-        </div>
-      </div>
-
       <!-- ===== TAB: VISUALIZACIÓN ===== -->
       <div class="admin-tab-content" id="tabVisual" style="display:none">
         <div class="admin-panel">
@@ -819,8 +772,9 @@
                 </div>
               </div>
 
-              <h4 style="font-size:0.9rem;margin-bottom:var(--spacing-sm)">Burbujas de categorías (incluye "Todos")</h4>
-              <div id="visualCategoryBubblesList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--spacing-md);max-height:600px;overflow-y:auto;padding-right:4px"></div>
+              <h4 style="font-size:0.9rem;margin-bottom:4px">Burbujas de categorías</h4>
+              <p class="form-hint" style="margin-bottom:var(--spacing-md)">Arrastra las burbujas o usa las flechas para cambiar el orden en que aparecen en la tienda, y usa el interruptor para ocultarlas o mostrarlas. La imagen de cada burbuja se sube desde aquí.</p>
+              <ul class="sortable-list" id="visualCategoryBubblesList" style="max-height:620px;overflow-y:auto;padding-right:4px"></ul>
 
               <div style="display:flex;justify-content:flex-end;margin-top:var(--spacing-lg)">
                 <button type="submit" class="btn btn-primary">Guardar personalización</button>
@@ -1108,56 +1062,83 @@
 
       <!-- ===== TAB: ANALÍTICAS ===== -->
       <div class="admin-tab-content" id="tabAnalytics" style="display:none">
-        <div class="admin-panel">
-          <div class="admin-panel-header">
-            <h3>Analíticas Avanzadas</h3>
-            <div style="display:flex;gap:var(--spacing-sm);align-items:center;">
-              <select class="form-input" id="analyticsDateRange" style="width:auto;font-size:0.85rem">
-                <option value="7">Últimos 7 días</option>
-                <option value="30" selected>Últimos 30 días</option>
-                <option value="90">Últimos 90 días</option>
-                <option value="365">Último año</option>
-                <option value="all">Todo el tiempo</option>
-              </select>
-              <button class="btn btn-secondary btn-sm" id="btnRefreshAnalytics">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-                Actualizar
-              </button>
-              <button class="btn btn-primary btn-sm" id="btnPublishBestSellers" title="Permite a los clientes ordenar el catálogo por 'Más vendidos'">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5"/><polyline points="5 12 12 5 19 12"/></svg>
-                Publicar más vendidos
-              </button>
-            </div>
+
+        <div class="an-toolbar">
+          <div class="an-toolbar-title">
+            <h3>Analíticas y estadísticas</h3>
+            <p id="analyticsRangeLabel">Resumen de ventas, catálogo y actividad de la tienda.</p>
           </div>
-          <div class="admin-panel-body">
-            <!-- KPI Cards -->
-            <div class="analytics-kpis" id="analyticsKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--spacing-md);margin-bottom:var(--spacing-xl)">
-            </div>
-            <!-- Charts area -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-lg)">
-              <div class="admin-panel" style="padding:var(--spacing-lg)">
-                <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:var(--spacing-md)">Ventas por día</h4>
-                <div id="analyticsSalesChart" style="min-height:200px"></div>
-              </div>
-              <div class="admin-panel" style="padding:var(--spacing-lg)">
-                <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:var(--spacing-md)">Productos más vendidos</h4>
-                <div id="analyticsTopProducts" style="min-height:200px"></div>
-              </div>
-              <div class="admin-panel" style="padding:var(--spacing-lg)">
-                <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:var(--spacing-md)">Ventas por categoría</h4>
-                <div id="analyticsCategoryChart" style="min-height:200px"></div>
-              </div>
-              <div class="admin-panel" style="padding:var(--spacing-lg)">
-                <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:var(--spacing-md)">Pedidos por estado</h4>
-                <div id="analyticsOrderStatus" style="min-height:200px"></div>
-              </div>
-            </div>
-            <!-- Recent activity -->
-            <div class="admin-panel" style="padding:var(--spacing-lg);margin-top:var(--spacing-lg)">
-              <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:var(--spacing-md)">Actividad reciente</h4>
-              <div id="analyticsRecentActivity" style="max-height:300px;overflow-y:auto"></div>
-            </div>
+          <div class="an-toolbar-actions">
+            <select class="form-input" id="analyticsDateRange" aria-label="Rango de fechas">
+              <option value="7">Últimos 7 días</option>
+              <option value="30" selected>Últimos 30 días</option>
+              <option value="90">Últimos 90 días</option>
+              <option value="365">Último año</option>
+              <option value="all">Todo el tiempo</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" id="btnRefreshAnalytics">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+              Actualizar
+            </button>
+            <button class="btn btn-primary btn-sm" id="btnPublishBestSellers" title="Permite a los clientes ordenar el catálogo por 'Más vendidos'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5"/><polyline points="5 12 12 5 19 12"/></svg>
+              Publicar más vendidos
+            </button>
           </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="an-kpis" id="analyticsKpis"></div>
+
+        <!-- Gráficas y listados -->
+        <div class="an-grid">
+          <section class="an-card an-card--wide">
+            <div class="an-card-head">
+              <h4>Ingresos por día</h4>
+              <span class="an-card-meta" id="analyticsSalesMeta"></span>
+            </div>
+            <div class="an-card-body" id="analyticsSalesChart"></div>
+          </section>
+
+          <section class="an-card">
+            <div class="an-card-head">
+              <h4>Pedidos por estado</h4>
+              <span class="an-card-meta" id="analyticsStatusMeta"></span>
+            </div>
+            <div class="an-card-body" id="analyticsOrderStatus"></div>
+          </section>
+
+          <section class="an-card">
+            <div class="an-card-head">
+              <h4>Ventas por categoría</h4>
+              <span class="an-card-meta" id="analyticsCategoryMeta"></span>
+            </div>
+            <div class="an-card-body" id="analyticsCategoryChart"></div>
+          </section>
+
+          <section class="an-card">
+            <div class="an-card-head">
+              <h4>Productos más vendidos</h4>
+              <span class="an-card-meta">Top 10 por unidades</span>
+            </div>
+            <div class="an-card-body" id="analyticsTopProducts"></div>
+          </section>
+
+          <section class="an-card">
+            <div class="an-card-head">
+              <h4>Productos más vistos</h4>
+              <span class="an-card-meta">Visitas a la ficha de producto</span>
+            </div>
+            <div class="an-card-body" id="analyticsMostViewed"></div>
+          </section>
+
+          <section class="an-card an-card--wide">
+            <div class="an-card-head">
+              <h4>Actividad reciente</h4>
+              <span class="an-card-meta">Últimos 15 pedidos</span>
+            </div>
+            <div class="an-card-body an-scroll" id="analyticsRecentActivity"></div>
+          </section>
         </div>
       </div>
 
