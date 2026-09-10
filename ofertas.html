@@ -11,6 +11,9 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Conexión anticipada al backend y al CDN: ahorra el DNS+TLS del primer fetch -->
+  <link rel="preconnect" href="https://ouhgtxeufkzbxjwuiosj.supabase.co" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="icon" type="image/png" href="nuevos%20logos/JPG/Isotipo/1.jpg">
@@ -603,7 +606,7 @@
                     ${isOutOfStock ? '<span class="product-badge out-of-stock">Agotado</span>' : ''}
                     ${product.offerActive && product.offerPrice ? '<span class="product-badge sale">Oferta</span>' : ''}
                     ${isOutOfStock ? '<div class="product-sold-out-overlay"></div>' : ''}
-                    <img src="${imageUrl}" alt="${product.name}" class="product-image" loading="lazy" width="260" height="260" onerror="this.src='LOGO_LIBRETECH.png'">
+                    <img src="${imageUrl}" alt="${product.name}" class="product-image" loading="lazy" decoding="async" width="260" height="260" onerror="this.src='LOGO_LIBRETECH.png'">
                   </div>
                   <div class="product-card-body">
                     <span class="product-category">${product.category || ''}</span>

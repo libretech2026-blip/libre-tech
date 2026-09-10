@@ -52,6 +52,15 @@
       * Pedidos cancelados excluidos de ingresos y ventas
 
   == ÚLTIMA ACTUALIZACIÓN ==
+  Septiembre 2026 — v3.5:
+  - Pedidos: eliminar registro a registro y "Limpiar todo", con confirmación
+    (requiere la política "Admin can delete orders" de supabase_setup.sql)
+  - Productos: selección múltiple con "Seleccionar todos" y acciones masivas
+    (eliminar, archivar, marcar sin stock)
+  - Diálogo de confirmación propio (sustituye a window.confirm)
+  - Analíticas: gráficas redibujadas al ancho real, colores sin color-mix()
+    y tarjetas sin recortes en ningún tamaño de pantalla
+
   Septiembre 2026 — v3.4 (Analíticas y Estadísticas unificadas en un solo
   dashboard, burbujas de categorías reordenables y ocultables desde
   Visualización)
@@ -68,6 +77,9 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Conexión anticipada al backend y al CDN: ahorra el DNS+TLS del primer fetch -->
+  <link rel="preconnect" href="https://ouhgtxeufkzbxjwuiosj.supabase.co" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="nuevos%20logos/JPG/Isotipo/1.jpg">
   <link rel="stylesheet" href="css/styles.css">
@@ -453,10 +465,35 @@
             </div>
           </div>
           <div class="admin-panel-body">
+            <!-- Acciones masivas: aparece al seleccionar productos -->
+            <div class="bulk-bar" id="productsBulkBar" hidden>
+              <span class="bulk-bar-count" id="productsBulkCount">0 seleccionados</span>
+              <div class="bulk-bar-actions">
+                <button type="button" class="btn btn-secondary btn-sm" data-bulk="archive">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                  Archivar
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bulk="out-of-stock">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><line x1="3.27" y1="6.96" x2="20.73" y2="6.96"/></svg>
+                  Marcar sin stock
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" data-bulk="delete">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                  Eliminar
+                </button>
+                <button type="button" class="btn btn-ghost btn-sm" data-bulk="clear">Deseleccionar</button>
+              </div>
+            </div>
+
             <div class="table-responsive">
               <table class="products-table" id="productsTable">
                 <thead>
                   <tr>
+                    <th class="col-select">
+                      <label class="table-check" title="Seleccionar todos">
+                        <input type="checkbox" id="productsSelectAll" aria-label="Seleccionar todos los productos">
+                      </label>
+                    </th>
                     <th>Producto</th>
                     <th>Precio</th>
                     <th>Categoría</th>
@@ -549,7 +586,7 @@
         <div class="admin-panel">
           <div class="admin-panel-header">
             <h3>Gestión de Pedidos</h3>
-            <div style="display:flex;gap:var(--spacing-sm);align-items:center">
+            <div style="display:flex;gap:var(--spacing-sm);align-items:center;flex-wrap:wrap">
               <select class="form-select" id="orderStatusFilter" style="width:auto;font-size:0.85rem;">
                 <option value="all">Todos los estados</option>
                 <option value="pending">Pendientes</option>
@@ -558,6 +595,10 @@
                 <option value="delivered">Entregados</option>
                 <option value="cancelled">Cancelados</option>
               </select>
+              <button class="btn btn-danger btn-sm" id="btnClearOrders" title="Eliminar todo el historial de pedidos">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                Limpiar todo
+              </button>
             </div>
           </div>
           <div class="admin-panel-body">
@@ -1069,7 +1110,7 @@
             <p id="analyticsRangeLabel">Resumen de ventas, catálogo y actividad de la tienda.</p>
           </div>
           <div class="an-toolbar-actions">
-            <select class="form-input" id="analyticsDateRange" aria-label="Rango de fechas">
+            <select class="form-select" id="analyticsDateRange" aria-label="Rango de fechas">
               <option value="7">Últimos 7 días</option>
               <option value="30" selected>Últimos 30 días</option>
               <option value="90">Últimos 90 días</option>
@@ -1145,6 +1186,21 @@
         </div><!-- /.admin-content -->
       </div><!-- /.admin-workspace -->
 
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: CONFIRMACIÓN ==================== -->
+  <div class="product-form-overlay confirm-overlay" id="confirmOverlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="product-form-modal confirm-modal">
+      <div class="confirm-icon" id="confirmIcon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <h2 id="confirmTitle">¿Confirmar acción?</h2>
+      <p id="confirmMessage">Esta acción no se puede deshacer.</p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-secondary" id="confirmCancel">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmAccept">Eliminar</button>
+      </div>
     </div>
   </div>
 

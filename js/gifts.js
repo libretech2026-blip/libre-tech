@@ -14,14 +14,22 @@ const Gifts = (() => {
 
   const UI_KEY = 'libretech_visual_ui';
 
+  // El mapa se consulta una vez por tarjeta de producto: se memoriza el
+  // parseo y solo se repite si cambió la cadena guardada.
+  let _cache = { raw: null, map: {} };
+
   function getMap() {
     try {
       if (typeof Store !== 'undefined' && Store.getVisualUiConfig) {
         const fromStore = Store.getVisualUiConfig().productGifts;
         if (fromStore && typeof fromStore === 'object') return fromStore;
       }
-      const ui = JSON.parse(localStorage.getItem(UI_KEY) || '{}');
-      return ui && typeof ui.productGifts === 'object' && ui.productGifts ? ui.productGifts : {};
+      const raw = localStorage.getItem(UI_KEY) || '{}';
+      if (raw !== _cache.raw) {
+        const ui = JSON.parse(raw);
+        _cache = { raw, map: ui && typeof ui.productGifts === 'object' && ui.productGifts ? ui.productGifts : {} };
+      }
+      return _cache.map;
     } catch {
       return {};
     }

@@ -292,6 +292,23 @@ const SB = (() => {
     if (error) console.error('[SB] updateOrderStatus:', error.message);
   }
 
+  /**
+   * Borra pedidos (solo admin: politica "Admin can delete orders").
+   * @param {string|string[]} orderIds uno o varios ids
+   */
+  async function deleteOrders(orderIds) {
+    const ids = (Array.isArray(orderIds) ? orderIds : [orderIds]).filter(Boolean);
+    if (ids.length === 0) return;
+    const { error } = await client.from('orders').delete().in('id', ids);
+    if (error) throw error;
+  }
+
+  /** Borra todo el historial de pedidos (solo admin). */
+  async function deleteAllOrders() {
+    const { error } = await client.from('orders').delete().not('id', 'is', null);
+    if (error) throw error;
+  }
+
   /* ----------------------------------------------------------
      PQRs
   ---------------------------------------------------------- */
@@ -709,6 +726,8 @@ const SB = (() => {
     getOrders,
     getAllOrders,
     updateOrderStatus,
+    deleteOrders,
+    deleteAllOrders,
     // PQRs
     submitPqr,
     getUserPqrs,

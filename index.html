@@ -42,6 +42,13 @@
   - coupons (cupones de descuento con código, tipo, valor, vencimiento, usos)
 
   == ÚLTIMA ACTUALIZACIÓN ==
+  Septiembre 2026 — v3.5:
+  - Rendimiento: parseo del catálogo memorizado (app.js/cart.js/gifts.js),
+    grid montado con DocumentFragment, carruseles en pausa con la pestaña
+    oculta, imágenes con decoding="async" y preconnect a Supabase/CDN
+  - Animaciones: sin "transition: all", entrada por scroll más corta (420 ms)
+    y hover de tarjeta más inmediato (220 ms)
+
   Septiembre 2026 — v3.4:
   - Lobby sin el filtro "Todos / Destacados": el botón de ordenar ocupa su lugar
     en la fila del título "Destacados"
@@ -115,6 +122,9 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Conexión anticipada al backend y al CDN: ahorra el DNS+TLS del primer fetch -->
+  <link rel="preconnect" href="https://ouhgtxeufkzbxjwuiosj.supabase.co" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
 
   <!-- Supabase JS v2 CDN -->

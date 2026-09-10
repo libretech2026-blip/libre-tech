@@ -383,7 +383,7 @@ const Admin = (() => {
 
         <tr>
 
-          <td colspan="6" style="text-align:center;padding:2rem;color:var(--text-tertiary);">
+          <td colspan="7" style="text-align:center;padding:2rem;color:var(--text-tertiary);">
 
             No hay productos. Agrega el primero o importa desde un archivo plano.
 
@@ -401,7 +401,12 @@ const Admin = (() => {
 
     tbody.innerHTML = products.map(p => `
 
-      <tr data-id="${escapeAttr(p.id)}">
+      <tr data-id="${escapeAttr(p.id)}"${selectedProductIds.has(p.id) ? ' class="is-selected"' : ''}>
+        <td class="col-select">
+          <label class="table-check">
+            <input type="checkbox" class="row-select" data-id="${escapeAttr(p.id)}"${selectedProductIds.has(p.id) ? ' checked' : ''} aria-label="Seleccionar ${escapeAttr(p.name)}">
+          </label>
+        </td>
 
         <td>
 
@@ -411,7 +416,7 @@ const Admin = (() => {
 
               ${p.image
 
-                ? `<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.name)}" loading="lazy">`
+                ? `<img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.name)}" loading="lazy" decoding="async">`
 
                 : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:24px;height:24px;margin:10px auto;opacity:.3;display:block"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`
 
@@ -466,6 +471,9 @@ const Admin = (() => {
       </tr>
 
     `).join('');
+
+    updateProductsBulkBar();
+
 
   }
 
@@ -1657,15 +1665,28 @@ const Admin = (() => {
 
       } else if (action === 'delete') {
 
-        if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+        const product = getProducts().find(p => p.id === id);
+
+        const ok = await confirmAction({
+          title: '¿Eliminar este producto?',
+          message: product
+            ? `Se eliminará "${product.name}" de la tienda y de Supabase. Esta acción no se puede deshacer.`
+            : 'El producto se eliminará definitivamente.',
+          confirmLabel: 'Eliminar producto',
+          danger: true
+        });
+
+        if (ok) {
 
           await deleteProduct(id);
+
+          selectedProductIds.delete(id);
 
           renderProductsTable();
 
           updateStats();
 
-          showToast('Producto eliminado', 'info');
+          showToast('Producto eliminado', 'success');
 
         }
 
@@ -1938,6 +1959,11 @@ const Admin = (() => {
     initVisualBanners();
     initVisualUiEvents();
 
+    // Confirmación reutilizable, acciones masivas de productos y limpieza de pedidos
+    initConfirmEvents();
+    initProductBulkEvents();
+    document.getElementById('btnClearOrders')?.addEventListener('click', handleClearOrders);
+
     // Navegación del panel + pestañas "Inicio y menú" y "Calculadora de envío"
     initAdminNav();
     initHomeTabEvents();
@@ -2195,11 +2221,16 @@ const Admin = (() => {
 
           <td>
 
-            <button class="table-btn" data-action="view-order" data-order-id="${escapeAttr(o.id)}" title="Ver detalle">
+            <div class="table-actions">
+              <button class="table-btn" data-action="view-order" data-order-id="${escapeAttr(o.id)}" title="Ver detalle" aria-label="Ver detalle del pedido">
 
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
 
             </button>
+              <button class="table-btn delete" data-action="delete-order" data-order-id="${escapeAttr(o.id)}" title="Eliminar pedido" aria-label="Eliminar pedido">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              </button>
+            </div>
 
           </td>
 
@@ -2232,6 +2263,13 @@ const Admin = (() => {
     tbody.querySelectorAll('[data-action="view-order"]').forEach(btn => {
 
       btn.addEventListener('click', () => openOrderDetail(btn.dataset.orderId));
+
+    });
+
+    // Eliminar pedido (con confirmación)
+    tbody.querySelectorAll('[data-action="delete-order"]').forEach(btn => {
+
+      btn.addEventListener('click', () => handleDeleteOrder(btn.dataset.orderId));
 
     });
 
@@ -2328,7 +2366,7 @@ const Admin = (() => {
   // ===== PAGES CMS =====
 
   const DEFAULT_PAGES = {
-    'sobre-nosotros': { title: 'Sobre Nosotros', content: '<h1>Sobre Nosotros</h1><p>Somos <strong>LIBRE TECH</strong>, una tienda colombiana de tecnología fundada con el propósito de hacer accesible la tecnología de calidad a todos. Desde nuestra sede en <strong>Barranquilla, Colombia</strong>, trabajamos cada día para traerte los mejores productos al mejor precio.</p><h2>Nuestra Misión</h2><p>Democratizar el acceso a la tecnología en Colombia, ofreciendo productos originales de alta calidad con atención personalizada y envíos a todo el país.</p><h2>Nuestra Visión</h2><p>Ser la tienda de tecnología en línea preferida de los colombianos, reconocida por la confianza, calidad y experiencia excepcional.</p><h2>Nuestros Valores</h2><ul><li><strong>Confianza:</strong> Todos nuestros productos son originales y cuentan con garantía.</li><li><strong>Calidad:</strong> Seleccionamos cuidadosamente cada artículo de nuestro catálogo.</li><li><strong>Servicio:</strong> Atención personalizada por WhatsApp con respuesta rápida.</li><li><strong>Accesibilidad:</strong> Precios justos y envíos a todo el territorio colombiano.</li></ul><h2>Nuestra Ubicación</h2><p>Nos encontramos en <strong>Barranquilla, Atlántico, Colombia</strong>.</p><div style="margin-top:1rem;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.15)"><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-75.06%2C10.91%2C-74.95%2C11.02&amp;layer=mapnik&amp;marker=10.9639,-74.7964" width="100%" height="350" style="border:0;display:block" loading="lazy" title="Barranquilla, Colombia"></iframe></div>' },
+    'sobre-nosotros': { title: 'Sobre Nosotros', content: '<h1>Sobre Nosotros</h1><p>Somos <strong>LIBRE TECH</strong>, una tienda colombiana de tecnología fundada con el propósito de hacer accesible la tecnología de calidad a todos. Desde nuestra sede en <strong>Barranquilla, Colombia</strong>, trabajamos cada día para traerte los mejores productos al mejor precio.</p><h2>Nuestra Misión</h2><p>Democratizar el acceso a la tecnología en Colombia, ofreciendo productos originales de alta calidad con atención personalizada y envíos a todo el país.</p><h2>Nuestra Visión</h2><p>Ser la tienda de tecnología en línea preferida de los colombianos, reconocida por la confianza, calidad y experiencia excepcional.</p><h2>Nuestros Valores</h2><ul><li><strong>Confianza:</strong> Todos nuestros productos son originales y cuentan con garantía.</li><li><strong>Calidad:</strong> Seleccionamos cuidadosamente cada artículo de nuestro catálogo.</li><li><strong>Servicio:</strong> Atención personalizada por WhatsApp con respuesta rápida.</li><li><strong>Accesibilidad:</strong> Precios justos y envíos a todo el territorio colombiano.</li></ul><h2>Nuestra Ubicación</h2><p>Nos encontramos en <strong>Barranquilla, Atlántico, Colombia</strong>.</p><div style="margin-top:1rem;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.15)"><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-75.06%2C10.91%2C-74.95%2C11.02&amp;layer=mapnik&amp;marker=10.9639,-74.7964" width="100%" height="350" style="border:0;display:block" loading="lazy" decoding="async" title="Barranquilla, Colombia"></iframe></div>' },
     'preguntas-frecuentes': { title: 'Preguntas Frecuentes', content: '<h1>Preguntas Frecuentes</h1><p>Aquí encontrarás respuestas a las preguntas más comunes.</p><div class="faq-item"><p class="faq-question">¿Cómo realizo un pedido?</p><p>Agrega los productos a tu carrito y finaliza el pedido por WhatsApp. Nuestro equipo te confirmará disponibilidad y pago.</p></div><div class="faq-item"><p class="faq-question">¿Qué métodos de pago aceptan?</p><p>Transferencias bancarias (Bancolombia, Nequi, Daviplata), PSE y pago contra entrega en Barranquilla.</p></div><div class="faq-item"><p class="faq-question">¿Cuánto tarda el envío?</p><p><strong>Barranquilla:</strong> 1-2 días hábiles. <strong>Ciudades principales:</strong> 2-4 días. <strong>Otras ciudades:</strong> 3-7 días.</p></div><div class="faq-item"><p class="faq-question">¿Los productos son originales?</p><p>Sí, todos son 100% originales y nuevos con garantía de fabricante.</p></div><div class="faq-item"><p class="faq-question">¿Tienen garantía?</p><p>Sí, todos los productos cuentan con garantía. Contáctanos por WhatsApp para reclamaciones.</p></div><div class="faq-item"><p class="faq-question">¿Puedo devolver un producto?</p><p>Tienes 5 días hábiles desde la recepción. El producto debe estar sin uso y en empaque original.</p></div><div class="faq-item"><p class="faq-question">¿Hacen envíos a todo Colombia?</p><p>¡Sí! Enviamos a todo el territorio colombiano con rastreo incluido.</p></div><p style="margin-top:1.5rem">¿No encontraste tu pregunta? <a href="https://wa.me/573176134822" target="_blank">Escríbenos por WhatsApp</a>.</p>' },
     'contactanos': { title: 'Contáctanos', content: '<h1>Contáctanos</h1><p>¿Tienes alguna pregunta o necesitas ayuda? ¡Estamos aquí para ti!</p><div class="contact-grid"><div class="contact-card"><strong>💬 WhatsApp</strong><p><a href="https://wa.me/573176134822" target="_blank">+57 317 613 4822</a></p></div><div class="contact-card"><strong>📧 Correo</strong><p><a href="mailto:libretechtienda@gmail.com">libretechtienda@gmail.com</a></p></div><div class="contact-card"><strong>🕐 Horario</strong><p>Lun-Vie: 8AM-6PM<br>Sáb: 9AM-1PM</p></div><div class="contact-card"><strong>📍 Ubicación</strong><p>Barranquilla, Colombia</p></div></div><h2>Escríbenos</h2><p><a href="https://wa.me/573176134822" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">💬 Chatear por WhatsApp</a></p>' },
     'seguimiento-pedido': { title: 'Seguimiento de Pedido', content: '<h1>Seguimiento de su Pedido</h1><p>Mantente informado sobre el estado de tu compra.</p><h2>¿Cómo rastreo mi pedido?</h2><ol><li>Cuando tu pedido sea despachado, recibirás por WhatsApp el <strong>número de guía</strong>.</li><li>Ingresa a la página de la transportadora para ver el estado en tiempo real.</li><li>Si tienes dudas, contáctanos por WhatsApp.</li></ol><h2>Estados del pedido</h2><table><thead><tr><th>Estado</th><th>Descripción</th></tr></thead><tbody><tr><td><strong>Confirmado</strong></td><td>Pedido recibido y pago verificado.</td></tr><tr><td><strong>En preparación</strong></td><td>Alistando tu paquete.</td></tr><tr><td><strong>Enviado</strong></td><td>En camino, recibirás guía.</td></tr><tr><td><strong>Entregado</strong></td><td>¡Entregado exitosamente!</td></tr></tbody></table><h2>Tiempos estimados</h2><table><thead><tr><th>Destino</th><th>Tiempo</th></tr></thead><tbody><tr><td>Barranquilla</td><td>1-2 días</td></tr><tr><td>Ciudades principales</td><td>2-4 días</td></tr><tr><td>Otras ciudades</td><td>3-7 días</td></tr></tbody></table><div class="info-card"><h4>¿Necesitas ayuda?</h4><p><a href="https://wa.me/573176134822" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">💬 Consultar mi pedido</a></p></div>' },
@@ -2418,6 +2456,7 @@ const Admin = (() => {
       btn.addEventListener('click', () => openPageForm(btn.dataset.slug));
 
     });
+
 
   }
 
@@ -2520,6 +2559,306 @@ const Admin = (() => {
   }
 
 
+
+  /* ============================================================
+     CONFIRMACIÓN REUTILIZABLE
+     Sustituye a window.confirm() en las acciones destructivas:
+     mismo lenguaje visual del panel y sin bloquear el hilo.
+     ============================================================ */
+  let _confirmResolve = null;
+
+  function closeConfirm(result) {
+    const overlay = document.getElementById('confirmOverlay');
+    if (overlay) overlay.classList.remove('active');
+    document.body.style.overflow = '';
+    if (_confirmResolve) {
+      const resolve = _confirmResolve;
+      _confirmResolve = null;
+      resolve(result);
+    }
+  }
+
+  /**
+   * @param {{title:string, message:string, confirmLabel?:string, danger?:boolean}} options
+   * @returns {Promise<boolean>} true si el usuario confirma
+   */
+  function confirmAction({ title, message, confirmLabel = 'Eliminar', danger = true }) {
+    const overlay = document.getElementById('confirmOverlay');
+    // Respaldo por si el modal no existe en la página
+    if (!overlay) return Promise.resolve(window.confirm(message || title));
+
+    overlay.querySelector('#confirmTitle').textContent = title;
+    overlay.querySelector('#confirmMessage').textContent = message;
+
+    const accept = overlay.querySelector('#confirmAccept');
+    accept.textContent = confirmLabel;
+    accept.classList.toggle('btn-danger', danger);
+    accept.classList.toggle('btn-primary', !danger);
+    overlay.querySelector('#confirmIcon').classList.toggle('is-warning', !danger);
+
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => accept.focus(), 60);
+
+    return new Promise(resolve => { _confirmResolve = resolve; });
+  }
+
+  function initConfirmEvents() {
+    const overlay = document.getElementById('confirmOverlay');
+    if (!overlay) return;
+    overlay.querySelector('#confirmCancel')?.addEventListener('click', () => closeConfirm(false));
+    overlay.querySelector('#confirmAccept')?.addEventListener('click', () => closeConfirm(true));
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeConfirm(false); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && overlay.classList.contains('active')) closeConfirm(false);
+    });
+  }
+
+  /* ============================================================
+     PRODUCTOS — SELECCIÓN MÚLTIPLE Y ACCIONES MASIVAS
+     ============================================================ */
+  const selectedProductIds = new Set();
+
+  function getSelectedProducts() {
+    const byId = new Map(getProducts().map(p => [p.id, p]));
+    // Descarta ids que ya no existan (p. ej. tras eliminar)
+    [...selectedProductIds].forEach(id => { if (!byId.has(id)) selectedProductIds.delete(id); });
+    return [...selectedProductIds].map(id => byId.get(id));
+  }
+
+  function updateProductsBulkBar() {
+    const bar = document.getElementById('productsBulkBar');
+    const count = document.getElementById('productsBulkCount');
+    const selectAll = document.getElementById('productsSelectAll');
+    if (!bar) return;
+
+    const total = document.querySelectorAll('#productsTableBody .row-select').length;
+    const n = selectedProductIds.size;
+
+    bar.hidden = n === 0;
+    if (count) count.textContent = `${n} producto${n === 1 ? '' : 's'} seleccionado${n === 1 ? '' : 's'}`;
+    if (selectAll) {
+      selectAll.checked = n > 0 && n === total;
+      selectAll.indeterminate = n > 0 && n < total;
+    }
+    document.querySelectorAll('#productsTableBody tr[data-id]').forEach(tr => {
+      tr.classList.toggle('is-selected', selectedProductIds.has(tr.dataset.id));
+    });
+  }
+
+  function clearProductSelection() {
+    selectedProductIds.clear();
+    document.querySelectorAll('#productsTableBody .row-select').forEach(cb => { cb.checked = false; });
+    updateProductsBulkBar();
+  }
+
+  /**
+   * Aplica una actualización parcial a varios productos: primero en local
+   * (una sola escritura) y después en Supabase en paralelo.
+   */
+  async function bulkUpdateProducts(ids, updates) {
+    const products = getProducts();
+    const idSet = new Set(ids);
+    const next = products.map(p => (idSet.has(p.id) ? { ...p, ...updates } : p));
+    saveProducts(next);
+
+    if (typeof SB === 'undefined' || !SB.client) return { ok: ids.length, failed: 0 };
+    const results = await Promise.allSettled(ids.map(id => SB.updateProduct(id, updates)));
+    const failed = results.filter(r => r.status === 'rejected').length;
+    return { ok: ids.length - failed, failed };
+  }
+
+  async function bulkDeleteProducts(ids) {
+    const idSet = new Set(ids);
+    saveProducts(getProducts().filter(p => !idSet.has(p.id)));
+
+    if (typeof SB === 'undefined' || !SB.client) return { ok: ids.length, failed: 0 };
+    const results = await Promise.allSettled(ids.map(id => SB.deleteProduct(id)));
+    const failed = results.filter(r => r.status === 'rejected').length;
+    return { ok: ids.length - failed, failed };
+  }
+
+  async function runProductBulkAction(action) {
+    const selected = getSelectedProducts();
+    const ids = selected.map(p => p.id);
+    if (ids.length === 0) return;
+
+    const plural = ids.length === 1 ? '' : 's';
+    const names = selected.slice(0, 3).map(p => p.name).join(', ') + (ids.length > 3 ? `, +${ids.length - 3} más` : '');
+
+    if (action === 'delete') {
+      const ok = await confirmAction({
+        title: `¿Eliminar ${ids.length} producto${plural}?`,
+        message: `Se eliminarán de la tienda y de Supabase: ${names}. Esta acción no se puede deshacer.`,
+        confirmLabel: `Eliminar ${ids.length} producto${plural}`,
+        danger: true
+      });
+      if (!ok) return;
+      showToast(`Eliminando ${ids.length} producto${plural}...`, 'info');
+      const res = await bulkDeleteProducts(ids);
+      clearProductSelection();
+      renderProductsTable();
+      updateStats();
+      populateCategoriesDatalist();
+      showToast(res.failed
+        ? `${res.ok} eliminado${res.ok === 1 ? '' : 's'} · ${res.failed} sin sincronizar con Supabase`
+        : `${res.ok} producto${plural} eliminado${plural}`, res.failed ? 'error' : 'success');
+      return;
+    }
+
+    if (action === 'archive') {
+      const ok = await confirmAction({
+        title: `¿Archivar ${ids.length} producto${plural}?`,
+        message: `Dejarán de mostrarse en la tienda (quedan como inactivos y puedes reactivarlos desde el formulario de producto): ${names}.`,
+        confirmLabel: `Archivar ${ids.length} producto${plural}`,
+        danger: false
+      });
+      if (!ok) return;
+      const res = await bulkUpdateProducts(ids, { active: false });
+      clearProductSelection();
+      renderProductsTable();
+      updateStats();
+      showToast(res.failed
+        ? `${res.ok} archivado${res.ok === 1 ? '' : 's'} · ${res.failed} sin sincronizar con Supabase`
+        : `${res.ok} producto${plural} archivado${plural}`, res.failed ? 'error' : 'success');
+      return;
+    }
+
+    if (action === 'out-of-stock') {
+      const ok = await confirmAction({
+        title: `¿Marcar ${ids.length} producto${plural} sin stock?`,
+        message: `Su stock quedará en 0 y aparecerán como agotados en la tienda: ${names}.`,
+        confirmLabel: 'Marcar sin stock',
+        danger: false
+      });
+      if (!ok) return;
+      const res = await bulkUpdateProducts(ids, { stock: 0 });
+      clearProductSelection();
+      renderProductsTable();
+      updateStats();
+      showToast(res.failed
+        ? `${res.ok} actualizado${res.ok === 1 ? '' : 's'} · ${res.failed} sin sincronizar con Supabase`
+        : `${res.ok} producto${plural} sin stock`, res.failed ? 'error' : 'success');
+    }
+  }
+
+  function initProductBulkEvents() {
+    const selectAll = document.getElementById('productsSelectAll');
+    const bar = document.getElementById('productsBulkBar');
+    const tbody = document.getElementById('productsTableBody');
+
+    selectAll?.addEventListener('change', () => {
+      const boxes = [...document.querySelectorAll('#productsTableBody .row-select')];
+      boxes.forEach(cb => {
+        cb.checked = selectAll.checked;
+        if (selectAll.checked) selectedProductIds.add(cb.dataset.id);
+        else selectedProductIds.delete(cb.dataset.id);
+      });
+      updateProductsBulkBar();
+    });
+
+    tbody?.addEventListener('change', e => {
+      const cb = e.target.closest('.row-select');
+      if (!cb) return;
+      if (cb.checked) selectedProductIds.add(cb.dataset.id);
+      else selectedProductIds.delete(cb.dataset.id);
+      updateProductsBulkBar();
+    });
+
+    bar?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-bulk]');
+      if (!btn) return;
+      const action = btn.dataset.bulk;
+      if (action === 'clear') { clearProductSelection(); return; }
+      runProductBulkAction(action);
+    });
+  }
+
+  /* ============================================================
+     PEDIDOS — ELIMINAR UNO A UNO Y LIMPIAR TODO
+     ============================================================ */
+  async function deleteOrderById(orderId) {
+    // Local primero para que la tabla responda al instante
+    saveOrders(getOrders().filter(o => o.id !== orderId));
+    if (typeof SB !== 'undefined' && SB.deleteOrders) {
+      await SB.deleteOrders(orderId);
+    }
+  }
+
+  /**
+   * Comprueba contra Supabase que los pedidos ya no existen.
+   * Con RLS un DELETE sin permiso no lanza error: no borra nada y el pedido
+   * reaparecería en la siguiente sincronización.
+   * @returns {Promise<boolean>} true si el borrado se aplicó en la base
+   */
+  async function verifyOrdersDeleted(deletedIds) {
+    if (typeof SB === 'undefined' || !SB.getAllOrders) return true;
+    try {
+      const remote = await SB.getAllOrders();
+      localStorage.setItem(ORDERS_KEY, JSON.stringify(remote));
+      const ids = new Set(deletedIds);
+      return !remote.some(o => ids.has(o.id));
+    } catch (e) {
+      console.warn('[Admin] verifyOrdersDeleted:', e.message);
+      return true; // sin conexión no se puede afirmar que falló
+    }
+  }
+
+  const ORDER_POLICY_HINT = 'El pedido sigue en la base de datos: falta la política «Admin can delete orders» (ejecuta supabase_setup.sql).';
+
+  async function handleDeleteOrder(orderId) {
+    const order = getOrders().find(o => o.id === orderId);
+    const ok = await confirmAction({
+      title: '¿Eliminar este pedido?',
+      message: order
+        ? `Se borrará el pedido de ${order.customerName || 'el cliente'} por ${formatPrice(order.total || 0)}. Esta acción no se puede deshacer.`
+        : 'El pedido se borrará definitivamente.',
+      confirmLabel: 'Eliminar pedido',
+      danger: true
+    });
+    if (!ok) return;
+
+    try {
+      await deleteOrderById(orderId);
+      const applied = await verifyOrdersDeleted([orderId]);
+      renderOrdersTable();
+      updateStats();
+      showToast(applied ? 'Pedido eliminado' : ORDER_POLICY_HINT, applied ? 'success' : 'error');
+    } catch (err) {
+      console.error('[Admin] deleteOrder:', err);
+      renderOrdersTable();
+      showToast('Eliminado localmente — Supabase rechazó el borrado: ' + (err.message || err), 'error');
+    }
+  }
+
+  async function handleClearOrders() {
+    const total = getOrders().length;
+    if (total === 0) {
+      showToast('No hay pedidos para eliminar', 'info');
+      return;
+    }
+    const ok = await confirmAction({
+      title: `¿Eliminar los ${total} pedidos?`,
+      message: 'Se borrará todo el historial de pedidos de la tienda, incluidas las analíticas basadas en ellos. Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar todo',
+      danger: true
+    });
+    if (!ok) return;
+
+    const ids = getOrders().map(o => o.id);
+    try {
+      saveOrders([]);
+      if (typeof SB !== 'undefined' && SB.deleteAllOrders) await SB.deleteAllOrders();
+      const applied = await verifyOrdersDeleted(ids);
+      renderOrdersTable();
+      updateStats();
+      showToast(applied ? 'Historial de pedidos eliminado' : ORDER_POLICY_HINT, applied ? 'success' : 'error');
+    } catch (err) {
+      console.error('[Admin] clearOrders:', err);
+      renderOrdersTable();
+      showToast('Limpiado localmente — Supabase rechazó el borrado: ' + (err.message || err), 'error');
+    }
+  }
 
   // ===== ESTADÍSTICAS =====
   // La antigua funcion renderStats() se unifico dentro de renderAnalytics():
@@ -4475,7 +4814,20 @@ const Admin = (() => {
   };
 
   function anEmpty(message) {
-    return `<div class="an-empty">${escapeHTML(message)}</div>`;
+    return `<div class="an-empty"><span>${escapeHTML(message)}</span></div>`;
+  }
+
+  /** #rrggbb -> rgba(r,g,b,a). Evita color-mix(), que no existe en navegadores antiguos. */
+  function anRgba(hex, alpha) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+    if (!m) return `rgba(26, 75, 140, ${alpha})`;
+    const n = parseInt(m[1], 16);
+    return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+  }
+
+  /** Variables de color de una tarjeta/fila (color sólido + versión suave). */
+  function anColorVars(hex) {
+    return `--an-color:${hex};--an-soft:${anRgba(hex, 0.13)};--an-soft-strong:${anRgba(hex, 0.28)}`;
   }
 
   function anCompactPrice(value) {
@@ -4498,103 +4850,129 @@ const Admin = (() => {
   function anDeltaHTML(delta) {
     if (delta === null || !Number.isFinite(delta)) return '';
     const cls = delta > 0.5 ? 'up' : (delta < -0.5 ? 'down' : 'flat');
-    const arrow = cls === 'up' ? '↑' : (cls === 'down' ? '↓' : '→');
-    return `<div class="an-kpi-delta ${cls}">${arrow} ${Math.abs(delta).toFixed(1)}% vs. periodo anterior</div>`;
+    const arrow = cls === 'up'
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>'
+      : (cls === 'down'
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="6" y1="12" x2="18" y2="12"/></svg>');
+    return `<div class="an-kpi-delta ${cls}">${arrow}<span>${Math.abs(delta).toFixed(1)}%</span><small>vs. periodo anterior</small></div>`;
   }
 
   function anKpiCard(kpi) {
     return `
-      <div class="an-kpi" style="--an-color:${kpi.color}">
+      <div class="an-kpi" style="${anColorVars(kpi.color)}">
         <span class="an-kpi-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${AN_ICONS[kpi.icon] || ''}</svg>
         </span>
         <div class="an-kpi-info">
           <div class="an-kpi-label">${escapeHTML(kpi.label)}</div>
-          <div class="an-kpi-value" title="${escapeAttr(String(kpi.title || kpi.value))}">${escapeHTML(String(kpi.value))}</div>
+          <div class="an-kpi-value${String(kpi.value).length > 9 ? ' is-long' : ''}" title="${escapeAttr(String(kpi.title || kpi.value))}">${escapeHTML(String(kpi.value))}</div>
           ${kpi.delta !== undefined ? anDeltaHTML(kpi.delta) : ''}
         </div>
       </div>
     `;
   }
 
-  /** Gráfica de área en SVG puro (sin librerías) para los ingresos por día. */
-  function anAreaChart(entries) {
+  /**
+   * Gráfica de área en SVG dibujada a tamaño real (píxeles del contenedor).
+   * Se evita escalar el viewBox: así el texto y los trazos se ven iguales en
+   * todos los navegadores y a cualquier ancho, sin deformarse.
+   */
+  function anAreaChart(entries, width) {
     if (entries.length === 0) return anEmpty('Sin ventas en este periodo');
 
-    const W = 620;
-    const H = 200;
-    const padL = 46;
-    const padR = 12;
-    const padT = 14;
-    const padB = 26;
-    const maxVal = Math.max(...entries.map(e => e.value), 1);
+    const W = Math.max(280, Math.round(width || 640));
+    const H = 230;
+    const padL = 54;
+    const padR = 16;
+    const padT = 18;
+    const padB = 34;
     const innerW = W - padL - padR;
     const innerH = H - padT - padB;
+    const maxVal = Math.max(...entries.map(e => e.value), 1);
     const stepX = entries.length > 1 ? innerW / (entries.length - 1) : 0;
 
-    const pointAt = (i, val) => {
-      const x = entries.length > 1 ? padL + i * stepX : padL + innerW / 2;
-      const y = padT + innerH - (val / maxVal) * innerH;
-      return [x, y];
-    };
+    const px = i => (entries.length > 1 ? padL + i * stepX : padL + innerW / 2);
+    const py = v => padT + innerH - (v / maxVal) * innerH;
+    const points = entries.map((e, i) => [px(i), py(e.value)]);
 
-    const points = entries.map((e, i) => pointAt(i, e.value));
-    const line = points.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+    // Curva suavizada (Catmull-Rom → Bézier) para un trazo más natural
+    const line = points.map(([x, y], i) => {
+      if (i === 0) return `M${x.toFixed(1)},${y.toFixed(1)}`;
+      const [px0, py0] = points[i - 1];
+      const cx = (px0 + x) / 2;
+      return `C${cx.toFixed(1)},${py0.toFixed(1)} ${cx.toFixed(1)},${y.toFixed(1)} ${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
     const area = `${line} L${points[points.length - 1][0].toFixed(1)},${padT + innerH} L${points[0][0].toFixed(1)},${padT + innerH} Z`;
 
-    // Rejilla horizontal + escala del eje Y
-    const gridLines = [0, 0.5, 1].map(f => {
+    const grid = [0, 0.25, 0.5, 0.75, 1].map(f => {
       const y = padT + innerH - f * innerH;
-      return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}"/>
-              <text class="an-area-label" x="${padL - 6}" y="${(y + 3).toFixed(1)}" text-anchor="end">${anCompactPrice(maxVal * f)}</text>`;
+      const label = (f === 0 || f === 0.5 || f === 1)
+        ? `<text class="an-axis-label" x="${padL - 8}" y="${(y + 3.5).toFixed(1)}" text-anchor="end">${anCompactPrice(maxVal * f)}</text>`
+        : '';
+      return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}"/>${label}`;
     }).join('');
 
-    // Como máximo 6 etiquetas en el eje X para que no se amontonen
-    const labelEvery = Math.max(1, Math.ceil(entries.length / 6));
+    // Máximo 7 etiquetas en el eje X para que nunca se solapen
+    const every = Math.max(1, Math.ceil(entries.length / 7));
     const xLabels = entries.map((e, i) => {
-      if (i % labelEvery !== 0 && i !== entries.length - 1) return '';
-      const [x] = pointAt(i, e.value);
-      return `<text class="an-area-label" x="${x.toFixed(1)}" y="${H - 8}" text-anchor="middle">${escapeHTML(e.label)}</text>`;
+      if (i % every !== 0 && i !== entries.length - 1) return '';
+      const x = px(i);
+      const anchor = i === 0 ? 'start' : (i === entries.length - 1 ? 'end' : 'middle');
+      return `<text class="an-axis-label" x="${x.toFixed(1)}" y="${H - 12}" text-anchor="${anchor}">${escapeHTML(e.label)}</text>`;
     }).join('');
 
-    const dots = points.map(([x, y], i) => `
-      <circle class="an-area-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3">
-        <title>${escapeHTML(entries[i].label)}: ${anPrice(entries[i].value)} (${entries[i].orders} pedido${entries[i].orders === 1 ? '' : 's'})</title>
-      </circle>
-    `).join('');
+    const bestIndex = entries.reduce((best, e, i) => (e.value > entries[best].value ? i : best), 0);
+
+    const markers = points.map(([x, y], i) => {
+      const e = entries[i];
+      const isBest = i === bestIndex && entries.length > 1;
+      const band = entries.length > 1 ? Math.max(10, stepX) : innerW;
+      return `
+        <g class="an-area-point${isBest ? ' is-best' : ''}">
+          <rect x="${(x - band / 2).toFixed(1)}" y="${padT}" width="${band.toFixed(1)}" height="${innerH}" fill="transparent"></rect>
+          <line class="an-area-guide" x1="${x.toFixed(1)}" y1="${padT}" x2="${x.toFixed(1)}" y2="${(padT + innerH).toFixed(1)}"/>
+          <circle class="an-area-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${isBest ? 4.5 : 3.5}"/>
+          <title>${escapeHTML(e.label)}: ${anPrice(e.value)} · ${e.orders} pedido${e.orders === 1 ? '' : 's'}</title>
+        </g>
+      `;
+    }).join('');
 
     return `
-      <svg class="an-area" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Ingresos por día">
+      <svg class="an-area" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Ingresos por día">
         <defs>
           <linearGradient id="anAreaGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="var(--primary-blue)" stop-opacity="0.28"/>
+            <stop offset="0%" stop-color="var(--primary-blue)" stop-opacity="0.30"/>
             <stop offset="100%" stop-color="var(--primary-blue)" stop-opacity="0.02"/>
           </linearGradient>
         </defs>
-        <g class="an-area-grid">${gridLines}</g>
+        <g class="an-area-grid">${grid}</g>
         <path class="an-area-fill" d="${area}"/>
         <path class="an-area-line" d="${line}"/>
-        ${dots}
+        ${markers}
         ${xLabels}
       </svg>
     `;
   }
 
-  /** Donut en SVG con leyenda. entries: [{label, value, color}] */
+  /** Donut con leyenda. entries: [{label, value, color}] */
   function anDonutChart(entries, centerValue, centerLabel) {
     if (entries.length === 0) return anEmpty('Sin datos en este periodo');
 
     const total = entries.reduce((s, e) => s + e.value, 0) || 1;
-    const r = 15.915494; // circunferencia = 100 → el dasharray es directamente el %
-    let offset = 25;     // arranca en las 12 en punto
+    const SIZE = 120;
+    const C = SIZE / 2;
+    const R = 48;
+    const CIRC = 2 * Math.PI * R;
+    let offset = 0;
 
     const segments = entries.map(e => {
-      const pct = (e.value / total) * 100;
-      const seg = `<circle cx="21" cy="21" r="${r}" fill="none" stroke="${e.color}" stroke-width="5.2"
-        stroke-dasharray="${pct.toFixed(2)} ${(100 - pct).toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}">
-        <title>${escapeHTML(e.label)}: ${e.value} (${Math.round(pct)}%)</title>
-      </circle>`;
-      offset -= pct;
+      const frac = e.value / total;
+      const dash = frac * CIRC;
+      const seg = `<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${e.color}" stroke-width="14" stroke-linecap="butt"
+        stroke-dasharray="${dash.toFixed(2)} ${(CIRC - dash).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}"
+        transform="rotate(-90 ${C} ${C})"><title>${escapeHTML(e.label)}: ${e.value} (${Math.round(frac * 100)}%)</title></circle>`;
+      offset += dash;
       return seg;
     }).join('');
 
@@ -4609,11 +4987,11 @@ const Admin = (() => {
 
     return `
       <div class="an-donut-wrap">
-        <svg class="an-donut" viewBox="0 0 42 42" role="img" aria-label="${escapeAttr(centerLabel)}">
-          <circle cx="21" cy="21" r="${r}" fill="none" stroke="var(--bg-secondary)" stroke-width="5.2"/>
+        <svg class="an-donut" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}" role="img" aria-label="${escapeAttr(centerLabel)}">
+          <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="var(--bg-secondary)" stroke-width="14"/>
           ${segments}
-          <text class="an-donut-center-value" x="21" y="21" text-anchor="middle">${escapeHTML(String(centerValue))}</text>
-          <text class="an-donut-center-label" x="21" y="25.5" text-anchor="middle">${escapeHTML(centerLabel)}</text>
+          <text class="an-donut-value" x="${C}" y="${C - 1}" text-anchor="middle">${escapeHTML(String(centerValue))}</text>
+          <text class="an-donut-label" x="${C}" y="${C + 13}" text-anchor="middle">${escapeHTML(centerLabel)}</text>
         </svg>
         <div class="an-legend">${legend}</div>
       </div>
@@ -4624,7 +5002,7 @@ const Admin = (() => {
   function anBarRows(rows, emptyMessage) {
     if (rows.length === 0) return anEmpty(emptyMessage);
     return `<div class="an-rows">${rows.map(row => `
-      <div class="an-row" style="--an-color:${row.color || 'var(--primary-blue)'}">
+      <div class="an-row" style="${anColorVars(row.color || '#1a4b8c')}">
         ${row.rank ? `<span class="an-row-rank">${row.rank}</span>` : ''}
         <div class="an-row-main">
           <div class="an-row-top">
@@ -4644,6 +5022,44 @@ const Admin = (() => {
     if (Number.isFinite(raw) && raw > 0) return raw;
     if (!product) return 0;
     return parseFloat(product.offerActive && product.offerPrice ? product.offerPrice : product.price) || 0;
+  }
+
+  // Última serie de ingresos por día, para poder redibujar al cambiar el ancho
+  let lastSalesEntries = [];
+  let salesChartWidth = 0;
+  let salesResizeObserver = null;
+  let salesResizeRaf = 0;
+  let salesResizeBound = false;
+
+  /**
+   * Dibuja la gráfica al ancho real del contenedor. Se vuelve a dibujar al
+   * cambiar el tamaño con ResizeObserver y, como respaldo (navegadores sin
+   * soporte o con el observador inactivo), escuchando `resize`.
+   */
+  function drawSalesChart(force) {
+    const el = document.getElementById('analyticsSalesChart');
+    if (!el) return;
+    const width = Math.round(el.clientWidth || el.parentElement?.clientWidth || 640);
+    if (!force && lastSalesEntries.length && Math.abs(width - salesChartWidth) < 16) return;
+
+    salesChartWidth = width;
+    el.innerHTML = anAreaChart(lastSalesEntries, width);
+
+    if (!salesResizeObserver && typeof ResizeObserver !== 'undefined') {
+      salesResizeObserver = new ResizeObserver(() => scheduleSalesRedraw());
+      salesResizeObserver.observe(el);
+    }
+    if (!salesResizeBound) {
+      salesResizeBound = true;
+      window.addEventListener('resize', scheduleSalesRedraw, { passive: true });
+    }
+  }
+
+  function scheduleSalesRedraw() {
+    cancelAnimationFrame(salesResizeRaf);
+    salesResizeRaf = requestAnimationFrame(() => {
+      if (lastSalesEntries.length) drawSalesChart(false);
+    });
   }
 
   async function renderAnalytics() {
@@ -4727,7 +5143,8 @@ const Admin = (() => {
         dayMap.set(key, entry);
       });
       const entries = [...dayMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).slice(-30).map(e => e[1]);
-      salesEl.innerHTML = anAreaChart(entries);
+      lastSalesEntries = entries;
+      drawSalesChart(true);
 
       const meta = document.getElementById('analyticsSalesMeta');
       if (meta) {
@@ -4816,7 +5233,7 @@ const Admin = (() => {
         value: `${e.qty} u.`,
         sub: anPrice(e.revenue),
         ratio: e.qty / maxQty,
-        color: 'var(--primary-blue)'
+        color: '#1a4b8c'
       })), 'Sin ventas en este periodo');
     }
 
@@ -4835,7 +5252,7 @@ const Admin = (() => {
         value: `${e.count} vista${e.count === 1 ? '' : 's'}`,
         sub: e.product ? (e.product.category || 'Sin categoría') : '',
         ratio: e.count / maxViews,
-        color: 'var(--primary-orange)'
+        color: '#e87722'
       })), 'Aún no se registran visitas a fichas de producto');
     }
 
@@ -4850,7 +5267,7 @@ const Admin = (() => {
           const status = o.status || 'pending';
           const date = new Date(orderTime(o)).toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
           return `
-            <div class="an-activity-item" style="--an-color:${AN_STATUS_COLORS[status] || '#94a3b8'}">
+            <div class="an-activity-item" style="${anColorVars(AN_STATUS_COLORS[status] || '#94a3b8')}">
               <span class="an-activity-date">${escapeHTML(date)}</span>
               <span class="an-activity-name">${escapeHTML(o.customer_name || o.customerName || 'Cliente')}</span>
               <span class="an-activity-total">${anPrice(o.total)}</span>

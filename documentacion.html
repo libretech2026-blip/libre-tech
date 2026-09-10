@@ -242,7 +242,7 @@
   <div class="doc-header">
     <h1>📘 LIBRE TECH - Documentación</h1>
     <p>Documentación técnica y registro de cambios del proyecto</p>
-    <span class="version">v3.4.0 — Última actualización: 10 de septiembre de 2026</span>
+    <span class="version">v3.5.0 — Última actualización: 10 de septiembre de 2026</span>
   </div>
 
   <div class="doc-container">
@@ -479,11 +479,11 @@
       <table>
         <thead><tr><th>Sección</th><th>Función</th></tr></thead>
         <tbody>
-          <tr><td><strong>Productos</strong></td><td>CRUD completo con formulario, imágenes, colores, specs, ofertas y obsequio incluido</td></tr>
+          <tr><td><strong>Productos</strong></td><td>CRUD completo con formulario, imágenes, colores, specs, ofertas y obsequio incluido; selección múltiple con «Seleccionar todos» y acciones masivas (eliminar, archivar, marcar sin stock)</td></tr>
           <tr><td><strong>Inicio y menú</strong></td><td>Orden manual de destacados, orden y visibilidad del menú hamburguesa, y textos del banner principal (titular, subtítulo y botón) con vista previa</td></tr>
           <tr><td><strong>Calculadora de envío</strong></td><td>Envío gratis desde, costo y entrega por defecto, nota al cliente, zonas por departamento/ciudad y probador de tarifas</td></tr>
           <tr><td><strong>CSV/Excel</strong></td><td>Importación masiva desde archivos CSV/TXT/Excel</td></tr>
-          <tr><td><strong>Pedidos</strong></td><td>Gestión de pedidos (pendiente/procesando/enviado/entregado/cancelado)</td></tr>
+          <tr><td><strong>Pedidos</strong></td><td>Gestión de pedidos (pendiente/procesando/enviado/entregado/cancelado), eliminación individual y botón «Limpiar todo», ambos con confirmación</td></tr>
           <tr><td><strong>Páginas</strong></td><td>Editor de páginas estáticas personalizadas</td></tr>
           <tr><td><strong>Visualización</strong></td><td>Sistema de banners visual con minimapa de la página, drag &amp; drop, reorden; color del header y burbujas de categorías (imagen, orden por drag &amp; drop y visibilidad individual)</td></tr>
           <tr><td><strong>PQRs</strong></td><td>Gestión de peticiones, quejas, reclamos y sugerencias (Supabase)</td></tr>
@@ -499,6 +499,65 @@
     <!-- 5. CHANGELOG -->
     <section class="doc-section" id="changelog">
       <h2>5. Registro de cambios (Changelog)</h2>
+
+      <div class="changelog-entry">
+        <span class="date">10 de septiembre de 2026</span>
+        <h4>v3.5.0 — Gestión masiva, limpieza de pedidos, dashboard y rendimiento</h4>
+        <p>Cambios de esta versión:</p>
+        <ul>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Eliminar pedidos</strong> — Botón de papelera en cada fila y «Limpiar todo» en la cabecera de
+            Admin → Pedidos, ambos con diálogo de confirmación. El borrado se aplica en Supabase
+            (<code>SB.deleteOrders</code> / <code>SB.deleteAllOrders</code>) y se verifica después: si la base sigue
+            devolviendo el pedido —falta la política <code>Admin can delete orders</code>— el panel lo avisa en vez de
+            fingir que se borró. <strong>Requiere ejecutar el bloque nuevo de <code>supabase_setup.sql</code></strong>.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Acciones masivas de productos</strong> — Casilla por fila y «Seleccionar todos» en la tabla de
+            productos. Con una o más selecciones aparece una barra con <em>Archivar</em> (pasa a inactivo),
+            <em>Marcar sin stock</em> (stock 0) y <em>Eliminar</em>, todas con confirmación. Los cambios se guardan
+            primero en local (una sola escritura) y luego se sincronizan con Supabase en paralelo, informando de los
+            que no se pudieron sincronizar.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Diálogo de confirmación propio</strong> — Sustituye a <code>window.confirm()</code> en las acciones
+            destructivas del panel: mismo lenguaje visual, no bloquea el hilo y distingue acciones destructivas (rojo)
+            de reversibles (naranja).
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>Dashboard de analíticas mejorado</strong> — La gráfica de ingresos se dibuja al ancho real del
+            contenedor (sin escalar el <code>viewBox</code>), con curva suavizada, rejilla, eje de importes, resalte del
+            mejor día y detalle por punto; el donut de estados se redibuja con trazos proporcionales y texto centrado.
+            Los colores de tarjetas, barras y etiquetas se calculan en JS como <code>rgba()</code> en lugar de
+            <code>color-mix()</code>, que no existe en navegadores antiguos (se añadió respaldo también en los usos
+            anteriores). Las tarjetas ya no recortan valores ni etiquetas y la fila de actividad se reordena en dos
+            líneas en móvil.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>Rendimiento</strong> — El catálogo se parseaba con <code>JSON.parse</code> en cada tarjeta y en cada
+            función auxiliar (57&nbsp;KB por llamada). Ahora <code>app.js</code>, <code>cart.js</code> y
+            <code>gifts.js</code> memorizan el parseo y solo repiten el trabajo si cambió el dato guardado: 2.000
+            lecturas del catálogo pasaron de ~488&nbsp;ms a ~21&nbsp;ms en pruebas locales. Además el grid se monta en un
+            <code>DocumentFragment</code> (un solo reflow), el contador de productos reutiliza el filtrado ya hecho, los
+            carruseles no animan con la pestaña en segundo plano, el <code>resize</code> del carrusel va con
+            <code>requestAnimationFrame</code>, las imágenes usan <code>decoding="async"</code> y todas las páginas
+            hacen <code>preconnect</code> a Supabase y al CDN.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>Animaciones más fluidas</strong> — Se eliminaron las 42 reglas con <code>transition: all</code>
+            (obligaban al navegador a vigilar propiedades que provocan reflow) y se sustituyeron por listas explícitas de
+            color, sombra, opacidad y <code>transform</code>. La aparición por scroll pasó de 620&nbsp;ms a 420&nbsp;ms
+            con desplazamiento de 14&nbsp;px, escalonado de 28&nbsp;ms y <code>translate3d</code>; el hover de las
+            tarjetas responde en 220&nbsp;ms y el contenido se revela un poco antes de entrar en pantalla.
+          </li>
+        </ul>
+      </div>
 
       <div class="changelog-entry">
         <span class="date">10 de septiembre de 2026</span>

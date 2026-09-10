@@ -189,6 +189,13 @@ CREATE POLICY "Admin can update orders"
   TO authenticated
   USING ( public.is_admin() );
 
+-- Admin can delete orders (eliminar un pedido o limpiar el historial desde el panel)
+DROP POLICY IF EXISTS "Admin can delete orders" ON orders;
+CREATE POLICY "Admin can delete orders"
+  ON orders FOR DELETE
+  TO authenticated
+  USING ( public.is_admin() );
+
 -- 2c. Create pqrs table
 CREATE TABLE IF NOT EXISTS pqrs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

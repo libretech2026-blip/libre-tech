@@ -278,7 +278,7 @@ input, select, textarea {
   background: var(--bg-secondary);
   color: var(--text-primary);
   font-size: 0.85rem;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
   outline: none;
 }
 
@@ -412,7 +412,7 @@ input, select, textarea {
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-primary);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .header-btn:hover {
@@ -443,7 +443,7 @@ input, select, textarea {
   color: var(--text-primary);
   font-size: 0.85rem;
   font-weight: 500;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
   white-space: nowrap;
 }
 
@@ -488,7 +488,7 @@ input, select, textarea {
   opacity: 0;
   visibility: hidden;
   transform: translateY(-8px);
-  transition: all var(--transition-fast);
+  transition: opacity var(--transition-fast), visibility var(--transition-fast), transform var(--transition-fast);
   z-index: 100;
 }
 
@@ -524,7 +524,7 @@ input, select, textarea {
   justify-content: center;
   background: var(--bg-secondary);
   color: var(--text-primary);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .login-close:hover {
@@ -746,7 +746,7 @@ input, select, textarea {
   height: 2px;
   background: currentColor;
   border-radius: 2px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease;
 }
 
 .btn-hamburger.active span:nth-child(1) {
@@ -944,7 +944,7 @@ input, select, textarea {
   cursor: pointer;
   font-weight: 600;
   color: var(--text-primary);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
   flex: 1;
 }
 
@@ -983,7 +983,7 @@ input, select, textarea {
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
   flex-shrink: 0;
 }
 
@@ -1023,7 +1023,7 @@ input, select, textarea {
   cursor: pointer;
   color: var(--text-secondary);
   font-size: 0.9rem;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .hamburger-menu-content .menu-subcategory-item:hover {
@@ -1228,7 +1228,7 @@ input, select, textarea {
   color: #fff;
   font-weight: 700;
   font-size: 0.9rem;
-  transition: all var(--transition-base);
+  transition: background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base), opacity var(--transition-base);
   box-shadow: 0 4px 24px rgba(232, 119, 34, 0.4);
   position: relative;
   overflow: hidden;
@@ -1431,7 +1431,7 @@ input, select, textarea {
   height: 12px;
   border-radius: 50%;
   background: rgba(26, 75, 140, 0.3);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), width var(--transition-fast), border-radius var(--transition-fast), transform var(--transition-fast);
   cursor: pointer;
   border: 2px solid rgba(26, 75, 140, 0.2);
   padding: 0;
@@ -1534,7 +1534,7 @@ input, select, textarea {
   border-radius: 50%;
   background: rgba(26, 75, 140, 0.3);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), width var(--transition-fast), border-radius var(--transition-fast), transform var(--transition-fast);
   border: none;
   padding: 0;
 }
@@ -1597,7 +1597,7 @@ input, select, textarea {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
   cursor: pointer;
 }
 
@@ -1622,7 +1622,7 @@ input, select, textarea {
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 16px rgba(26, 75, 140, 0.2);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .category-bubble-avatar img {
@@ -1837,7 +1837,7 @@ input, select, textarea {
   font-size: 0.82rem;
   font-weight: 600;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   position: relative;
@@ -1906,7 +1906,7 @@ input, select, textarea {
   font-size: 0.78rem;
   font-weight: 600;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
   cursor: pointer;
   letter-spacing: 0.01em;
 }
@@ -1967,7 +1967,8 @@ input, select, textarea {
     var(--shadow-card),
     -2px -2px 6px rgba(255, 255, 255, 0.5) inset,
     2px 2px 6px rgba(0, 0, 0, 0.1) inset;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Solo transform y sombra: se resuelven en composición, sin reflow */
+  transition: transform 220ms var(--ease-out-soft), box-shadow 220ms var(--ease-out-soft), border-color 220ms var(--ease-out-soft);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -2118,7 +2119,7 @@ input, select, textarea {
   font-size: 1.5rem;
   font-weight: 300;
   box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
-  transition: all var(--transition-smooth);
+  transition: background-color var(--transition-smooth), border-color var(--transition-smooth), color var(--transition-smooth), box-shadow var(--transition-smooth), transform var(--transition-smooth), opacity var(--transition-smooth);
   flex-shrink: 0;
   border: none;
   white-space: nowrap;
@@ -2212,7 +2213,7 @@ input, select, textarea {
   z-index: 2000;
   opacity: 0;
   visibility: hidden;
-  transition: all var(--transition-base);
+  transition: opacity var(--transition-base), visibility var(--transition-base), transform var(--transition-base);
 }
 
 .cart-overlay.active {
@@ -2273,7 +2274,7 @@ input, select, textarea {
   justify-content: center;
   background: var(--bg-secondary);
   color: var(--text-primary);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .cart-close:hover {
@@ -2400,7 +2401,7 @@ input, select, textarea {
   color: var(--text-primary);
   font-size: 1rem;
   font-weight: 600;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .qty-btn:hover {
@@ -2425,7 +2426,7 @@ input, select, textarea {
   background: transparent;
   color: var(--text-tertiary);
   margin-left: var(--spacing-sm);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .cart-item-remove:hover {
@@ -2486,7 +2487,7 @@ input, select, textarea {
   color: #fff;
   font-size: 1rem;
   font-weight: 700;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
   box-shadow: 0 4px 14px rgba(37, 211, 102, 0.3);
 }
 
@@ -2524,7 +2525,7 @@ input, select, textarea {
   color: #fff;
   font-size: 1rem;
   font-weight: 700;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
   box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
   margin-bottom: var(--spacing-sm);
   border: none;
@@ -2657,7 +2658,7 @@ input, select, textarea {
   justify-content: center;
   opacity: 0;
   visibility: hidden;
-  transition: all var(--transition-base);
+  transition: opacity var(--transition-base), visibility var(--transition-base), transform var(--transition-base);
   padding: var(--spacing-lg);
 }
 
@@ -2709,7 +2710,7 @@ input, select, textarea {
   justify-content: center;
   background: var(--bg-secondary);
   color: var(--text-primary);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .modal-close:hover {
@@ -3026,7 +3027,7 @@ input, select, textarea {
   font-weight: 600;
   color: var(--text-secondary);
   background: transparent;
-  transition: all 0.2s;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s, opacity 0.2s;
   white-space: nowrap;
   cursor: pointer;
   border: none;
@@ -3398,7 +3399,7 @@ input, select, textarea {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 0.9rem;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
   outline: none;
 }
 
@@ -3436,7 +3437,7 @@ input, select, textarea {
   border-radius: var(--radius-sm);
   font-weight: 600;
   font-size: 0.9rem;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
   white-space: nowrap;
   cursor: pointer;
   border: none;
@@ -3562,7 +3563,7 @@ input, select, textarea {
   justify-content: center;
   background: transparent;
   color: var(--text-secondary);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .table-btn:hover {
@@ -3661,7 +3662,7 @@ input, select, textarea {
   border-radius: var(--radius-md);
   padding: var(--spacing-2xl);
   text-align: center;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
   cursor: pointer;
   margin-bottom: var(--spacing-lg);
 }
@@ -3703,7 +3704,7 @@ input, select, textarea {
   padding: var(--spacing-lg);
   text-align: center;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
   position: relative;
   overflow: hidden;
 }
@@ -3820,7 +3821,7 @@ input, select, textarea {
   justify-content: center;
   opacity: 0;
   visibility: hidden;
-  transition: all var(--transition-base);
+  transition: opacity var(--transition-base), visibility var(--transition-base), transform var(--transition-base);
   padding: var(--spacing-lg);
 }
 
@@ -4121,7 +4122,7 @@ input, select, textarea {
   border-radius: var(--radius-full);
   background: var(--bg-primary);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
@@ -4870,7 +4871,7 @@ input, select, textarea {
   background: var(--bg-primary);
   cursor: pointer;
   color: var(--text-tertiary);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .btn-icon:hover {
@@ -5331,7 +5332,7 @@ input, select, textarea {
   font-size: 0.84rem;
   cursor: pointer;
   color: var(--text-secondary);
-  transition: all 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, transform 0.15s, opacity 0.15s;
   font-weight: 500;
 }
 
@@ -6781,7 +6782,7 @@ input, select, textarea {
   color: var(--text-primary);
   border: none;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 
 .theme-toggle:hover {
@@ -7679,7 +7680,7 @@ input, select, textarea {
   margin-left: 0;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-  transition: all var(--transition-smooth);
+  transition: background-color var(--transition-smooth), border-color var(--transition-smooth), color var(--transition-smooth), box-shadow var(--transition-smooth), transform var(--transition-smooth), opacity var(--transition-smooth);
 }
 
 @media (max-width: 768px) {
@@ -7851,7 +7852,7 @@ input, select, textarea {
   background: rgba(255,255,255,0.1);
   color: rgba(255,255,255,0.8);
   text-decoration: none;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
   border: 1px solid rgba(255,255,255,0.15);
 }
 
@@ -7907,7 +7908,7 @@ input, select, textarea {
   text-decoration: none;
   font-size: 0.85rem;
   font-weight: 500;
-  transition: all 0.25s;
+  transition: background-color 0.25s, border-color 0.25s, color 0.25s, box-shadow 0.25s, transform 0.25s, opacity 0.25s;
   border: 1px solid rgba(255,255,255,0.15);
 }
 
@@ -8268,7 +8269,7 @@ input, select, textarea {
   border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
   margin: 0 4px;
 }
 
@@ -9433,7 +9434,9 @@ input, select, textarea {
   /* Curvas de animación reutilizables */
   --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --transition-reveal: 620ms var(--ease-out-soft);
+  /* Entrada más corta: a 620 ms el contenido se sentía "perezoso" al
+     hacer scroll rápido y las últimas tarjetas llegaban tarde. */
+  --transition-reveal: 420ms var(--ease-out-soft);
 }
 
 /* ============================================================
@@ -9441,11 +9444,12 @@ input, select, textarea {
    ============================================================ */
 .reveal {
   opacity: 0;
-  transform: translateY(22px);
+  /* translate3d fuerza capa propia: la entrada se compone en GPU */
+  transform: translate3d(0, 14px, 0);
   transition:
     opacity var(--transition-reveal),
     transform var(--transition-reveal);
-  transition-delay: calc(var(--card-index, 0) * 45ms);
+  transition-delay: calc(var(--card-index, 0) * 28ms);
   will-change: opacity, transform;
 }
 
@@ -9500,10 +9504,11 @@ input, select, textarea {
    2. TARJETAS DE PRODUCTO — pulido e interacción
    ============================================================ */
 .product-card {
+  /* Respuesta más inmediata al pasar el cursor (antes 420 ms) */
   transition:
-    transform 420ms var(--ease-out-soft),
-    box-shadow 420ms var(--ease-out-soft),
-    border-color 260ms ease;
+    transform 220ms var(--ease-out-soft),
+    box-shadow 220ms var(--ease-out-soft),
+    border-color 200ms ease;
 }
 
 .product-card:hover .product-card-image img {
@@ -9511,7 +9516,7 @@ input, select, textarea {
 }
 
 .product-card-image img {
-  transition: transform 620ms var(--ease-out-soft);
+  transition: transform 420ms var(--ease-out-soft);
 }
 
 .product-card:hover .product-name {
@@ -9540,7 +9545,7 @@ input, select, textarea {
   box-shadow: var(--shadow-sm);
   opacity: 0;
   transform: translateY(-6px) scale(0.9);
-  transition: all 260ms var(--ease-spring);
+  transition: background-color 260ms var(--ease-spring), border-color 260ms var(--ease-spring), color 260ms var(--ease-spring), box-shadow 260ms var(--ease-spring), transform 260ms var(--ease-spring), opacity 260ms var(--ease-spring);
 }
 
 .product-card:hover .product-share-btn,
@@ -10214,6 +10219,7 @@ input, select, textarea {
   width: 38px;
   height: 38px;
   border-radius: var(--radius-full);
+  background: var(--bg-secondary); /* respaldo para navegadores sin color-mix() */
   background: color-mix(in srgb, var(--share-color, #1a4b8c) 14%, transparent);
   color: var(--share-color, var(--primary-blue));
 }
@@ -10509,6 +10515,7 @@ input, select, textarea {
 }
 
 .admin-sidebar .admin-tab.active {
+  background: rgba(26, 75, 140, 0.12); /* respaldo para navegadores sin color-mix() */
   background: color-mix(in srgb, var(--primary-blue) 12%, transparent);
   color: var(--primary-blue);
   border-left-color: var(--primary-blue);
@@ -10989,6 +10996,7 @@ textarea:focus-visible {
 .sort-option:hover { background: var(--bg-secondary); color: var(--text-primary); }
 
 .sort-option.active {
+  background: rgba(26, 75, 140, 0.10); /* respaldo para navegadores sin color-mix() */
   background: color-mix(in srgb, var(--primary-blue) 10%, transparent);
   color: var(--primary-blue);
   font-weight: 700;
@@ -11223,6 +11231,9 @@ textarea:focus-visible {
 /* ============================================================
    8. ADMIN — DASHBOARD DE ANALÍTICAS Y ESTADÍSTICAS
    Sección unificada: KPIs, gráficas y listados en una sola vista.
+   Los colores llegan por variables en línea (--an-color / --an-soft)
+   calculadas en JS: nada depende de color-mix(), que no existe en
+   navegadores antiguos.
    ============================================================ */
 .an-toolbar {
   display: flex;
@@ -11232,6 +11243,8 @@ textarea:focus-visible {
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
 }
+
+.an-toolbar-title { min-width: 0; }
 
 .an-toolbar-title h3 {
   font-size: 1.15rem;
@@ -11253,15 +11266,19 @@ textarea:focus-visible {
   flex-wrap: wrap;
 }
 
+.an-toolbar-actions .form-select,
 .an-toolbar-actions .form-input {
   width: auto;
+  min-width: 150px;
   font-size: 0.85rem;
 }
+
+.an-toolbar-actions .btn { white-space: nowrap; }
 
 /* --- KPIs --- */
 .an-kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(196px, 1fr));
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
 }
@@ -11269,15 +11286,16 @@ textarea:focus-visible {
 .an-kpi {
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  padding: 14px 16px;
+  min-width: 0;
+  padding: 15px 16px 15px 19px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-light);
   background: var(--bg-primary);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
-  transition: transform 200ms var(--ease-out-soft), box-shadow var(--transition-fast);
+  transition: transform 180ms var(--ease-out-soft), box-shadow 180ms var(--ease-out-soft);
 }
 
 .an-kpi::before {
@@ -11287,7 +11305,7 @@ textarea:focus-visible {
   bottom: 0;
   left: 0;
   width: 4px;
-  background: var(--an-color, var(--primary-blue));
+  background: var(--an-color, #1a4b8c);
 }
 
 .an-kpi:hover {
@@ -11296,54 +11314,75 @@ textarea:focus-visible {
 }
 
 .an-kpi-icon {
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--an-color, #1a4b8c) 13%, transparent);
-  color: var(--an-color, var(--primary-blue));
+  background: var(--an-soft, rgba(26, 75, 140, 0.13));
+  color: var(--an-color, #1a4b8c);
 }
 
 .an-kpi-icon svg {
-  width: 20px;
-  height: 20px;
-  max-width: 20px;
-  max-height: 20px;
-  flex: 0 0 20px;
+  width: 19px;
+  height: 19px;
+  max-width: 19px;
+  max-height: 19px;
+  flex: 0 0 19px;
   display: block;
 }
 
 .an-kpi-info { min-width: 0; flex: 1; }
 
 .an-kpi-label {
-  font-size: 0.74rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  line-height: 1.25;
+  /* Se permite el salto de línea: cortar con puntos suspensivos dejaba
+     etiquetas ilegibles ("PRODUCTOS ACT...") en pantallas medianas. */
+  overflow-wrap: anywhere;
 }
 
 .an-kpi-value {
-  font-size: 1.35rem;
+  margin-top: 3px;
+  font-size: clamp(1.05rem, 1.45vw, 1.4rem);
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.15;
   color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
+/* Importes largos ($1.234.567) bajan un escalón para no desbordar la tarjeta */
+.an-kpi-value.is-long { font-size: clamp(0.98rem, 1.15vw, 1.15rem); }
+
 .an-kpi-delta {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 3px;
-  margin-top: 2px;
+  gap: 4px;
+  margin-top: 5px;
   font-size: 0.72rem;
   font-weight: 700;
+  line-height: 1.2;
+  flex-wrap: wrap;
+}
+
+.an-kpi-delta svg {
+  width: 11px;
+  height: 11px;
+  flex: 0 0 11px;
+  display: block;
+}
+
+.an-kpi-delta small {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
 }
 
 .an-kpi-delta.up   { color: var(--success); }
@@ -11353,13 +11392,15 @@ textarea:focus-visible {
 /* --- Tarjetas de gráfica --- */
 .an-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
   gap: var(--spacing-lg);
+  align-items: start;
 }
 
 .an-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-light);
   background: var(--bg-primary);
@@ -11374,47 +11415,97 @@ textarea:focus-visible {
   align-items: baseline;
   justify-content: space-between;
   gap: var(--spacing-sm);
-  padding: 14px var(--spacing-lg) 0;
+  flex-wrap: wrap;
+  padding: 15px var(--spacing-lg) 0;
 }
 
 .an-card-head h4 {
-  font-size: 0.95rem;
+  font-size: 0.94rem;
   font-weight: 700;
   margin: 0;
 }
 
 .an-card-meta {
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   color: var(--text-tertiary);
   font-weight: 600;
-  white-space: nowrap;
 }
 
 .an-card-body {
   padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
   flex: 1;
-  min-height: 190px;
+  min-width: 0;
+  min-height: 180px;
 }
 
-.an-scroll { max-height: 320px; overflow-y: auto; }
+.an-scroll {
+  max-height: 330px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 
 .an-empty {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
-  min-height: 150px;
+  min-height: 148px;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-color);
   color: var(--text-tertiary);
-  font-size: 0.85rem;
+  font-size: 0.84rem;
+  text-align: center;
 }
 
 /* --- Gráfica de área (ingresos por día) --- */
-.an-area { width: 100%; height: auto; display: block; }
+/* El SVG se genera al ancho real del contenedor: sin escalado, el texto
+   y los trazos se ven idénticos en Chrome, Firefox y Safari. */
+.an-area {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
 .an-area-grid line { stroke: var(--border-light); stroke-width: 1; }
-.an-area-line { fill: none; stroke: var(--primary-blue); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+
+.an-axis-label {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--text-tertiary);
+}
+
+.an-area-line {
+  fill: none;
+  stroke: var(--primary-blue);
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
 .an-area-fill { fill: url(#anAreaGradient); }
-.an-area-dot { fill: var(--bg-primary); stroke: var(--primary-blue); stroke-width: 2; }
-.an-area-label { font-size: 9px; fill: var(--text-tertiary); }
+
+.an-area-dot {
+  fill: var(--bg-primary);
+  stroke: var(--primary-blue);
+  stroke-width: 2;
+  transition: r 140ms var(--ease-out-soft);
+}
+
+.an-area-guide {
+  stroke: var(--primary-blue);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0;
+  transition: opacity 140ms linear;
+}
+
+.an-area-point { cursor: pointer; }
+.an-area-point:hover .an-area-guide { opacity: 0.45; }
+.an-area-point:hover .an-area-dot { r: 5.5; }
+.an-area-point.is-best .an-area-dot { fill: var(--primary-orange); stroke: var(--primary-orange); }
 
 /* --- Donut (pedidos por estado) --- */
 .an-donut-wrap {
@@ -11424,23 +11515,28 @@ textarea:focus-visible {
   flex-wrap: wrap;
 }
 
-.an-donut { flex: 0 0 132px; width: 132px; height: 132px; display: block; }
+.an-donut { flex: 0 0 120px; width: 120px; height: 120px; display: block; }
+.an-donut circle { transition: stroke-dasharray 420ms var(--ease-out-soft); }
 
-.an-donut-center-value {
-  font-size: 9px;
+.an-donut-value {
+  font-family: inherit;
+  font-size: 22px;
   font-weight: 800;
   fill: var(--text-primary);
 }
 
-.an-donut-center-label {
-  font-size: 4.5px;
-  fill: var(--text-tertiary);
+.an-donut-label {
+  font-family: inherit;
+  font-size: 9px;
   font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  fill: var(--text-tertiary);
 }
 
 .an-legend {
-  flex: 1;
-  min-width: 150px;
+  flex: 1 1 160px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -11450,7 +11546,8 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.8rem;
+  min-width: 0;
+  font-size: 0.79rem;
 }
 
 .an-legend-dot {
@@ -11460,14 +11557,22 @@ textarea:focus-visible {
   border-radius: 50%;
 }
 
-.an-legend-label { flex: 1; color: var(--text-secondary); }
+.an-legend-label {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .an-legend-value { font-weight: 700; color: var(--text-primary); }
-.an-legend-pct { font-size: 0.72rem; color: var(--text-tertiary); min-width: 34px; text-align: right; }
+.an-legend-pct { font-size: 0.72rem; color: var(--text-tertiary); min-width: 32px; text-align: right; }
 
-/* --- Filas con barra de progreso (categorías, top, más vistos) --- */
-.an-rows { display: flex; flex-direction: column; gap: 11px; }
+/* --- Filas con barra (categorías, top vendidos, más vistos) --- */
+.an-rows { display: flex; flex-direction: column; gap: 12px; }
 
-.an-row { display: flex; align-items: center; gap: 10px; }
+.an-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
 
 .an-row-rank {
   flex: 0 0 22px;
@@ -11476,10 +11581,10 @@ textarea:focus-visible {
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-full);
-  background: var(--bg-secondary);
+  background: var(--an-soft, var(--bg-secondary));
   font-size: 0.7rem;
   font-weight: 800;
-  color: var(--text-secondary);
+  color: var(--an-color, var(--text-secondary));
 }
 
 .an-row-main { flex: 1; min-width: 0; }
@@ -11502,7 +11607,7 @@ textarea:focus-visible {
 }
 
 .an-row-value { font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
-.an-row-sub { font-size: 0.72rem; color: var(--text-tertiary); }
+.an-row-sub { font-size: 0.72rem; color: var(--text-tertiary); margin-top: 4px; }
 
 .an-bar {
   height: 7px;
@@ -11526,6 +11631,7 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+  min-width: 0;
   padding: 9px 0;
   border-bottom: 1px solid var(--border-light);
 }
@@ -11533,7 +11639,7 @@ textarea:focus-visible {
 .an-activity-item:last-child { border-bottom: 0; }
 
 .an-activity-date {
-  flex: 0 0 110px;
+  flex: 0 0 112px;
   font-size: 0.74rem;
   color: var(--text-tertiary);
 }
@@ -11555,7 +11661,7 @@ textarea:focus-visible {
   border-radius: var(--radius-full);
   font-size: 0.7rem;
   font-weight: 700;
-  background: color-mix(in srgb, var(--an-color, #1a4b8c) 14%, transparent);
+  background: var(--an-soft, rgba(26, 75, 140, 0.14));
   color: var(--an-color, var(--primary-blue));
 }
 
@@ -11565,10 +11671,24 @@ textarea:focus-visible {
 }
 
 @media (max-width: 560px) {
+  .an-kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .an-kpi { padding: 12px 12px 12px 15px; gap: 9px; }
+  .an-kpi-icon { width: 32px; height: 32px; flex-basis: 32px; }
+  .an-kpi-icon svg { width: 16px; height: 16px; flex-basis: 16px; }
+  .an-kpi-delta small { display: none; }
   .an-toolbar-actions { width: 100%; }
-  .an-toolbar-actions .form-input { flex: 1 1 100%; }
-  .an-activity-date { flex-basis: 84px; font-size: 0.68rem; }
-  .an-donut-wrap { flex-direction: column; align-items: flex-start; }
+  .an-toolbar-actions .form-select { flex: 1 1 100%; min-width: 0; }
+  .an-card-body { padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md); }
+  .an-card-head { padding: 13px var(--spacing-md) 0; }
+  /* La fila de actividad pasa a dos líneas: fecha + estado arriba,
+     cliente e importe abajo (evita el desbordamiento horizontal). */
+  .an-activity-item { flex-wrap: wrap; row-gap: 3px; }
+  .an-activity-date { flex: 1 1 auto; order: 1; font-size: 0.68rem; }
+  .an-status-pill { order: 2; }
+  .an-activity-name { order: 3; flex: 1 1 60%; }
+  .an-activity-total { order: 4; }
+  .an-donut-wrap { gap: var(--spacing-md); }
+  .an-donut { flex-basis: 104px; width: 104px; height: 104px; }
 }
 
 [data-theme="dark"] .an-kpi,
@@ -11577,4 +11697,158 @@ textarea:focus-visible {
   border-color: var(--border-light);
 }
 
-[data-theme="dark"] .an-bar { background: var(--bg-secondary); }
+[data-theme="dark"] .an-bar,
+[data-theme="dark"] .an-donut > circle:first-child { background: var(--bg-secondary); }
+
+@media (prefers-reduced-motion: reduce) {
+  .an-kpi:hover { transform: none; }
+  .an-bar span,
+  .an-donut circle,
+  .an-area-dot,
+  .an-area-guide { transition: none; }
+}
+
+/* ============================================================
+   9. ADMIN — CONFIRMACIÓN, SELECCIÓN MÚLTIPLE Y ACCIONES MASIVAS
+   ============================================================ */
+/* El diálogo de confirmación no hereda el modal a pantalla completa que
+   usan los formularios largos en móvil: siempre es una tarjeta centrada. */
+.product-form-overlay.confirm-overlay {
+  align-items: center;
+  padding: var(--spacing-md);
+}
+
+.confirm-overlay .confirm-modal {
+  max-width: 430px;
+  width: 100%;
+  height: auto;
+  max-height: min(88vh, 520px);
+  padding: var(--spacing-lg);
+  text-align: center;
+  border-radius: var(--radius-xl);
+}
+
+.confirm-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto var(--spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 59, 48, 0.12);
+  color: var(--danger);
+}
+
+.confirm-icon.is-warning {
+  background: rgba(232, 119, 34, 0.14);
+  color: var(--primary-orange-dark);
+}
+
+.confirm-icon svg {
+  width: 26px;
+  height: 26px;
+  max-width: 26px;
+  max-height: 26px;
+  flex: 0 0 26px;
+  display: block;
+}
+
+.confirm-modal h2 {
+  font-size: 1.08rem;
+  font-weight: 800;
+  margin: 0 0 6px;
+}
+
+.confirm-modal p {
+  font-size: 0.87rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-lg);
+}
+
+.confirm-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.confirm-actions .btn { min-width: 132px; justify-content: center; }
+
+/* --- Barra de acciones masivas --- */
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--primary-blue);
+  background: rgba(26, 75, 140, 0.06);
+  animation: ltSlideDown 200ms var(--ease-out-soft) both;
+}
+
+.bulk-bar[hidden] { display: none !important; }
+
+.bulk-bar-count {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--primary-blue);
+}
+
+.bulk-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.bulk-bar-actions .btn { white-space: nowrap; }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+}
+
+.btn-ghost:hover { background: var(--bg-secondary); color: var(--text-primary); }
+
+@keyframes ltSlideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* --- Casillas de selección en tablas --- */
+.products-table th.col-select,
+.products-table td.col-select {
+  width: 40px;
+  padding-right: 0;
+  text-align: center;
+}
+
+.table-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 4px;
+  margin: -4px;
+}
+
+.table-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  accent-color: var(--primary-blue);
+  cursor: pointer;
+}
+
+.products-table tr.is-selected {
+  background: rgba(26, 75, 140, 0.05);
+}
+
+[data-theme="dark"] .bulk-bar { background: rgba(90, 160, 255, 0.1); }
+[data-theme="dark"] .products-table tr.is-selected { background: rgba(90, 160, 255, 0.08); }

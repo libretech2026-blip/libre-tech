@@ -173,10 +173,17 @@ const Cart = (() => {
   }
 
   // --- Obtener productos (del admin o seed) ---
+  // Se memoriza el parseo: esta función se llama por cada ítem del carrito,
+  // por cada obsequio y en cada repintado del resumen.
+  let _productsCache = { raw: null, value: [] };
+
   function getProducts() {
     try {
-      const data = localStorage.getItem('libretech_products');
-      return data ? JSON.parse(data) : [];
+      const data = localStorage.getItem('libretech_products') || '[]';
+      if (data !== _productsCache.raw) {
+        _productsCache = { raw: data, value: JSON.parse(data) };
+      }
+      return _productsCache.value;
     } catch {
       return [];
     }

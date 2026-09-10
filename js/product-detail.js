@@ -130,10 +130,10 @@ const ProductDetail = (() => {
     const imgContainerMobile = document.getElementById('pdMainImageMobile');
     const mainImageSrc = Cart.escapeAttr(allImages[0]);
     if (imgContainer && allImages.length > 0) {
-      imgContainer.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" id="pdMainImg" style="cursor:zoom-in;">`;
+      imgContainer.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async" id="pdMainImg" style="cursor:zoom-in;">`;
     }
     if (imgContainerMobile && allImages.length > 0) {
-      imgContainerMobile.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" id="pdMainImgMobile" style="cursor:zoom-in;">`;
+      imgContainerMobile.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async" id="pdMainImgMobile" style="cursor:zoom-in;">`;
     }
 
     const addZoomListeners = () => {
@@ -148,7 +148,7 @@ const ProductDetail = (() => {
     const thumbsContainerMobile = document.getElementById('pdThumbnailsMobile');
     const thumbsHtml = allImages.map((img, i) =>
       `<button class="pd-thumb${i === 0 ? ' active' : ''}" data-index="${i}" data-src="${Cart.escapeAttr(img)}" aria-label="Ver imagen ${i + 1}">
-        <img src="${Cart.escapeAttr(img)}" alt="Foto ${i + 1}" loading="lazy">
+        <img src="${Cart.escapeAttr(img)}" alt="Foto ${i + 1}" loading="lazy" decoding="async">
       </button>`
     ).join('');
 
@@ -353,7 +353,7 @@ const ProductDetail = (() => {
         <a href="producto.html?id=${encodeURIComponent(p.id)}" class="product-card-link">
           <div class="product-card-image">
             ${p.image
-              ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" width="260" height="260">`
+              ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async" width="260" height="260">`
               : `<div class="product-no-image">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -774,8 +774,8 @@ const ProductDetail = (() => {
       <a href="producto.html?id=${encodeURIComponent(p.id)}" class="search-dropdown-item">
         <div class="search-dropdown-thumb">
           ${p.image
-            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy">`
-            : `<img src="nuevos logos/PNG/Isotipo/4.png" alt="Libre Tech" loading="lazy">`
+            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async">`
+            : `<img src="nuevos logos/PNG/Isotipo/4.png" alt="Libre Tech" loading="lazy" decoding="async">`
           }
         </div>
         <div class="search-dropdown-info">

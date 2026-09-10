@@ -257,7 +257,7 @@ const Store = (() => {
           <button class="category-bubble-item" data-category="${Cart.escapeAttr(cat)}" aria-label="Filtrar por ${Cart.escapeAttr(label)}">
             <span class="category-bubble-avatar${img ? ' has-image' : ''}">
               ${img
-                ? `<img src="${Cart.escapeAttr(img)}" alt="${Cart.escapeAttr(label)}" loading="lazy">`
+                ? `<img src="${Cart.escapeAttr(img)}" alt="${Cart.escapeAttr(label)}" loading="lazy" decoding="async">`
                 : `<span class="category-bubble-fallback">${Cart.escapeHTML(label.charAt(0).toUpperCase())}</span>`
               }
             </span>
@@ -291,6 +291,7 @@ const Store = (() => {
     function startCategoryAutoRotate() {
       if (pageCount <= 1) return;
       categoryCarouselAutoInterval = setInterval(() => {
+        if (document.hidden) return; // pestaña en segundo plano: no se anima
         categoryCarouselPage = (categoryCarouselPage + 1) % pageCount;
         updateCategoryCarousel();
       }, 8000);
@@ -505,20 +506,47 @@ const Store = (() => {
     localStorage.setItem('libretech_reviews', JSON.stringify(REVIEWS));
   }
 
-  // --- Obtener productos ---
-  function getProducts() {
-    try { return JSON.parse(localStorage.getItem(PRODUCTS_KEY) || '[]'); }
-    catch { return []; }
+  /**
+   * Caché de parseo por clave de localStorage.
+   * Se guarda la cadena original: si no cambió, se reutiliza el objeto ya
+   * parseado. Evita cientos de JSON.parse del catálogo por render sin
+   * arriesgar datos obsoletos (cualquier escritura cambia la cadena).
+   */
+  const _lsCache = new Map();
+
+  function readJSON(key, fallback) {
+    const raw = localStorage.getItem(key) || fallback;
+    const cached = _lsCache.get(key);
+    if (cached && cached.raw === raw) return cached.value;
+    let value;
+    try { value = JSON.parse(raw); }
+    catch { value = JSON.parse(fallback); }
+    _lsCache.set(key, { raw, value });
+    return value;
   }
 
+  // --- Obtener productos ---
+  function getProducts() {
+    const products = readJSON(PRODUCTS_KEY, '[]');
+    return Array.isArray(products) ? products : [];
+  }
+
+  // Los productos activos también se memorizan: se recorren en cada render,
+  // en los filtros, en las burbujas y en el contador.
+  let _activeCache = { source: null, value: [] };
+
   function getActiveProducts() {
-    return getProducts().filter(p => p.active !== false);
+    const products = getProducts();
+    if (_activeCache.source === products) return _activeCache.value;
+    const active = products.filter(p => p.active !== false);
+    _activeCache = { source: products, value: active };
+    return active;
   }
 
   // --- Ratings ---
   function getRatings() {
-    try { return JSON.parse(localStorage.getItem(RATINGS_KEY) || '{}'); }
-    catch { return {}; }
+    const ratings = readJSON(RATINGS_KEY, '{}');
+    return ratings && typeof ratings === 'object' ? ratings : {};
   }
 
   function getProductRating(productId) {
@@ -620,11 +648,13 @@ const Store = (() => {
     dropdown.style.display = 'block';
   }
 
-  function updateProductsCount() {
+  function updateProductsCount(knownCount) {
     const countEl = document.getElementById('productsCount');
     if (!countEl) return;
-    const filtered = getFilteredProducts();
-    countEl.textContent = `${filtered.length} producto${filtered.length !== 1 ? 's' : ''}`;
+    // Si quien renderiza ya filtró, se reutiliza su conteo en vez de
+    // volver a filtrar todo el catálogo.
+    const total = typeof knownCount === 'number' ? knownCount : getFilteredProducts().length;
+    countEl.textContent = `${total} producto${total !== 1 ? 's' : ''}`;
   }
 
   /* ============================================================
@@ -837,13 +867,18 @@ const Store = (() => {
 
     if (featuredHeader) featuredHeader.style.display = 'flex';
 
+    // Se monta en un fragmento y se inserta de una vez: un único reflow
+    // en lugar de uno por tarjeta.
+    const fragment = document.createDocumentFragment();
     products.forEach((product, i) => {
       const card = createProductCard(product);
       // Entrada escalonada (limitada para que la última fila no tarde demasiado)
-      card.style.setProperty('--card-index', Math.min(i, 11));
-      grid.appendChild(card);
+      card.style.setProperty('--card-index', Math.min(i, 9));
+      fragment.appendChild(card);
     });
-    updateProductsCount();
+    grid.appendChild(fragment);
+
+    updateProductsCount(products.length);
     observeReveals(grid);
   }
 
@@ -918,7 +953,7 @@ const Store = (() => {
           ${gift ? `<span class="product-badge gift" title="${Cart.escapeAttr(gift)}">🎁 Regalo</span>` : ''}
           ${isOutOfStock ? '<div class="product-sold-out-overlay"></div>' : ''}
           ${product.image
-            ? `<img src="${Cart.escapeAttr(product.image)}" alt="${Cart.escapeAttr(product.name)}" loading="lazy" width="260" height="260">`
+            ? `<img src="${Cart.escapeAttr(product.image)}" alt="${Cart.escapeAttr(product.name)}" loading="lazy" decoding="async" decoding="async" width="260" height="260">`
             : `<div class="product-no-image">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -991,7 +1026,7 @@ const Store = (() => {
         const href = link ? ` href="${Cart.escapeAttr(link)}"` : '';
         heroBannerContainer.innerHTML = `<${tag}${href} class="promo-banner-link">
           <div class="promo-banner-img">
-            ${hb.image ? `<img src="${Cart.escapeAttr(hb.image)}" alt="${Cart.escapeAttr(hb.name)}" loading="lazy">` : ''}
+            ${hb.image ? `<img src="${Cart.escapeAttr(hb.image)}" alt="${Cart.escapeAttr(hb.name)}" loading="lazy" decoding="async">` : ''}
           </div>
           <div class="promo-banner-body">
             <div class="promo-banner-title">${Cart.escapeHTML(hb.name || '')}</div>
@@ -1019,7 +1054,7 @@ const Store = (() => {
           const tag = link ? 'a' : 'div';
           const href = link ? ` href="${Cart.escapeAttr(link)}"` : '';
           return `<${tag}${href} class="promo-banner-link promo-banner--image-only" ${h}>
-            ${b.image ? `<img src="${Cart.escapeAttr(b.image)}" alt="${Cart.escapeAttr(b.name)}" loading="lazy">` : ''}
+            ${b.image ? `<img src="${Cart.escapeAttr(b.image)}" alt="${Cart.escapeAttr(b.name)}" loading="lazy" decoding="async">` : ''}
           </${tag}>`;
         }).join('');
       } else {
@@ -1083,7 +1118,7 @@ const Store = (() => {
         ${hasOffer ? `<div class="hero-slide-discount-badge">-${discountPercent}%</div>` : ''}
         <div class="hero-slide-image">
           ${p.image
-            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy">`
+            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async">`
             : `<div class="hero-slide-placeholder">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
               </div>`
@@ -1145,11 +1180,21 @@ const Store = (() => {
 
       function resetCarouselTimer() {
         clearInterval(carouselInterval);
-        carouselInterval = setInterval(nextSlide, 4000);
+        // Con la pestaña en segundo plano no se anima: el navegador
+        // acumularía los ticks y gastaría batería sin que nadie lo vea.
+        carouselInterval = setInterval(() => {
+          if (document.hidden) return;
+          nextSlide();
+        }, 4000);
       }
 
       resetCarouselTimer();
-      window.addEventListener('resize', updateCarousel);
+
+      let resizeRaf = 0;
+      window.addEventListener('resize', () => {
+        cancelAnimationFrame(resizeRaf);
+        resizeRaf = requestAnimationFrame(updateCarousel);
+      }, { passive: true });
     } else {
       // Comportamiento móvil: scroll horizontal sin transición automática
       track.style.transform = 'none';
@@ -1281,8 +1326,8 @@ const Store = (() => {
       <a href="producto.html?id=${encodeURIComponent(p.id)}" class="search-dropdown-item">
         <div class="search-dropdown-thumb">
           ${p.image
-            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy">`
-            : `<img src="nuevos logos/PNG/Isotipo/4.png" alt="Libre Tech" loading="lazy">`
+            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async">`
+            : `<img src="nuevos logos/PNG/Isotipo/4.png" alt="Libre Tech" loading="lazy" decoding="async">`
           }
         </div>
         <div class="search-dropdown-info">
@@ -1318,8 +1363,8 @@ const Store = (() => {
       <a href="producto.html?id=${encodeURIComponent(p.id)}" class="search-dropdown-item">
         <div class="search-dropdown-thumb">
           ${p.image
-            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy">`
-            : `<img src="nuevos logos/PNG/Isotipo/4.png" alt="Libre Tech" loading="lazy">`
+            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async">`
+            : `<img src="nuevos logos/PNG/Isotipo/4.png" alt="Libre Tech" loading="lazy" decoding="async">`
           }
         </div>
         <div class="search-dropdown-info">
@@ -1479,9 +1524,9 @@ const Store = (() => {
       const link = p.link || p.linkSection || p.linkUrl || '';
       if (link) {
         const isExternal = link.startsWith('http');
-        wrapper.innerHTML = `<a href="${Cart.escapeAttr(link)}"${isExternal ? ' target="_blank" rel="noopener"' : ''}><img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeHTML(p.title || 'Promoción')}" loading="lazy"></a>`;
+        wrapper.innerHTML = `<a href="${Cart.escapeAttr(link)}"${isExternal ? ' target="_blank" rel="noopener"' : ''}><img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeHTML(p.title || 'Promoción')}" loading="lazy" decoding="async"></a>`;
       } else {
-        wrapper.innerHTML = `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeHTML(p.title || 'Promoción')}" loading="lazy">`;
+        wrapper.innerHTML = `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeHTML(p.title || 'Promoción')}" loading="lazy" decoding="async">`;
       }
       slot.appendChild(wrapper);
     });
@@ -1512,9 +1557,9 @@ const Store = (() => {
       const link = photo.link || photo.linkSection || photo.linkUrl || '';
       if (link) {
         const isExternal = link.startsWith('http');
-        item.innerHTML = `<a href="${Cart.escapeAttr(link)}"${isExternal ? ' target="_blank" rel="noopener"' : ''}><img src="${Cart.escapeAttr(photo.image)}" alt="${Cart.escapeHTML(photo.title || 'Banner')}" loading="lazy"></a>`;
+        item.innerHTML = `<a href="${Cart.escapeAttr(link)}"${isExternal ? ' target="_blank" rel="noopener"' : ''}><img src="${Cart.escapeAttr(photo.image)}" alt="${Cart.escapeHTML(photo.title || 'Banner')}" loading="lazy" decoding="async"></a>`;
       } else {
-        item.innerHTML = `<img src="${Cart.escapeAttr(photo.image)}" alt="${Cart.escapeHTML(photo.title || 'Banner')}" loading="lazy">`;
+        item.innerHTML = `<img src="${Cart.escapeAttr(photo.image)}" alt="${Cart.escapeHTML(photo.title || 'Banner')}" loading="lazy" decoding="async">`;
       }
       track.appendChild(item);
     });
@@ -1532,6 +1577,7 @@ const Store = (() => {
     bannerCarouselIndex = 0;
     showBannerCarouselSlide(0, photos.length);
     bannerCarouselInterval = setInterval(() => {
+      if (document.hidden) return; // pestaña en segundo plano: no se anima
       bannerCarouselIndex = (bannerCarouselIndex + 1) % photos.length;
       showBannerCarouselSlide(bannerCarouselIndex, photos.length);
     }, 5000); // Change every 5 seconds
@@ -1665,7 +1711,9 @@ const Store = (() => {
         entry.target.classList.add('revealed');
         _revealObserver.unobserve(entry.target);
       });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    // Se revela un poco antes de entrar en pantalla: al hacer scroll el
+    // contenido ya está visible en vez de aparecer bajo el dedo.
+    }, { rootMargin: '0px 0px 12% 0px', threshold: 0.05 });
 
     return _revealObserver;
   }
