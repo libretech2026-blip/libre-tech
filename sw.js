@@ -3,14 +3,22 @@
    Cache-first for static assets, network-first for API calls
    ============================================================ */
 
-const CACHE_NAME = 'libretech-v2';
+// Subir la versión invalida el caché anterior tras cada despliegue
+const CACHE_NAME = 'libretech-v4';
 const STATIC_ASSETS = [
   '/index.html',
   '/producto.html',
   '/css/styles.css',
+  '/js/business-config.js',
+  '/js/colombia-locations.js',
   '/js/app.js',
   '/js/cart.js',
   '/js/auth.js',
+  '/js/shipping.js',
+  '/js/gifts.js',
+  '/js/share.js',
+  '/js/whatsapp-bubble.js',
+  '/js/hamburger-menu.js',
   '/js/product-detail.js',
   '/js/supabase-client.js',
   '/nuevos%20logos/JPG/Isotipo/1.jpg',

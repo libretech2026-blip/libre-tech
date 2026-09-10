@@ -401,12 +401,37 @@ const Auth = (() => {
   }
 
   function openLoginDropdown() {
+    openDropdownPanel('login');
+  }
+
+  function openRegisterDropdown() {
+    openDropdownPanel('register');
+  }
+
+  /**
+   * Abre el menú de usuario mostrando el panel pedido.
+   * Si el usuario ya inició sesión no tiene sentido pedir credenciales:
+   * se abre el menú de cuenta.
+   */
+  function openDropdownPanel(panel) {
     const dropdown = document.getElementById('userDropdown');
-    if (dropdown && !dropdown.classList.contains('active')) {
+    if (!dropdown) return;
+
+    if (isLoggedIn()) {
       dropdown.classList.add('active');
+      return;
     }
-    // Ensure login panel is visible (not register)
-    hideRegisterPanel();
+
+    if (panel === 'register') showRegisterPanel();
+    else hideRegisterPanel();
+
+    dropdown.classList.add('active');
+    dropdown.scrollIntoView?.({ block: 'nearest' });
+
+    const focusTarget = panel === 'register'
+      ? document.getElementById('registerName')
+      : document.getElementById('loginEmail');
+    setTimeout(() => focusTarget?.focus(), 250);
   }
 
   // --- Registro (UI helpers) ---
@@ -529,5 +554,5 @@ const Auth = (() => {
     }
   }
 
-  return { init, getUser, isLoggedIn, openLoginDropdown };
+  return { init, getUser, isLoggedIn, openLoginDropdown, openRegisterDropdown };
 })();

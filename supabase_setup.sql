@@ -85,7 +85,7 @@ DECLARE
   user_email text;
 BEGIN
   SELECT email INTO user_email FROM auth.users WHERE id = auth.uid();
-  RETURN user_email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com');
+  RETURN user_email IN ('admin@libretechtienda.com', 'libretechtienda@gmail.com', 'libretech2026@gmail.com');
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
@@ -345,7 +345,7 @@ BEGIN
   -- Check if caller is admin
   IF NOT EXISTS (
     SELECT 1 FROM auth.users au WHERE au.id = auth.uid()
-    AND au.email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com')
+    AND au.email IN ('admin@libretechtienda.com', 'libretechtienda@gmail.com', 'libretech2026@gmail.com')
   ) THEN
     RAISE EXCEPTION 'Not authorized';
   END IF;
@@ -366,7 +366,7 @@ BEGIN
   -- Check if caller is admin
   IF NOT EXISTS (
     SELECT 1 FROM auth.users au WHERE au.id = auth.uid()
-    AND au.email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com')
+    AND au.email IN ('admin@libretechtienda.com', 'libretechtienda@gmail.com', 'libretech2026@gmail.com')
   ) THEN
     RAISE EXCEPTION 'Not authorized';
   END IF;
@@ -388,7 +388,7 @@ BEGIN
   -- Check if caller is admin
   IF NOT EXISTS (
     SELECT 1 FROM auth.users au WHERE au.id = auth.uid()
-    AND au.email IN ('admin@libretechtienda.com', 'libretech2026@gmail.com')
+    AND au.email IN ('admin@libretechtienda.com', 'libretechtienda@gmail.com', 'libretech2026@gmail.com')
   ) THEN
     RAISE EXCEPTION 'Not authorized';
   END IF;

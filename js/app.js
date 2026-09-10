@@ -28,8 +28,13 @@ const Store = (() => {
 
   // --- Inicialización ---
   function init() {
+    // Enlace corto compartido (index.html?product=<id>) → ficha del producto
+    if (typeof Share !== 'undefined' && Share.resolveDeepLink && Share.resolveDeepLink()) return;
+
     // Products already synced from Supabase before init() is called
     seedReviews();
+    loadSortMode();
+    renderSortControl(renderFeaturedProducts);
     renderCategories();
     renderCategoryBubbleCarousel();
     renderFeaturedProducts();
@@ -41,11 +46,13 @@ const Store = (() => {
     bindEvents();
     initHeaderScroll();
     applyHeaderInnerCustomization();
+    applyHeroTexts();
     updateHeroStats();
     renderSocialLinks();
     renderFooterSocialIcons();
     renderPromoPhotoBanners();
     setHeroBackgroundImage();
+    initSectionReveals();
 
     // Load banners and social links from Supabase, then re-render
     loadSiteConfigFromDB();
@@ -88,9 +95,14 @@ const Store = (() => {
         _uiConfigFromDB = uiData;
         try { localStorage.setItem('libretech_visual_ui', JSON.stringify(uiData)); } catch(e) { /* ok */ }
         applyHeaderInnerCustomization();
+        applyHeroTexts();
         renderCategoryBubbleCarousel();
+        // El orden manual de destacados vive en visual_ui.featuredOrder
+        renderFeaturedProducts();
       }
       notifyProductsUpdated();
+      // Avisa a carrito / menú / obsequios / envíos que ya hay configuración
+      document.dispatchEvent(new CustomEvent('site-config-loaded'));
     } catch (e) { console.warn('[App] loadSiteConfigFromDB:', e); }
   }
 
@@ -102,6 +114,27 @@ const Store = (() => {
     } catch {
       return {};
     }
+  }
+
+  /**
+   * Titular, subtítulo y botón del hero, configurables desde
+   * Admin → Inicio y menú → Textos del inicio (visual_ui.heroTexts).
+   * Un campo vacío conserva el texto que trae el HTML.
+   */
+  function applyHeroTexts() {
+    const texts = getVisualUiConfig().heroTexts;
+    if (!texts || typeof texts !== 'object') return;
+
+    const apply = (id, value) => {
+      const el = document.getElementById(id);
+      if (el && typeof value === 'string' && value.trim()) el.textContent = value.trim();
+    };
+
+    apply('heroTitleLine1', texts.line1);
+    apply('heroTitleLine2', texts.line2);
+    apply('heroTitleLine3', texts.line3);
+    apply('heroSubtitleText', texts.subtitle);
+    apply('heroCtaLabel', texts.ctaText);
   }
 
   function applyHeaderInnerCustomization() {
@@ -569,6 +602,177 @@ const Store = (() => {
     countEl.textContent = `${filtered.length} producto${filtered.length !== 1 ? 's' : ''}`;
   }
 
+  /* ============================================================
+     ORDENAMIENTO DE PRODUCTOS
+     Control compartido por index, productos, destacados y ofertas.
+     "Recomendados" respeta el orden propio de cada página (orden manual
+     de destacados en el lobby, mejor calificados en destacados, etc.).
+     ============================================================ */
+  const SORT_KEY = 'libretech_sort';
+
+  const SORT_OPTIONS = [
+    { value: 'relevance',  label: 'Recomendados',           icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
+    { value: 'recent',     label: 'Más recientes',          icon: 'M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+    { value: 'az',         label: 'Nombre: A → Z',          icon: 'M3 6h18M3 12h12M3 18h6' },
+    { value: 'za',         label: 'Nombre: Z → A',          icon: 'M3 6h6M3 12h12M3 18h18' },
+    { value: 'price_asc',  label: 'Precio: menor a mayor',  icon: 'M12 19V5M5 12l7-7 7 7' },
+    { value: 'price_desc', label: 'Precio: mayor a menor',  icon: 'M12 5v14M19 12l-7 7-7-7' },
+    { value: 'best',       label: 'Más vendidos',           icon: 'M20 12V22H4V12M22 7H2v5h20V7zM12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z' }
+  ];
+
+  let currentSort = 'relevance';
+
+  function getSortMode() {
+    return currentSort;
+  }
+
+  function loadSortMode() {
+    try {
+      const saved = sessionStorage.getItem(SORT_KEY);
+      if (saved && SORT_OPTIONS.some(o => o.value === saved)) currentSort = saved;
+    } catch {
+      // sessionStorage no disponible: se usa el orden por defecto
+    }
+  }
+
+  function saveSortMode(mode) {
+    try { sessionStorage.setItem(SORT_KEY, mode); } catch { /* opcional */ }
+  }
+
+  function priceOf(product) {
+    return product.offerActive && product.offerPrice ? product.offerPrice : product.price;
+  }
+
+  /**
+   * Ranking de más vendidos publicado desde Admin → Analíticas.
+   * Si no hay ranking publicado se usan las reseñas como señal de respaldo,
+   * que es lo único con lectura pública disponible.
+   */
+  function getBestSellerRank() {
+    const published = getVisualUiConfig().bestSellers;
+    if (Array.isArray(published) && published.length > 0) {
+      return new Map(published.map((entry, i) => [entry.id || entry, i]));
+    }
+
+    const ratings = getRatings();
+    const fallback = Object.entries(ratings)
+      .map(([id, list]) => ({ id, count: Array.isArray(list) ? list.length : 0 }))
+      .sort((a, b) => b.count - a.count);
+    return new Map(fallback.map((entry, i) => [entry.id, i]));
+  }
+
+  /** Devuelve una copia ordenada; no muta el array recibido. */
+  function sortProducts(products, mode) {
+    const list = [...(products || [])];
+    const by = mode || currentSort;
+    const name = p => (p.name || '').toLocaleLowerCase('es');
+
+    switch (by) {
+      case 'recent':
+        return list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      case 'az':
+        return list.sort((a, b) => name(a).localeCompare(name(b), 'es', { sensitivity: 'base' }));
+      case 'za':
+        return list.sort((a, b) => name(b).localeCompare(name(a), 'es', { sensitivity: 'base' }));
+      case 'price_asc':
+        return list.sort((a, b) => priceOf(a) - priceOf(b));
+      case 'price_desc':
+        return list.sort((a, b) => priceOf(b) - priceOf(a));
+      case 'best': {
+        const rank = getBestSellerRank();
+        const at = id => (rank.has(id) ? rank.get(id) : Number.MAX_SAFE_INTEGER);
+        return list.sort((a, b) => at(a.id) - at(b.id));
+      }
+      default:
+        return list; // 'relevance': se conserva el orden que trae la página
+    }
+  }
+
+  /**
+   * Dibuja el botón de ordenar dentro de #sortBar.
+   * @param {() => void} onChange se llama cuando cambia el criterio
+   */
+  function renderSortControl(onChange) {
+    const bar = document.getElementById('sortBar');
+    if (!bar) return;
+
+    const current = SORT_OPTIONS.find(o => o.value === currentSort) || SORT_OPTIONS[0];
+
+    bar.innerHTML = `
+      <div class="sort-control">
+        <button type="button" class="sort-btn" id="sortBtn" aria-haspopup="listbox" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+          <span class="sort-btn-label">Ordenar:</span>
+          <strong id="sortBtnValue">${current.label}</strong>
+          <svg class="sort-btn-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <ul class="sort-menu" id="sortMenu" role="listbox" aria-label="Ordenar productos" hidden>
+          ${SORT_OPTIONS.map(o => `
+            <li role="option" aria-selected="${o.value === currentSort}">
+              <button type="button" class="sort-option${o.value === currentSort ? ' active' : ''}" data-sort="${o.value}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${o.icon}"/></svg>
+                <span>${o.label}</span>
+                <svg class="sort-option-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+
+    const btn = bar.querySelector('#sortBtn');
+    const menu = bar.querySelector('#sortMenu');
+
+    const closeMenu = () => {
+      menu.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+      btn.classList.remove('open');
+    };
+
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = menu.hidden;
+      menu.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+      btn.classList.toggle('open', open);
+    });
+
+    menu.addEventListener('click', e => {
+      const option = e.target.closest('[data-sort]');
+      if (!option) return;
+      currentSort = option.dataset.sort;
+      saveSortMode(currentSort);
+      closeMenu();
+      renderSortControl(onChange);
+      if (typeof onChange === 'function') onChange();
+    });
+
+    document.addEventListener('click', e => {
+      if (!menu.hidden && !bar.contains(e.target)) closeMenu();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !menu.hidden) { closeMenu(); btn.focus(); }
+    });
+  }
+
+  /**
+   * Orden manual de los destacados del lobby.
+   * Se guarda en site_config.visual_ui.featuredOrder como un array de IDs.
+   * Los productos destacados que no estén en la lista van al final,
+   * conservando su orden natural (fecha de creación).
+   */
+  function sortByFeaturedOrder(products) {
+    const order = getVisualUiConfig().featuredOrder;
+    if (!Array.isArray(order) || order.length === 0) return products;
+
+    const rank = new Map(order.map((id, i) => [id, i]));
+    return [...products].sort((a, b) => {
+      const ra = rank.has(a.id) ? rank.get(a.id) : Number.MAX_SAFE_INTEGER;
+      const rb = rank.has(b.id) ? rank.get(b.id) : Number.MAX_SAFE_INTEGER;
+      return ra - rb;
+    });
+  }
+
   // --- Renderizar productos destacados ---
   function renderFeaturedProducts() {
     const grid = document.getElementById('productsGrid');
@@ -582,10 +786,14 @@ const Store = (() => {
     if (!showAll) {
       // Show only featured when no search/filter
       if (currentCategory === 'all' && !searchQuery.trim()) {
-        products = products.filter(p => p.featured === true);
+        products = sortByFeaturedOrder(products.filter(p => p.featured === true));
         isShowingFeaturedOnly = true;
       }
     }
+
+    // El criterio elegido por el cliente manda; "Recomendados" conserva
+    // el orden manual de destacados definido en el panel de administración.
+    products = sortProducts(products);
 
     grid.innerHTML = '';
     if (products.length === 0) {
@@ -601,8 +809,14 @@ const Store = (() => {
       featuredHeader.style.display = isShowingFeaturedOnly || showAll ? 'flex' : 'none';
     }
 
-    products.forEach(product => grid.appendChild(createProductCard(product)));
+    products.forEach((product, i) => {
+      const card = createProductCard(product);
+      // Entrada escalonada (limitada para que la última fila no tarde demasiado)
+      card.style.setProperty('--card-index', Math.min(i, 11));
+      grid.appendChild(card);
+    });
     updateProductsCount();
+    observeReveals(grid);
 
     // Show/hide "Ver todos" button - shown when showing featured OR when showing all products
     const btnViewAll = document.getElementById('btnViewAll');
@@ -666,7 +880,7 @@ const Store = (() => {
   // --- Crear tarjeta de producto ---
   function createProductCard(product) {
     const card = document.createElement('article');
-    card.className = 'product-card';
+    card.className = 'product-card reveal';
     card.dataset.productId = product.id;
 
     const isNew = isRecentProduct(product.createdAt);
@@ -674,13 +888,19 @@ const Store = (() => {
     const rating = getProductRating(product.id);
     const stock = product.stock ?? 0;
     const isOutOfStock = stock <= 0;
+    const gift = (typeof Gifts !== 'undefined') ? Gifts.forProduct(product.id) : '';
 
     card.innerHTML = `
+      <button class="product-share-btn" type="button" data-share="product" data-share-id="${product.id}"
+              title="Compartir ${Cart.escapeAttr(product.name)}" aria-label="Compartir ${Cart.escapeAttr(product.name)}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
       <a href="${detailLink}" class="product-card-link">
         <div class="product-card-image">
           ${isOutOfStock ? '<span class="product-badge out-of-stock">Agotado</span>' : ''}
           ${!isOutOfStock && isNew ? '<span class="product-badge new">Nuevo</span>' : ''}
           ${product.offerActive && product.offerPrice ? '<span class="product-badge sale">Oferta</span>' : ''}
+          ${gift ? `<span class="product-badge gift" title="${Cart.escapeAttr(gift)}">🎁 Regalo</span>` : ''}
           ${isOutOfStock ? '<div class="product-sold-out-overlay"></div>' : ''}
           ${product.image
             ? `<img src="${Cart.escapeAttr(product.image)}" alt="${Cart.escapeAttr(product.name)}" loading="lazy" width="260" height="260">`
@@ -696,6 +916,7 @@ const Store = (() => {
         <div class="product-card-body">
           <span class="product-category">${Cart.escapeHTML(product.category || '')}</span>
           <h3 class="product-name">${Cart.escapeHTML(product.name)}</h3>
+          ${gift ? `<span class="product-gift-line">🎁 Incluye: ${Cart.escapeHTML(gift)}</span>` : ''}
           ${renderStars(rating.avg, rating.count)}
           <div class="product-price-row">
             <span class="product-price-wrapper">
@@ -1385,6 +1606,8 @@ const Store = (() => {
     }
     
     seedReviews();
+    loadSortMode();
+    renderSortControl(renderFeaturedProducts);
     renderCategoryBubbleCarousel();
     renderFeaturedProducts();
     renderPromoBanners();
@@ -1395,6 +1618,7 @@ const Store = (() => {
     renderSocialLinks();
     renderFooterSocialIcons();
     renderPromoPhotoBanners();
+    initSectionReveals();
 
     // Load banners and social links from Supabase
     loadSiteConfigFromDB();
@@ -1409,7 +1633,112 @@ const Store = (() => {
     });
   }
 
-  return { init, initProductsPage, renderProducts, renderCategories, getProductRating, renderStars, getActiveProducts, getProducts, renderSocialLinks, renderPromoPhotoBanners, setHeroBackgroundImage, setActiveCategory, renderBannerCarousel, renderCustomerReviews, bindEvents };
+  /* ============================================================
+     ANIMACIONES DE ENTRADA (scroll reveal)
+     Un único IntersectionObserver compartido: los elementos con la
+     clase .reveal se muestran al entrar en el viewport y se dejan de
+     observar. Respeta prefers-reduced-motion.
+     ============================================================ */
+  let _revealObserver = null;
+  let _revealDisabled = false;   // sin animación: todo visible de inmediato
+  let _revealWatchdog = null;
+
+  function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function getRevealObserver() {
+    if (_revealObserver) return _revealObserver;
+    if (!('IntersectionObserver' in window)) return null;
+
+    _revealObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('revealed');
+        _revealObserver.unobserve(entry.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+
+    return _revealObserver;
+  }
+
+  /**
+   * Red de seguridad: el contenido nunca debe quedarse invisible.
+   * Si pasado un momento el observer no reveló nada, se desactiva el efecto
+   * y se muestra todo (navegadores sin soporte, pestañas en segundo plano,
+   * extensiones que bloquean el observer...).
+   */
+  function armRevealWatchdog() {
+    if (_revealWatchdog || _revealDisabled) return;
+    _revealWatchdog = setTimeout(() => {
+      _revealWatchdog = null;
+      if (document.querySelector('.reveal.revealed')) return; // funcionó
+      revealAll();
+    }, 1500);
+  }
+
+  function revealAll() {
+    _revealDisabled = true;
+    if (_revealObserver) { _revealObserver.disconnect(); _revealObserver = null; }
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('revealed'));
+  }
+
+  /** Observa los .reveal dentro de root (o de todo el documento). */
+  function observeReveals(root) {
+    const scope = root || document;
+    const targets = scope.querySelectorAll('.reveal:not(.revealed)');
+    if (targets.length === 0) return;
+
+    const observer = (_revealDisabled || prefersReducedMotion()) ? null : getRevealObserver();
+
+    targets.forEach(el => {
+      if (observer) observer.observe(el);
+      else el.classList.add('revealed');
+    });
+
+    if (observer) armRevealWatchdog();
+  }
+
+  /** Marca las secciones estáticas de la página para el efecto reveal. */
+  function initSectionReveals() {
+    const selectors = [
+      '.category-bubbles-section',
+      '.featured-header',
+      '.banner-carousel-section',
+      '.customer-reviews-section',
+      '.trust-banner',
+      '.promo-photo-slot',
+      '.recommended-section'
+    ];
+    document.querySelectorAll(selectors.join(',')).forEach(el => el.classList.add('reveal'));
+    observeReveals();
+  }
+
+  return {
+    init,
+    initProductsPage,
+    renderProducts,
+    renderCategories,
+    getProductRating,
+    renderStars,
+    getActiveProducts,
+    getProducts,
+    getVisualUiConfig,
+    loadSiteConfigFromDB,
+    applyHeroTexts,
+    sortProducts,
+    getSortMode,
+    renderSortControl,
+    SORT_OPTIONS,
+    renderSocialLinks,
+    renderPromoPhotoBanners,
+    setHeroBackgroundImage,
+    setActiveCategory,
+    renderBannerCarousel,
+    renderCustomerReviews,
+    observeReveals,
+    bindEvents
+  };
 })();
 
 // --- Theme toggle function ---

@@ -242,7 +242,7 @@
   <div class="doc-header">
     <h1>📘 LIBRE TECH - Documentación</h1>
     <p>Documentación técnica y registro de cambios del proyecto</p>
-    <span class="version">v2.1.0 — Última actualización: 17 de abril de 2026</span>
+    <span class="version">v3.3.0 — Última actualización: 9 de septiembre de 2026</span>
   </div>
 
   <div class="doc-container">
@@ -294,20 +294,31 @@
       <div class="file-tree">
         <span class="folder">LIBRE_TECH/</span><br>
         ├── <span class="file">index.html</span> <span class="comment">— Tienda principal (frontend del cliente)</span><br>
-        ├── <span class="file">producto.html</span> <span class="comment">— Página de detalle de producto</span><br>
+        ├── <span class="file">productos.html</span> <span class="comment">— Catálogo completo con filtros</span><br>
+        ├── <span class="file">destacados.html</span> <span class="comment">— Productos destacados (respeta el orden manual del admin)</span><br>
+        ├── <span class="file">ofertas.html</span> <span class="comment">— Productos en oferta</span><br>
+        ├── <span class="file">producto.html</span> <span class="comment">— Página de detalle de producto (destino del enlace compartido)</span><br>
         ├── <span class="file">pqr.html</span> <span class="comment">— Formulario de PQRs (Peticiones, Quejas, Reclamos)</span><br>
         ├── <span class="file">pagina.html</span> <span class="comment">— Páginas dinámicas del admin</span><br>
-        ├── <span class="file">admin.html</span> <span class="comment">— Panel de administración (10 módulos)</span><br>
+        ├── <span class="file">admin.html</span> <span class="comment">— Panel de administración (13 secciones)</span><br>
         ├── <span class="file">documentacion.html</span> <span class="comment">— Este archivo de documentación</span><br>
         ├── <span class="file">supabase_setup.sql</span> <span class="comment">— SQL completo para configurar Supabase</span><br>
+        ├── <span class="file">sw.js</span> <span class="comment">— Service Worker (PWA)</span><br>
         ├── <span class="file">LOGO_LIBRETECH.png</span> <span class="comment">— Logo del proyecto</span><br>
         ├── <span class="folder">css/</span><br>
-        │   └── <span class="file">styles.css</span> <span class="comment">— Estilos globales (~5100+ líneas)</span><br>
+        │   └── <span class="file">styles.css</span> <span class="comment">— Estilos globales (incluye animaciones, carrito enriquecido y panel admin)</span><br>
         ├── <span class="folder">js/</span><br>
-        │   ├── <span class="file">app.js</span> <span class="comment">— Lógica principal: productos, filtros, banners, carrusel</span><br>
-        │   ├── <span class="file">cart.js</span> <span class="comment">— Módulo del carrito de compras y wishlist</span><br>
+        │   ├── <span class="file">business-config.js</span> <span class="comment">— WhatsApp, correo, URL y umbral de envío gratis (cargar primero)</span><br>
+        │   ├── <span class="file">colombia-locations.js</span> <span class="comment">— Departamentos de Colombia y sus municipios</span><br>
+        │   ├── <span class="file">app.js</span> <span class="comment">— Lógica principal: productos, filtros, banners, carrusel, scroll reveal</span><br>
+        │   ├── <span class="file">cart.js</span> <span class="comment">— Carrito, obsequios, envío, formulario de pedido y recordatorio flotante</span><br>
         │   ├── <span class="file">auth.js</span> <span class="comment">— Autenticación Supabase (email, Google OAuth)</span><br>
-        │   ├── <span class="file">admin.js</span> <span class="comment">— Panel de administración (~3200+ líneas)</span><br>
+        │   ├── <span class="file">shipping.js</span> <span class="comment">— Cotización de envío y envío gratis por monto</span><br>
+        │   ├── <span class="file">gifts.js</span> <span class="comment">— Obsequios asociados a productos</span><br>
+        │   ├── <span class="file">share.js</span> <span class="comment">— Compartir producto/catálogo y resolución de enlaces cortos</span><br>
+        │   ├── <span class="file">whatsapp-bubble.js</span> <span class="comment">— Burbuja flotante arrastrable con posición persistente</span><br>
+        │   ├── <span class="file">hamburger-menu.js</span> <span class="comment">— Menú lateral con orden configurable desde admin</span><br>
+        │   ├── <span class="file">admin.js</span> <span class="comment">— Panel de administración</span><br>
         │   ├── <span class="file">product-detail.js</span> <span class="comment">— Detalle de producto, reseñas, zoom de fotos</span><br>
         │   └── <span class="file">supabase-client.js</span> <span class="comment">— Cliente Supabase con CRUD, auth, pedidos, PQRs, reseñas</span><br>
         ├── <span class="folder">img/</span><br>
@@ -364,6 +375,69 @@
         <li><strong>checkout()</strong> — Proceso de pago con formulario (nombre, email, teléfono)</li>
         <li><strong>showToast(message, type)</strong> — Notificaciones toast con auto-eliminación</li>
         <li><strong>formatPrice(price)</strong> — Formato COP (pesos colombianos)</li>
+        <li><strong>renderGiftNotice()</strong> — Aviso destacado cuando la compra incluye obsequios</li>
+        <li><strong>renderFreeShippingProgress()</strong> — Barra de progreso hacia el envío gratis</li>
+        <li><strong>renderShippingCalculator()</strong> / <strong>calculateShipping()</strong> — Calculadora de envío por ciudad</li>
+        <li><strong>updateCartReminder()</strong> — Píldora flotante persistente con cantidad y total del carrito</li>
+        <li><strong>openOrderForm({ prefill })</strong> — Formulario de pedido; con <code>prefill:false</code> refresca el resumen sin perder lo escrito</li>
+      </ul>
+
+      <h3>4.2.1 Shipping (<code>shipping.js</code>)</h3>
+      <p>
+        Aísla toda la lógica de envío. Hoy resuelve con una tabla de zonas configurable desde
+        <em>Admin → Calculadora de envío</em>; para usar la tarifa definitiva o integrar una transportadora basta con
+        reemplazar el cuerpo de <code>quote()</code> / <code>resolveZone()</code> — el resto de la tienda ya consume esa interfaz.
+      </p>
+      <ul>
+        <li><strong>getConfig()</strong> — Lee <code>site_config.visual_ui.shipping</code> con valores por defecto</li>
+        <li><strong>getFreeShippingProgress(subtotal)</strong> — <code>{ threshold, missing, reached, percent }</code></li>
+        <li><strong>resolveZone(city, department)</strong> — Coincidencia por ciudad &gt; departamento &gt; texto libre</li>
+        <li><strong>quote({ city, department, subtotal })</strong> — <code>{ free, cost, eta, zoneName, note, threshold }</code></li>
+      </ul>
+      <p>Forma de una zona:</p>
+      <pre>{
+  name: "Costa Caribe",
+  departments: ["Atlántico", "Bolívar"],   // departamentos completos
+  cities: ["Cartagena", "Santa Marta"],    // ciudades sueltas (ganan sobre el departamento)
+  cost: 9000,
+  eta: "1 a 3 días hábiles"
+}</pre>
+      <p>
+        Se sigue aceptando el formato antiguo <code>{ match: "ciudad1, ciudad2" }</code>; al abrir la pestaña en el panel
+        se migra automáticamente a <code>cities</code>.
+      </p>
+
+      <h3>4.2.4 Colombia Locations (<code>colombia-locations.js</code>)</h3>
+      <p>Catálogo estático de los 32 departamentos más Bogotá D.C. con sus municipios. Sin red ni base de datos.</p>
+      <ul>
+        <li><strong>getDepartments()</strong> / <strong>getCities(departamento)</strong></li>
+        <li><strong>fillDepartmentSelect(select, seleccionado)</strong> — Rellena un desplegable de departamentos</li>
+        <li><strong>fillCitySelect(select, departamento, seleccionada)</strong> — Carga las ciudades del departamento elegido</li>
+        <li><strong>findDepartmentByCity(ciudad)</strong> — Departamento al que pertenece una ciudad</li>
+      </ul>
+
+      <h3>4.2.5 WhatsApp Bubble (<code>whatsapp-bubble.js</code>)</h3>
+      <p>
+        Burbuja flotante arrastrable, compartida por todas las páginas públicas. Sustituye a los scripts en línea que había
+        duplicados por página. Arrastra con Pointer Events y <code>requestAnimationFrame</code>, parte de la posición real
+        renderizada (sin salto inicial), distingue clic de arrastre con un umbral de 5&nbsp;px, se mantiene dentro de la
+        ventana al redimensionar y guarda la posición en <code>localStorage</code>.
+      </p>
+
+      <h3>4.2.2 Gifts (<code>gifts.js</code>)</h3>
+      <p>Obsequios por producto, guardados en <code>site_config.visual_ui.productGifts</code> (sin migración de base de datos).</p>
+      <ul>
+        <li><strong>forProduct(productId)</strong> — Texto del obsequio o cadena vacía</li>
+        <li><strong>forItems(items)</strong> — Obsequios aplicables a una lista de ítems del carrito</li>
+      </ul>
+
+      <h3>4.2.3 Share (<code>share.js</code>)</h3>
+      <p>Compartir por enlace directo con Web Share API y modal de respaldo.</p>
+      <ul>
+        <li><strong>shareProduct(productId)</strong> — Comparte <code>producto.html?id=&lt;uuid&gt;</code></li>
+        <li><strong>shareCatalog()</strong> — Comparte el catálogo completo</li>
+        <li><strong>resolveDeepLink()</strong> — Redirige <code>?product=&lt;uuid&gt;</code> a la ficha del producto</li>
+        <li>Delegación global: cualquier elemento con <code>data-share="product|catalog"</code> abre el diálogo</li>
       </ul>
 
       <h3>4.3 Auth (<code>auth.js</code>)</h3>
@@ -397,12 +471,17 @@
         <li><strong>Productos relacionados</strong> — Sugerencias por categoría</li>
       </ul>
 
-      <h3>4.6 Admin (<code>admin.js</code>) — 12 Módulos</h3>
-      <p>Panel de administración con 12 pestañas:</p>
+      <h3>4.6 Admin (<code>admin.js</code>) — 14 secciones</h3>
+      <p>
+        Panel con navegación lateral agrupada en <strong>Catálogo</strong>, <strong>Ventas</strong>, <strong>Tienda</strong> y <strong>Clientes</strong>,
+        con buscador de secciones y menú desplegable en pantallas pequeñas:
+      </p>
       <table>
-        <thead><tr><th>Pestaña</th><th>Función</th></tr></thead>
+        <thead><tr><th>Sección</th><th>Función</th></tr></thead>
         <tbody>
-          <tr><td><strong>Productos</strong></td><td>CRUD completo con formulario, imágenes, colores, specs, ofertas</td></tr>
+          <tr><td><strong>Productos</strong></td><td>CRUD completo con formulario, imágenes, colores, specs, ofertas y obsequio incluido</td></tr>
+          <tr><td><strong>Inicio y menú</strong></td><td>Orden manual de destacados, orden y visibilidad del menú hamburguesa, y textos del banner principal (titular, subtítulo y botón) con vista previa</td></tr>
+          <tr><td><strong>Calculadora de envío</strong></td><td>Envío gratis desde, costo y entrega por defecto, nota al cliente, zonas por departamento/ciudad y probador de tarifas</td></tr>
           <tr><td><strong>CSV/Excel</strong></td><td>Importación masiva desde archivos CSV/TXT/Excel</td></tr>
           <tr><td><strong>Pedidos</strong></td><td>Gestión de pedidos (pendiente/procesando/enviado/entregado/cancelado)</td></tr>
           <tr><td><strong>Páginas</strong></td><td>Editor de páginas estáticas personalizadas</td></tr>
@@ -413,7 +492,7 @@
           <tr><td><strong>Usuarios</strong></td><td>Listado, cambio de contraseña y eliminación de usuarios (via RPCs)</td></tr>
           <tr><td><strong>Reseñas</strong></td><td>Moderación de todas las reseñas del sitio (Supabase)</td></tr>
           <tr><td><strong>Cupones</strong></td><td>Gestión de cupones de descuento: código, tipo (% o fijo), valor, compra mínima, límite de usos, fecha vencimiento, estado</td></tr>
-          <tr><td><strong>Analíticas</strong></td><td>Dashboard avanzado: KPIs, gráficos de ventas, top productos, ventas por categoría, pedidos por estado, filtro por fechas</td></tr>
+          <tr><td><strong>Analíticas</strong></td><td>Dashboard avanzado: KPIs, gráficos de ventas, top productos, ventas por categoría, pedidos por estado, filtro por fechas y publicación del ranking «Más vendidos» para la tienda</td></tr>
         </tbody>
       </table>
     </section>
@@ -421,6 +500,140 @@
     <!-- 5. CHANGELOG -->
     <section class="doc-section" id="changelog">
       <h2>5. Registro de cambios (Changelog)</h2>
+
+      <div class="changelog-entry">
+        <span class="date">9 de septiembre de 2026</span>
+        <h4>v3.3.0 — Ordenamiento, calculadora de envío por zonas y textos editables</h4>
+        <p>Cambios de esta versión:</p>
+        <ul>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Botón de ordenar productos</strong> — Disponible en inicio, catálogo, destacados y ofertas. Criterios: Recomendados, Más recientes,
+            Nombre A→Z, Nombre Z→A, Precio menor a mayor, Precio mayor a menor y Más vendidos. La elección se conserva mientras dure la visita
+            y <em>Recomendados</em> respeta el orden propio de cada página (orden manual de destacados en el lobby, mayor descuento en ofertas).
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Ranking de más vendidos publicable</strong> — Los pedidos no son de lectura pública (RLS), así que el ranking se calcula en
+            <em>Admin → Analíticas</em> y se publica con el botón «Publicar más vendidos» en <code>site_config.visual_ui.bestSellers</code>.
+            Si no hay ranking publicado la tienda usa el número de reseñas como señal de respaldo.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Sección «Calculadora de envío» en el panel</strong> — Pestaña propia con los ajustes generales (envío gratis, costo por defecto,
+            entrega estimada, nota al cliente), el editor de zonas y un probador para simular un pedido y ver la tarifa exacta que verá el cliente.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Departamentos y ciudades de Colombia</strong> (<code>js/colombia-locations.js</code>) — Catálogo estático de los 32 departamentos
+            más Bogotá D.C. con sus municipios. Al elegir un departamento se cargan sus ciudades, tanto en el editor de zonas del panel como en la
+            calculadora del carrito (antes eran campos de texto libre).
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Zonas de envío por departamento o ciudad</strong> — Cada zona acepta departamentos completos y ciudades sueltas, añadidos como
+            etiquetas. Gana la coincidencia más específica: ciudad &gt; departamento &gt; texto libre. Las zonas guardadas con el formato antiguo
+            (<code>match</code>) se migran automáticamente al abrir la pestaña.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Textos del inicio editables</strong> — En <em>Admin → Inicio y menú → Textos del inicio</em> se cambian las tres líneas del titular,
+            el subtítulo y el texto del botón del banner principal, con vista previa en vivo. Se guardan en <code>visual_ui.heroTexts</code>;
+            un campo vacío conserva el texto por defecto.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Salto de la burbuja de WhatsApp</strong> — <code>index.html</code> cargaba <em>dos</em> scripts de arrastre sobre el mismo elemento
+            (uno anclaba por <code>bottom</code> y el otro por <code>top</code>) y ambos partían de la posición 0, por lo que la burbuja saltaba en el
+            primer movimiento. Se sustituyeron los scripts en línea de las 6 páginas por el módulo único <code>js/whatsapp-bubble.js</code>, que parte
+            de la posición real (<code>getBoundingClientRect</code>), mueve con <code>requestAnimationFrame</code> y Pointer Events, distingue clic de
+            arrastre con un umbral de 5 px y guarda la posición aplicada (no la del rect, que incluía el <code>scale</code> de feedback y la desplazaba
+            unos píxeles en cada arrastre).
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Campos de documento en Mi perfil</strong> — «Tipo doc.» y «N.º de documento» quedaban desalineados porque el <code>&lt;select&gt;</code>
+            y el <code>&lt;input&gt;</code> tenían alturas distintas y el ancho del desplegable estaba fijado en línea a 80 px. Ahora comparten alto,
+            tipografía y línea base mediante la clase <code>.doc-field</code>.
+          </li>
+        </ul>
+      </div>
+
+      <div class="changelog-entry">
+        <span class="date">9 de septiembre de 2026</span>
+        <h4>v3.2.0 — Compartir, envíos, obsequios, animaciones y admin reorganizado</h4>
+        <p>Cambios de esta versión:</p>
+        <ul>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Compartir productos y catálogo</strong> (<code>js/share.js</code>) — Botón de compartir en cada tarjeta, en la ficha de producto, en el menú hamburguesa y en el footer.
+            Usa la Web Share API en móvil y un modal propio (copiar enlace, WhatsApp, Facebook, Telegram, X, correo) en escritorio.
+            El enlace directo es <code>producto.html?id=&lt;uuid&gt;</code>; también se aceptan enlaces cortos <code>?product=&lt;uuid&gt;</code> que redirigen a la ficha.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Calculadora de envío y envío gratis</strong> (<code>js/shipping.js</code>) — Barra de progreso hacia el envío gratis (por defecto desde $150.000),
+            calculadora por ciudad/departamento en el carrito y bloque de envío en el resumen del pedido. La lógica de cotización está aislada en <code>Shipping.quote()</code>,
+            lista para sustituirse por la tarifa definitiva o una integración con transportadora. Se configura desde <em>Admin → Inicio y menú → Envíos</em>.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Obsequios por producto</strong> (<code>js/gifts.js</code>) — Campo "Obsequio incluido" en el formulario de producto. El regalo se muestra como distintivo en la tarjeta,
+            en la ficha, en cada ítem del carrito, en un aviso destacado del carrito y en el resumen y el mensaje de WhatsApp del pedido.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Recordatorio persistente de carrito</strong> — Píldora flotante con cantidad, total y acceso directo al carrito, con animación al agregar productos y rebote del badge del header.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Orden manual de destacados y del menú hamburguesa</strong> — Nueva pestaña <em>Inicio y menú</em> en el panel admin con listas ordenables (drag &amp; drop y flechas)
+            y opción de ocultar entradas del menú. El orden se respeta en el lobby y en <code>destacados.html</code>.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Panel de administración reorganizado</strong> — Las 13 secciones pasaron de una barra horizontal a una navegación lateral fija agrupada en
+            Catálogo / Ventas / Tienda / Clientes, con buscador de secciones y menú desplegable en móvil.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Animaciones y transiciones</strong> — Aparición progresiva de secciones y tarjetas al hacer scroll (IntersectionObserver con red de seguridad),
+            micro-interacciones en botones, transiciones más naturales en modales, carrito y menú, y soporte de <code>prefers-reduced-motion</code>.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Configuración de negocio centralizada</strong> (<code>js/business-config.js</code>) — WhatsApp, correo, URL y umbral de envío gratis en un único archivo.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Botones "Iniciar sesión" y "Registrarse"</strong> del cuadro <em>Datos para tu pedido</em> — No abrían el panel porque el listener global de cierre de <code>auth.js</code>
+            se disparaba en el mismo clic. Ahora detienen la propagación, difieren la apertura un tick y "Registrarse" abre el formulario de registro (antes abría el de inicio de sesión).
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Bloque de caché roto en <code>supabase-client.js</code></strong> — Un bloque fuera del IIFE intentaba reasignar <code>syncProducts</code> y lanzaba un <code>ReferenceError</code>
+            en cada carga de página. Se eliminó (nunca llegó a funcionar).
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Script de tema en index / producto / pagina</strong> — Fallaba con <code>null</code> al buscar iconos inexistentes, rompiendo el conmutador claro/oscuro de <code>pagina.html</code>.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>Datos de contacto</strong> — WhatsApp del negocio actualizado a <strong>317 613 4822</strong> y correo a <strong>libretechtienda@gmail.com</strong> en toda la tienda,
+            páginas estáticas, plantillas del admin y mensajes de pedido. El botón "Continuar pedido por WhatsApp" ahora dice <strong>"Finalizar compra"</strong>.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>Verificación de dominio de Facebook</strong> — Metaetiqueta <code>facebook-domain-verification</code> añadida de forma estática al <code>&lt;head&gt;</code> de todas las páginas.
+          </li>
+        </ul>
+        <p>
+          <strong>Nota de persistencia:</strong> el orden de destacados, el orden/visibilidad del menú, los obsequios y la configuración de envíos se guardan dentro de
+          <code>site_config.visual_ui</code> (claves <code>featuredOrder</code>, <code>menuOrder</code>, <code>menuHidden</code>, <code>productGifts</code>, <code>shipping</code>).
+          No requieren migración de la base de datos.
+        </p>
+      </div>
 
       <div class="changelog-entry">
         <span class="date">17 de abril de 2026</span>

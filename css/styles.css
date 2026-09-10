@@ -9390,3 +9390,1710 @@ input, select, textarea {
       max-height: 520px !important;
     }
   }
+
+
+/* ============================================================
+   ============================================================
+   LIBRE TECH — v3.2
+   Animaciones, compartir, carrito enriquecido y panel admin
+   ============================================================
+   ============================================================ */
+
+:root {
+  /* Curvas de animación reutilizables */
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-reveal: 620ms var(--ease-out-soft);
+}
+
+/* ============================================================
+   1. SCROLL REVEAL + ENTRADAS ESCALONADAS
+   ============================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity var(--transition-reveal),
+    transform var(--transition-reveal);
+  transition-delay: calc(var(--card-index, 0) * 45ms);
+  will-change: opacity, transform;
+}
+
+.reveal.revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* Una vez visible ya no necesitamos reservar capa de composición */
+.reveal.revealed { will-change: auto; }
+
+@keyframes ltFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes ltPopIn {
+  0%   { opacity: 0; transform: scale(0.92); }
+  60%  { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ltBadgeBump {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+
+@keyframes ltShine {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to   { transform: translateX(320%) skewX(-18deg); }
+}
+
+/* El recordatorio está centrado con translateX(-50%): las keyframes deben
+   conservar ese desplazamiento o la píldora se descoloca al animarse. */
+@keyframes ltReminderIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(120%) scale(0.94); }
+  to   { opacity: 1; transform: translateX(-50%); }
+}
+
+@keyframes ltReminderPulse {
+  0%, 100% { transform: translateX(-50%); box-shadow: 0 12px 34px rgba(26, 75, 140, 0.32); }
+  40%      { transform: translateX(-50%) translateY(-6px) scale(1.03); box-shadow: 0 20px 44px rgba(26, 75, 140, 0.42); }
+}
+
+@keyframes ltGiftGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 119, 34, 0.28); }
+  50%      { box-shadow: 0 0 0 8px rgba(232, 119, 34, 0); }
+}
+
+/* ============================================================
+   2. TARJETAS DE PRODUCTO — pulido e interacción
+   ============================================================ */
+.product-card {
+  transition:
+    transform 420ms var(--ease-out-soft),
+    box-shadow 420ms var(--ease-out-soft),
+    border-color 260ms ease;
+}
+
+.product-card:hover .product-card-image img {
+  transform: scale(1.06);
+}
+
+.product-card-image img {
+  transition: transform 620ms var(--ease-out-soft);
+}
+
+.product-card:hover .product-name {
+  color: var(--primary-blue);
+}
+
+.product-name {
+  transition: color var(--transition-fast);
+}
+
+/* Botón de compartir en la tarjeta */
+.product-share-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+  transform: translateY(-6px) scale(0.9);
+  transition: all 260ms var(--ease-spring);
+}
+
+.product-card:hover .product-share-btn,
+.product-share-btn:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.product-share-btn:hover {
+  background: var(--primary-blue);
+  color: #fff;
+  border-color: var(--primary-blue);
+}
+
+.product-share-btn svg { width: 16px; height: 16px; }
+
+/* En táctil siempre visible: no hay hover */
+@media (hover: none) {
+  .product-share-btn { opacity: 1; transform: none; }
+}
+
+/* Badge y línea de obsequio */
+.product-badge.gift {
+  background: linear-gradient(135deg, var(--primary-orange), var(--primary-orange-light));
+  color: #fff;
+}
+
+.product-gift-line {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--primary-orange-dark);
+  margin: 2px 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Botón agregar: brillo al confirmar */
+.btn-add-cart {
+  position: relative;
+  overflow: hidden;
+  transition: transform 220ms var(--ease-spring), background 200ms ease, color 200ms ease;
+}
+
+.btn-add-cart:not(.disabled):active { transform: scale(0.9); }
+
+.btn-add-cart.added::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: ltShine 700ms ease-out;
+}
+
+/* ============================================================
+   3. RECORDATORIO PERSISTENTE DEL CARRITO
+   ============================================================ */
+.cart-reminder {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  z-index: 1900;
+  display: none;
+  align-items: center;
+  gap: 12px;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 10px 14px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--primary-blue-dark), var(--primary-blue));
+  color: #fff;
+  text-align: left;
+  box-shadow: 0 12px 34px rgba(26, 75, 140, 0.32);
+  cursor: pointer;
+  transform: translateX(-50%);
+  transition: transform 260ms var(--ease-spring), box-shadow 260ms ease;
+}
+
+.cart-reminder.visible {
+  display: flex;
+  animation: ltReminderIn 420ms var(--ease-out-soft) both;
+}
+
+.cart-reminder.visible.pulse {
+  animation: ltReminderPulse 800ms var(--ease-out-soft);
+}
+
+.cart-reminder:hover {
+  transform: translateX(-50%) translateY(-3px);
+  box-shadow: 0 18px 42px rgba(26, 75, 140, 0.4);
+}
+
+.cart-reminder-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.cart-reminder-icon svg { width: 19px; height: 19px; }
+
+.cart-reminder-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--primary-orange);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.cart-reminder-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.cart-reminder-text strong,
+.cart-reminder-text span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cart-reminder-text strong { font-size: 0.85rem; font-weight: 700; }
+.cart-reminder-text span   { font-size: 0.76rem; opacity: 0.85; }
+
+.cart-reminder-cta {
+  flex: 0 0 auto;
+  padding: 7px 13px;
+  border-radius: var(--radius-full);
+  background: #fff;
+  color: var(--primary-blue-dark);
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* No tapar la burbuja de WhatsApp en pantallas pequeñas */
+@media (max-width: 560px) {
+  .cart-reminder { bottom: 14px; gap: 9px; padding: 9px 11px; }
+  .cart-reminder-text strong { font-size: 0.79rem; }
+  .cart-reminder-text span   { font-size: 0.71rem; }
+  .cart-reminder-cta { padding: 6px 10px; font-size: 0.71rem; }
+}
+
+/* Badge del header con rebote al agregar */
+.header-btn .badge.badge-bump {
+  animation: ltBadgeBump 520ms var(--ease-spring);
+}
+
+/* ============================================================
+   4. CARRITO: OBSEQUIOS, ENVÍO GRATIS Y CALCULADORA
+   ============================================================ */
+.cart-item {
+  animation: ltFadeUp 320ms var(--ease-out-soft) both;
+}
+
+.cart-item-gift {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 4px 0 2px;
+  font-size: 0.73rem;
+  line-height: 1.3;
+  color: var(--primary-orange-dark);
+}
+
+.cart-item-gift svg { width: 13px; height: 13px; flex: 0 0 13px; margin-top: 1px; }
+.cart-item-gift strong { font-weight: 700; }
+
+/* --- Aviso de obsequio --- */
+.gift-notice {
+  margin-bottom: var(--spacing-md);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--primary-orange);
+  background: linear-gradient(135deg, rgba(232, 119, 34, 0.1), rgba(232, 119, 34, 0.03));
+  animation: ltPopIn 380ms var(--ease-spring) both, ltGiftGlow 2.6s ease-out 0.4s 2;
+}
+
+.gift-notice-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  color: var(--primary-orange-dark);
+}
+
+.gift-notice-icon { font-size: 1.05rem; }
+
+.gift-notice-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gift-notice-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.gift-notice-product { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gift-notice-gift    { flex: 0 0 auto; font-weight: 700; color: var(--primary-orange-dark); }
+
+/* --- Barra de progreso de envío gratis --- */
+.ship-progress {
+  margin-bottom: var(--spacing-md);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  transition: background 320ms ease, border-color 320ms ease;
+}
+
+.ship-progress.reached {
+  background: linear-gradient(135deg, rgba(52, 199, 89, 0.14), rgba(52, 199, 89, 0.04));
+  border-color: rgba(52, 199, 89, 0.4);
+}
+
+.ship-progress-text {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.ship-progress.reached .ship-progress-text { color: #1d8a3f; }
+.ship-progress-icon { font-size: 0.95rem; }
+
+.ship-progress-track {
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  overflow: hidden;
+}
+
+.ship-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--primary-blue), var(--primary-orange));
+  transition: width 620ms var(--ease-out-soft);
+}
+
+.ship-progress.reached .ship-progress-fill {
+  background: linear-gradient(90deg, #34c759, #1d8a3f);
+}
+
+.ship-progress-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+}
+
+/* --- Calculadora de envío --- */
+.ship-calc {
+  margin-bottom: var(--spacing-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.ship-calc-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 13px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.83rem;
+  font-weight: 600;
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+
+.ship-calc-toggle:hover { background: var(--bg-secondary); }
+.ship-calc-toggle > svg:first-child { width: 17px; height: 17px; color: var(--primary-blue); flex: 0 0 17px; }
+.ship-calc-toggle span { flex: 1; }
+
+.ship-calc-chevron {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  color: var(--text-tertiary);
+  transition: transform 260ms var(--ease-out-soft);
+}
+
+.ship-calc-toggle.open .ship-calc-chevron { transform: rotate(180deg); }
+
+.ship-calc-body {
+  padding: 0 13px 13px;
+  animation: ltFadeUp 280ms var(--ease-out-soft) both;
+}
+
+.ship-calc-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 7px;
+}
+
+.ship-calc-input {
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.ship-calc-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.14);
+}
+
+.ship-calc-btn {
+  padding: 9px 15px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-blue);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background var(--transition-fast), transform 160ms var(--ease-spring);
+}
+
+.ship-calc-btn:hover  { background: var(--primary-blue-dark); }
+.ship-calc-btn:active { transform: scale(0.96); }
+
+.ship-calc-result:not(:empty) {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-color);
+  animation: ltFadeUp 300ms var(--ease-out-soft) both;
+}
+
+.ship-calc-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.ship-calc-meta,
+.ship-calc-note {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+.ship-calc-error { font-size: 0.76rem; color: var(--danger); }
+.ship-free { color: #1d8a3f !important; font-weight: 800; }
+
+@media (max-width: 420px) {
+  .ship-calc-fields { grid-template-columns: 1fr 1fr; }
+  .ship-calc-btn { grid-column: 1 / -1; }
+}
+
+/* ============================================================
+   5. RESUMEN DEL PEDIDO (modal "Datos para tu pedido")
+   ============================================================ */
+.order-summary-title {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.order-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.order-summary-amount { font-weight: 600; white-space: nowrap; }
+.order-summary-discount { color: #1d8a3f; font-weight: 600; }
+
+.order-summary-subtotal {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.order-summary-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px solid var(--border-color);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.order-summary-hint {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+/* Cupón */
+.coupon-box { margin-top: 10px; }
+
+.coupon-box-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.coupon-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.coupon-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.14);
+}
+
+.coupon-btn {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--primary-blue), #2563eb);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(26, 75, 140, 0.25);
+  transition: transform 160ms var(--ease-spring), box-shadow var(--transition-fast);
+}
+
+.coupon-btn:hover  { box-shadow: 0 6px 16px rgba(26, 75, 140, 0.32); }
+.coupon-btn:active { transform: scale(0.96); }
+
+.coupon-status { margin-top: 6px; font-size: 0.8rem; }
+
+/* Envío dentro del resumen */
+.order-shipping {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  background: var(--bg-primary);
+}
+
+.order-shipping-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 9px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.order-shipping-head svg { width: 17px; height: 17px; color: var(--primary-blue); }
+.order-shipping .ship-progress { margin-bottom: 10px; padding: 9px 11px; }
+
+.order-shipping-meta,
+.order-shipping-note {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+.order-shipping-recalc {
+  margin-top: 8px;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--primary-blue);
+  background: transparent;
+  color: var(--primary-blue);
+  font-size: 0.76rem;
+  font-weight: 700;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.order-shipping-recalc:hover { background: var(--primary-blue); color: #fff; }
+
+/* Obsequios dentro del resumen */
+.order-gifts {
+  margin-top: 12px;
+  padding: 11px 12px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--primary-orange);
+  background: rgba(232, 119, 34, 0.07);
+}
+
+.order-gifts-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.84rem;
+  color: var(--primary-orange-dark);
+}
+
+.order-gifts-list {
+  list-style: none;
+  margin: 7px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.order-gifts-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.77rem;
+  color: var(--text-secondary);
+}
+
+.order-gifts-list em { font-style: normal; font-weight: 700; color: var(--primary-orange-dark); }
+
+/* ============================================================
+   6. MODAL DE COMPARTIR
+   ============================================================ */
+.share-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-base), visibility var(--transition-base);
+}
+
+.share-modal-overlay.active { opacity: 1; visibility: visible; }
+
+.share-modal {
+  width: 100%;
+  max-width: 420px;
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-xl);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-xl);
+  transform: translateY(18px) scale(0.97);
+  transition: transform 360ms var(--ease-spring);
+}
+
+.share-modal-overlay.active .share-modal { transform: none; }
+
+.share-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.share-modal-header h3 { font-size: 1.05rem; font-weight: 800; }
+
+.share-modal-close {
+  display: flex;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.share-modal-close:hover { background: var(--bg-secondary); color: var(--text-primary); }
+
+.share-modal-subtitle {
+  margin: 4px 0 var(--spacing-md);
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
+  gap: 9px;
+  margin-bottom: var(--spacing-md);
+}
+
+.share-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 0.71rem;
+  font-weight: 600;
+  text-align: center;
+  transition: transform 240ms var(--ease-spring), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.share-option:hover {
+  transform: translateY(-3px);
+  border-color: var(--share-color, var(--primary-blue));
+  box-shadow: var(--shadow-md);
+}
+
+.share-option-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--share-color, #1a4b8c) 14%, transparent);
+  color: var(--share-color, var(--primary-blue));
+}
+
+.share-option-icon svg { width: 19px; height: 19px; }
+
+.share-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.share-link-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+.share-link-copy {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  background: var(--primary-blue);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: background var(--transition-fast), transform 160ms var(--ease-spring);
+}
+
+.share-link-copy:hover   { background: var(--primary-blue-dark); }
+.share-link-copy:active  { transform: scale(0.96); }
+.share-link-copy.copied  { background: var(--success); }
+
+/* ============================================================
+   7. FICHA DE PRODUCTO: OBSEQUIO Y COMPARTIR
+   ============================================================ */
+.pd-gift {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: var(--spacing-md) 0;
+  padding: 11px 13px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--primary-orange);
+  background: linear-gradient(135deg, rgba(232, 119, 34, 0.11), rgba(232, 119, 34, 0.03));
+  animation: ltPopIn 420ms var(--ease-spring) both;
+}
+
+.pd-gift-icon { font-size: 1.25rem; }
+.pd-gift-text { font-size: 0.87rem; color: var(--text-secondary); }
+.pd-gift-text strong { color: var(--primary-orange-dark); font-weight: 800; }
+
+.pd-share {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: var(--spacing-md) 0;
+}
+
+.pd-share-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pd-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--primary-blue);
+  background: var(--primary-blue);
+  color: #fff;
+  font-size: 0.79rem;
+  font-weight: 700;
+  transition: transform 200ms var(--ease-spring), background var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.pd-share-btn:hover  { background: var(--primary-blue-dark); box-shadow: var(--shadow-md); }
+.pd-share-btn:active { transform: scale(0.96); }
+.pd-share-btn svg    { width: 15px; height: 15px; }
+
+.pd-share-btn--ghost {
+  background: transparent;
+  color: var(--primary-blue);
+  border-color: var(--border-color);
+}
+
+.pd-share-btn--ghost:hover {
+  background: var(--bg-secondary);
+  color: var(--primary-blue-dark);
+  border-color: var(--primary-blue);
+}
+
+/* ============================================================
+   8. MENÚ HAMBURGUESA — iconos y entrada escalonada
+   ============================================================ */
+.hamburger-menu.active .menu-category {
+  animation: ltFadeUp 380ms var(--ease-out-soft) both;
+  animation-delay: calc(var(--menu-index, 0) * 26ms);
+}
+
+.menu-category-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-item-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  color: var(--primary-blue);
+  opacity: 0.85;
+}
+
+.menu-category--static .menu-item-icon { color: var(--primary-orange); }
+
+.hamburger-menu-content .menu-category-toggle svg {
+  transition: transform 260ms var(--ease-out-soft);
+}
+
+.hamburger-menu-content .menu-category-toggle.expanded svg {
+  transform: rotate(180deg);
+}
+
+/* El colapso usa max-height (definido más arriba); aquí solo suavizamos la curva */
+.hamburger-menu-content .menu-subcategories {
+  transition: max-height 340ms var(--ease-out-soft), opacity 260ms ease;
+}
+
+/* ============================================================
+   9. PANEL DE ADMINISTRACIÓN — layout, navegación, listas
+   ============================================================ */
+.admin-main { max-width: 1440px; }
+
+.admin-workspace {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  gap: var(--spacing-xl);
+  align-items: start;
+}
+
+.admin-content { min-width: 0; }
+
+.admin-content > .admin-tab-content > .admin-panel + .admin-panel {
+  margin-top: var(--spacing-lg);
+}
+
+/* --- Sidebar --- */
+.admin-sidebar {
+  position: sticky;
+  top: calc(var(--header-height) + var(--spacing-md));
+}
+
+.admin-sidebar-inner {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.admin-sidebar-toggle { display: none; }
+
+.admin-sidebar-search {
+  position: relative;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.admin-sidebar-search svg {
+  position: absolute;
+  left: 26px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.admin-sidebar-search input {
+  width: 100%;
+  padding: 9px 11px 9px 34px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.83rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.admin-sidebar-search input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(26, 75, 140, 0.14);
+}
+
+/* Reemplaza la barra horizontal de pestañas por una lista vertical */
+.admin-sidebar .admin-tabs {
+  display: block;
+  padding: var(--spacing-sm);
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+
+.admin-nav-group + .admin-nav-group {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-light);
+}
+
+.admin-nav-group-title {
+  margin: 8px 10px 4px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.admin-sidebar .admin-tab {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 9px 11px;
+  margin-bottom: 2px;
+  font-size: 0.85rem;
+  border-left: 3px solid transparent;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.admin-sidebar .admin-tab:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.admin-sidebar .admin-tab.active {
+  background: color-mix(in srgb, var(--primary-blue) 12%, transparent);
+  color: var(--primary-blue);
+  border-left-color: var(--primary-blue);
+}
+
+.admin-sidebar .admin-tab svg { flex: 0 0 16px; }
+
+/* La navegación es vertical: el rótulo siempre visible, en cualquier ancho
+   (hay una regla previa que lo ocultaba pensada para la barra horizontal). */
+.admin-sidebar .admin-tab span { display: inline; }
+
+.admin-nav-empty {
+  padding: var(--spacing-md);
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+/* --- Encabezados de panel más informativos --- */
+.admin-panel-hint {
+  margin-top: 3px;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  max-width: 62ch;
+}
+
+.admin-subheader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+/* --- Listas ordenables (destacados / menú) --- */
+.sortable-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sortable-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  background: var(--bg-primary);
+  cursor: grab;
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast), opacity 200ms ease, transform 200ms var(--ease-out-soft);
+}
+
+.sortable-item:hover {
+  border-color: var(--primary-blue);
+  box-shadow: var(--shadow-sm);
+}
+
+.sortable-item.dragging {
+  opacity: 0.45;
+  cursor: grabbing;
+  transform: scale(0.99);
+}
+
+.sortable-item.is-hidden { opacity: 0.55; }
+.sortable-item.is-hidden .sortable-label strong { text-decoration: line-through; }
+
+.sortable-handle { display: flex; color: var(--text-tertiary); }
+.sortable-handle svg { width: 17px; height: 17px; }
+
+.sortable-pos {
+  flex: 0 0 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--bg-secondary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.sortable-thumb {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+}
+
+.sortable-thumb--empty { display: block; }
+
+.sortable-label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.sortable-label strong {
+  font-size: 0.86rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sortable-label small { font-size: 0.73rem; color: var(--text-tertiary); }
+
+.sortable-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.sortable-actions .table-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.sortable-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* --- Zonas de envío --- */
+.ship-zone-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.6fr 0.7fr 1fr auto;
+  gap: 7px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ship-zone-row .form-input { font-size: 0.82rem; padding: 8px 10px; }
+
+@media (max-width: 900px) {
+  .admin-workspace { grid-template-columns: 1fr; gap: var(--spacing-md); }
+
+  .admin-sidebar { position: static; margin-bottom: var(--spacing-md); }
+
+  .admin-sidebar-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .admin-sidebar-toggle > svg:first-child { width: 18px; height: 18px; flex: 0 0 18px; }
+  .admin-sidebar-toggle span { flex: 1; text-align: left; }
+
+  .admin-sidebar-chevron {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    transition: transform 260ms var(--ease-out-soft);
+  }
+
+  .admin-sidebar.nav-open .admin-sidebar-chevron { transform: rotate(180deg); }
+
+  .admin-sidebar-inner { display: none; margin-top: 8px; }
+  .admin-sidebar.nav-open .admin-sidebar-inner {
+    display: block;
+    animation: ltFadeUp 260ms var(--ease-out-soft) both;
+  }
+
+  /* La navegación lateral es vertical: los rótulos deben verse también en
+     móvil (una regla previa los ocultaba para la barra horizontal). */
+  .admin-sidebar .admin-tabs { max-height: 60vh; }
+  .admin-sidebar .admin-tab { padding: 10px 12px; font-size: 0.88rem; gap: 10px; }
+  .admin-sidebar .admin-tab span { display: inline; }
+
+  .ship-zone-row { grid-template-columns: 1fr 1fr; }
+  .ship-zone-row .table-btn { grid-column: 1 / -1; justify-self: end; }
+}
+
+/* ============================================================
+   10. MICRO-INTERACCIONES GENERALES
+   ============================================================ */
+.btn,
+.btn-whatsapp,
+.btn-add-cart-lg,
+.btn-buy-now {
+  transition:
+    transform 180ms var(--ease-spring),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.btn:active,
+.btn-whatsapp:active,
+.btn-add-cart-lg:active,
+.btn-buy-now:active { transform: scale(0.975); }
+
+.btn-whatsapp {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-whatsapp::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  transform: translateX(-120%) skewX(-18deg);
+}
+
+.btn-whatsapp:hover::after { animation: ltShine 900ms ease-out; }
+
+/* Foco visible y consistente para navegación con teclado */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary-orange);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Modales: entrada con escala suave */
+.modal-overlay .modal {
+  transform: translateY(16px) scale(0.98);
+  transition: transform 380ms var(--ease-spring);
+}
+
+.modal-overlay.active .modal { transform: none; }
+
+/* Sidebar del carrito: curva más natural */
+.cart-sidebar { transition: transform 420ms var(--ease-out-soft), box-shadow 420ms ease; }
+.cart-overlay { transition: opacity 320ms ease, visibility 320ms ease; }
+
+/* ============================================================
+   11. TEMA OSCURO — ajustes de los bloques nuevos
+   ============================================================ */
+[data-theme="dark"] .product-share-btn {
+  background: rgba(28, 28, 32, 0.9);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .ship-progress,
+[data-theme="dark"] .ship-calc,
+[data-theme="dark"] .order-shipping,
+[data-theme="dark"] .admin-sidebar-inner,
+[data-theme="dark"] .sortable-item,
+[data-theme="dark"] .share-modal,
+[data-theme="dark"] .share-option {
+  background: var(--bg-primary);
+  border-color: var(--border-light);
+}
+
+[data-theme="dark"] .share-link-input { background: var(--bg-secondary); }
+[data-theme="dark"] .ship-progress.reached .ship-progress-text,
+[data-theme="dark"] .ship-free { color: #4ade80 !important; }
+
+/* ============================================================
+   12. PREFERENCIA DE MOVIMIENTO REDUCIDO
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal { opacity: 1; transform: none; }
+}
+
+
+/* ============================================================
+   ============================================================
+   LIBRE TECH — v3.3
+   Ordenamiento, calculadora de envío por zonas, textos del hero
+   ============================================================
+   ============================================================ */
+
+/* ============================================================
+   1. CAMPOS DE DOCUMENTO DEL PERFIL
+   El <select> y el <input> tenían alturas distintas y el rótulo largo
+   desalineaba la fila; ahora comparten alto y se alinean por la base.
+   ============================================================ */
+.doc-field {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: var(--spacing-sm);
+  align-items: end;
+}
+
+.doc-field-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.doc-field-col .form-label {
+  min-height: 1.2rem;
+  line-height: 1.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-field .form-input {
+  width: 100%;
+  height: 42px;
+  font-family: inherit;
+  line-height: 1.2;
+}
+
+/* El desplegable necesita su propia flecha para igualar al input */
+.doc-field select.form-input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236e6e73' stroke-width='2' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 14px;
+}
+
+@media (max-width: 420px) {
+  .doc-field { grid-template-columns: 92px minmax(0, 1fr); }
+}
+
+/* ============================================================
+   2. BOTÓN DE ORDENAR
+   ============================================================ */
+.sort-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--spacing-md);
+}
+
+.sort-bar:empty { display: none; }
+
+.sort-control {
+  position: relative;
+  display: inline-block;
+}
+
+.sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform 160ms var(--ease-spring);
+}
+
+.sort-btn:hover  { border-color: var(--primary-blue); box-shadow: var(--shadow-md); }
+.sort-btn:active { transform: scale(0.97); }
+.sort-btn.open   { border-color: var(--primary-blue); }
+
+.sort-btn > svg:first-child {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  color: var(--primary-blue);
+}
+
+.sort-btn-label { color: var(--text-tertiary); }
+.sort-btn strong { font-weight: 700; }
+
+.sort-btn-chevron {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  color: var(--text-tertiary);
+  transition: transform 240ms var(--ease-out-soft);
+}
+
+.sort-btn.open .sort-btn-chevron { transform: rotate(180deg); }
+
+.sort-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  min-width: 236px;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-lg);
+  animation: ltFadeUp 220ms var(--ease-out-soft) both;
+}
+
+.sort-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: left;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.sort-option:hover { background: var(--bg-secondary); color: var(--text-primary); }
+
+.sort-option.active {
+  background: color-mix(in srgb, var(--primary-blue) 10%, transparent);
+  color: var(--primary-blue);
+  font-weight: 700;
+}
+
+.sort-option > svg:first-child { width: 16px; height: 16px; flex: 0 0 16px; opacity: 0.75; }
+.sort-option span { flex: 1; }
+
+.sort-option-check { width: 15px; height: 15px; flex: 0 0 15px; opacity: 0; }
+.sort-option.active .sort-option-check { opacity: 1; }
+
+@media (max-width: 520px) {
+  .sort-bar { justify-content: stretch; }
+  .sort-control { display: block; }
+  .sort-btn { width: 100%; justify-content: center; }
+  .sort-menu { left: 0; right: 0; min-width: 0; }
+}
+
+/* ============================================================
+   3. ADMIN — ZONAS DE ENVÍO CON DEPARTAMENTOS Y CIUDADES
+   ============================================================ */
+.ship-zone {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+}
+
+.ship-zone-head {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) 130px minmax(0, 1.4fr) auto;
+  gap: var(--spacing-sm);
+  align-items: end;
+}
+
+.ship-zone-head .form-group { margin-bottom: 0; }
+
+.ship-zone-delete {
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+}
+
+.ship-zone-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px dashed var(--border-color);
+}
+
+.ship-zone-col { min-width: 0; }
+.ship-zone-col .form-label { margin-bottom: 6px; }
+.ship-zone-col .form-input { font-size: 0.82rem; padding: 8px 10px; }
+
+.ship-zone-city-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  animation: ltPopIn 240ms var(--ease-spring) both;
+}
+
+.chip-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.chip-remove:hover { background: var(--danger); color: #fff; }
+
+.chip-empty {
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+/* Probador de la calculadora */
+.ship-test-result:not(:empty) { margin-top: var(--spacing-md); }
+
+.ship-test-card {
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  animation: ltFadeUp 260ms var(--ease-out-soft) both;
+}
+
+.ship-test-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  align-items: baseline;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.ship-test-row strong { font-size: 1.15rem; }
+
+.ship-test-meta {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+.ship-test-error { font-size: 0.85rem; color: var(--danger); }
+
+@media (max-width: 720px) {
+  .ship-zone-head { grid-template-columns: 1fr 1fr; }
+  .ship-zone-head .form-group:first-child { grid-column: 1 / -1; }
+  .ship-zone-delete { grid-column: 1 / -1; justify-self: end; }
+}
+
+/* ============================================================
+   4. ADMIN — VISTA PREVIA DE LOS TEXTOS DEL INICIO
+   ============================================================ */
+.form-label-note {
+  font-weight: 400;
+  color: var(--text-tertiary);
+  font-size: 0.78rem;
+}
+
+.hero-preview {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--primary-blue-dark), var(--primary-blue));
+  color: #fff;
+  overflow: hidden;
+}
+
+.hero-preview-title {
+  font-family: 'Poppins', var(--font-primary);
+  font-size: clamp(1.4rem, 3.2vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
+}
+
+.hero-preview-title span { display: block; }
+.hero-preview-accent { color: var(--primary-orange-light); }
+
+.hero-preview-sub {
+  font-size: 0.92rem;
+  opacity: 0.9;
+  margin: 0 0 var(--spacing-md);
+  max-width: 46ch;
+}
+
+.hero-preview-cta {
+  display: inline-block;
+  padding: 9px 20px;
+  border-radius: var(--radius-full);
+  background: var(--primary-orange);
+  color: #fff;
+  font-size: 0.87rem;
+  font-weight: 700;
+}
+
+/* ============================================================
+   5. BURBUJA DE WHATSAPP
+   El arrastre se maneja con Pointer Events: el navegador no debe
+   quedarse con el gesto para hacer scroll.
+   ============================================================ */
+.whatsapp-bubble {
+  touch-action: none;
+  transition: box-shadow var(--transition-fast), transform 180ms var(--ease-spring);
+}
+
+.whatsapp-bubble:hover:not(.dragging) { transform: scale(1.06); }
+.whatsapp-bubble.dragging { transform: scale(1.1); transition: none; }
+
+/* ============================================================
+   6. TEMA OSCURO — ajustes de los bloques nuevos
+   ============================================================ */
+[data-theme="dark"] .sort-btn,
+[data-theme="dark"] .sort-menu,
+[data-theme="dark"] .chip,
+[data-theme="dark"] .ship-zone,
+[data-theme="dark"] .ship-test-card {
+  background: var(--bg-primary);
+  border-color: var(--border-light);
+}
+
+[data-theme="dark"] .doc-field select.form-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1a6' stroke-width='2' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}

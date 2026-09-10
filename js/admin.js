@@ -162,6 +162,9 @@ const Admin = (() => {
 
     document.getElementById('adminDashboard').style.display = 'block';
 
+    // La configuración visual trae obsequios, orden de destacados y envíos
+    await loadVisualUiFromDB();
+
     await refreshOrders();
 
     updateStats();
@@ -544,6 +547,10 @@ const Admin = (() => {
 
       document.getElementById('productFeatured').checked = product.featured === true;
 
+      const giftInput = document.getElementById('productGift');
+
+      if (giftInput) giftInput.value = getProductGift(product.id);
+
 
 
       // Offers
@@ -684,15 +691,21 @@ const Admin = (() => {
 
 
 
+    const gift = document.getElementById('productGift')?.value.trim() || '';
+
     if (editingProductId) {
 
       await updateProduct(editingProductId, productData);
+
+      await saveProductGift(editingProductId, gift);
 
       showToast('Producto actualizado', 'success');
 
     } else {
 
-      await addProduct(productData);
+      const created = await addProduct(productData);
+
+      await saveProductGift(created.id, gift);
 
       showToast('Producto creado', 'success');
 
@@ -711,6 +724,33 @@ const Admin = (() => {
   }
 
 
+
+  /* --- Obsequios por producto (site_config.visual_ui.productGifts) --- */
+
+  function getProductGift(productId) {
+    const gifts = getVisualUiConfig().productGifts;
+    const gift = gifts && typeof gifts === 'object' ? gifts[productId] : '';
+    return typeof gift === 'string' ? gift : '';
+  }
+
+  async function saveProductGift(productId, gift) {
+    if (!productId) return;
+    const cfg = getVisualUiConfig();
+    const gifts = { ...(cfg.productGifts || {}) };
+
+    if (gift) gifts[productId] = gift;
+    else delete gifts[productId];
+
+    // Sin cambios: evitamos una escritura innecesaria a Supabase
+    if (JSON.stringify(gifts) === JSON.stringify(cfg.productGifts || {})) return;
+
+    try {
+      await saveVisualUiConfig({ ...cfg, productGifts: gifts });
+    } catch (err) {
+      console.warn('[Admin] Save gift:', err);
+      showToast('El producto se guardó, pero el obsequio no pudo sincronizarse', 'error');
+    }
+  }
 
   // --- Imagen upload (Supabase Storage con fallback a dataURL) ---
 
@@ -1469,11 +1509,25 @@ const Admin = (() => {
 
 
 
-    const tabMap = { products: 'tabProducts', csv: 'tabCsv', orders: 'tabOrders', pages: 'tabPages', stats: 'tabStats', visual: 'tabVisual', pqrs: 'tabPqrs', social: 'tabSocial', users: 'tabUsers', reviews: 'tabReviews', coupons: 'tabCoupons', analytics: 'tabAnalytics' };
+    const tabMap = { products: 'tabProducts', csv: 'tabCsv', orders: 'tabOrders', pages: 'tabPages', stats: 'tabStats', visual: 'tabVisual', pqrs: 'tabPqrs', social: 'tabSocial', users: 'tabUsers', reviews: 'tabReviews', coupons: 'tabCoupons', analytics: 'tabAnalytics', home: 'tabHome', shipping: 'tabShipping' };
 
     const tabEl = document.getElementById(tabMap[tabName]);
 
     if (tabEl) tabEl.style.display = 'block';
+
+    // Sincroniza el encabezado móvil y cierra la navegación desplegable
+    const activeBtn = document.querySelector(`.admin-tab[data-tab="${tabName}"]`);
+    const currentLabel = document.getElementById('adminNavCurrent');
+    if (activeBtn && currentLabel) currentLabel.textContent = activeBtn.querySelector('span')?.textContent || tabName;
+    closeAdminNav();
+
+    if (tabName === 'home') {
+      loadVisualUiFromDB().then(renderHomeTab);
+    }
+
+    if (tabName === 'shipping') {
+      loadVisualUiFromDB().then(renderShippingTab);
+    }
 
 
 
@@ -1884,6 +1938,11 @@ const Admin = (() => {
     initVisualBanners();
     initVisualUiEvents();
 
+    // Navegación del panel + pestañas "Inicio y menú" y "Calculadora de envío"
+    initAdminNav();
+    initHomeTabEvents();
+    initShippingTabEvents();
+
 
 
     // PQRs
@@ -2270,12 +2329,12 @@ const Admin = (() => {
 
   const DEFAULT_PAGES = {
     'sobre-nosotros': { title: 'Sobre Nosotros', content: '<h1>Sobre Nosotros</h1><p>Somos <strong>LIBRE TECH</strong>, una tienda colombiana de tecnología fundada con el propósito de hacer accesible la tecnología de calidad a todos. Desde nuestra sede en <strong>Barranquilla, Colombia</strong>, trabajamos cada día para traerte los mejores productos al mejor precio.</p><h2>Nuestra Misión</h2><p>Democratizar el acceso a la tecnología en Colombia, ofreciendo productos originales de alta calidad con atención personalizada y envíos a todo el país.</p><h2>Nuestra Visión</h2><p>Ser la tienda de tecnología en línea preferida de los colombianos, reconocida por la confianza, calidad y experiencia excepcional.</p><h2>Nuestros Valores</h2><ul><li><strong>Confianza:</strong> Todos nuestros productos son originales y cuentan con garantía.</li><li><strong>Calidad:</strong> Seleccionamos cuidadosamente cada artículo de nuestro catálogo.</li><li><strong>Servicio:</strong> Atención personalizada por WhatsApp con respuesta rápida.</li><li><strong>Accesibilidad:</strong> Precios justos y envíos a todo el territorio colombiano.</li></ul><h2>Nuestra Ubicación</h2><p>Nos encontramos en <strong>Barranquilla, Atlántico, Colombia</strong>.</p><div style="margin-top:1rem;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.15)"><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-75.06%2C10.91%2C-74.95%2C11.02&amp;layer=mapnik&amp;marker=10.9639,-74.7964" width="100%" height="350" style="border:0;display:block" loading="lazy" title="Barranquilla, Colombia"></iframe></div>' },
-    'preguntas-frecuentes': { title: 'Preguntas Frecuentes', content: '<h1>Preguntas Frecuentes</h1><p>Aquí encontrarás respuestas a las preguntas más comunes.</p><div class="faq-item"><p class="faq-question">¿Cómo realizo un pedido?</p><p>Agrega los productos a tu carrito y finaliza el pedido por WhatsApp. Nuestro equipo te confirmará disponibilidad y pago.</p></div><div class="faq-item"><p class="faq-question">¿Qué métodos de pago aceptan?</p><p>Transferencias bancarias (Bancolombia, Nequi, Daviplata), PSE y pago contra entrega en Barranquilla.</p></div><div class="faq-item"><p class="faq-question">¿Cuánto tarda el envío?</p><p><strong>Barranquilla:</strong> 1-2 días hábiles. <strong>Ciudades principales:</strong> 2-4 días. <strong>Otras ciudades:</strong> 3-7 días.</p></div><div class="faq-item"><p class="faq-question">¿Los productos son originales?</p><p>Sí, todos son 100% originales y nuevos con garantía de fabricante.</p></div><div class="faq-item"><p class="faq-question">¿Tienen garantía?</p><p>Sí, todos los productos cuentan con garantía. Contáctanos por WhatsApp para reclamaciones.</p></div><div class="faq-item"><p class="faq-question">¿Puedo devolver un producto?</p><p>Tienes 5 días hábiles desde la recepción. El producto debe estar sin uso y en empaque original.</p></div><div class="faq-item"><p class="faq-question">¿Hacen envíos a todo Colombia?</p><p>¡Sí! Enviamos a todo el territorio colombiano con rastreo incluido.</p></div><p style="margin-top:1.5rem">¿No encontraste tu pregunta? <a href="https://wa.me/573116488816" target="_blank">Escríbenos por WhatsApp</a>.</p>' },
-    'contactanos': { title: 'Contáctanos', content: '<h1>Contáctanos</h1><p>¿Tienes alguna pregunta o necesitas ayuda? ¡Estamos aquí para ti!</p><div class="contact-grid"><div class="contact-card"><strong>💬 WhatsApp</strong><p><a href="https://wa.me/573116488816" target="_blank">+57 300 560 6287</a></p></div><div class="contact-card"><strong>📧 Correo</strong><p><a href="mailto:libretech2026@gmail.com">libretech2026@gmail.com</a></p></div><div class="contact-card"><strong>🕐 Horario</strong><p>Lun-Vie: 8AM-6PM<br>Sáb: 9AM-1PM</p></div><div class="contact-card"><strong>📍 Ubicación</strong><p>Barranquilla, Colombia</p></div></div><h2>Escríbenos</h2><p><a href="https://wa.me/573116488816" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">💬 Chatear por WhatsApp</a></p>' },
-    'seguimiento-pedido': { title: 'Seguimiento de Pedido', content: '<h1>Seguimiento de su Pedido</h1><p>Mantente informado sobre el estado de tu compra.</p><h2>¿Cómo rastreo mi pedido?</h2><ol><li>Cuando tu pedido sea despachado, recibirás por WhatsApp el <strong>número de guía</strong>.</li><li>Ingresa a la página de la transportadora para ver el estado en tiempo real.</li><li>Si tienes dudas, contáctanos por WhatsApp.</li></ol><h2>Estados del pedido</h2><table><thead><tr><th>Estado</th><th>Descripción</th></tr></thead><tbody><tr><td><strong>Confirmado</strong></td><td>Pedido recibido y pago verificado.</td></tr><tr><td><strong>En preparación</strong></td><td>Alistando tu paquete.</td></tr><tr><td><strong>Enviado</strong></td><td>En camino, recibirás guía.</td></tr><tr><td><strong>Entregado</strong></td><td>¡Entregado exitosamente!</td></tr></tbody></table><h2>Tiempos estimados</h2><table><thead><tr><th>Destino</th><th>Tiempo</th></tr></thead><tbody><tr><td>Barranquilla</td><td>1-2 días</td></tr><tr><td>Ciudades principales</td><td>2-4 días</td></tr><tr><td>Otras ciudades</td><td>3-7 días</td></tr></tbody></table><div class="info-card"><h4>¿Necesitas ayuda?</h4><p><a href="https://wa.me/573116488816" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">💬 Consultar mi pedido</a></p></div>' },
-    'politica-privacidad': { title: 'Política de Privacidad', content: '<h1>Política de Privacidad</h1><p><strong>Última actualización:</strong> Enero 2026</p><p>En <strong>LIBRE TECH</strong> nos tomamos muy en serio la protección de tus datos personales.</p><h2>1. Información que Recopilamos</h2><ul><li><strong>Datos de contacto:</strong> Nombre, teléfono, correo electrónico.</li><li><strong>Datos de envío:</strong> Dirección completa, ciudad, departamento.</li><li><strong>Datos de la compra:</strong> Productos, cantidades, montos.</li></ul><h2>2. Uso de la Información</h2><ul><li>Procesar y gestionar tus pedidos.</li><li>Comunicarnos sobre el estado de tu pedido.</li><li>Brindarte soporte al cliente.</li><li>Mejorar nuestros productos y servicios.</li></ul><h2>3. Protección de Datos</h2><p>Implementamos medidas de seguridad para proteger tu información contra acceso no autorizado.</p><h2>4. No Compartimos tu Información</h2><p><strong>No vendemos ni compartimos tu información personal</strong>, excepto con transportadoras para el envío o cuando lo requiera la ley.</p><h2>5. Tus Derechos</h2><p>Según la Ley 1581 de 2012, puedes conocer, actualizar, rectificar y solicitar eliminación de tus datos.</p><h2>6. Contacto</h2><p>WhatsApp: <a href="https://wa.me/573116488816" target="_blank">+57 300 560 6287</a> | Correo: <a href="mailto:libretech2026@gmail.com">libretech2026@gmail.com</a></p>' },
+    'preguntas-frecuentes': { title: 'Preguntas Frecuentes', content: '<h1>Preguntas Frecuentes</h1><p>Aquí encontrarás respuestas a las preguntas más comunes.</p><div class="faq-item"><p class="faq-question">¿Cómo realizo un pedido?</p><p>Agrega los productos a tu carrito y finaliza el pedido por WhatsApp. Nuestro equipo te confirmará disponibilidad y pago.</p></div><div class="faq-item"><p class="faq-question">¿Qué métodos de pago aceptan?</p><p>Transferencias bancarias (Bancolombia, Nequi, Daviplata), PSE y pago contra entrega en Barranquilla.</p></div><div class="faq-item"><p class="faq-question">¿Cuánto tarda el envío?</p><p><strong>Barranquilla:</strong> 1-2 días hábiles. <strong>Ciudades principales:</strong> 2-4 días. <strong>Otras ciudades:</strong> 3-7 días.</p></div><div class="faq-item"><p class="faq-question">¿Los productos son originales?</p><p>Sí, todos son 100% originales y nuevos con garantía de fabricante.</p></div><div class="faq-item"><p class="faq-question">¿Tienen garantía?</p><p>Sí, todos los productos cuentan con garantía. Contáctanos por WhatsApp para reclamaciones.</p></div><div class="faq-item"><p class="faq-question">¿Puedo devolver un producto?</p><p>Tienes 5 días hábiles desde la recepción. El producto debe estar sin uso y en empaque original.</p></div><div class="faq-item"><p class="faq-question">¿Hacen envíos a todo Colombia?</p><p>¡Sí! Enviamos a todo el territorio colombiano con rastreo incluido.</p></div><p style="margin-top:1.5rem">¿No encontraste tu pregunta? <a href="https://wa.me/573176134822" target="_blank">Escríbenos por WhatsApp</a>.</p>' },
+    'contactanos': { title: 'Contáctanos', content: '<h1>Contáctanos</h1><p>¿Tienes alguna pregunta o necesitas ayuda? ¡Estamos aquí para ti!</p><div class="contact-grid"><div class="contact-card"><strong>💬 WhatsApp</strong><p><a href="https://wa.me/573176134822" target="_blank">+57 317 613 4822</a></p></div><div class="contact-card"><strong>📧 Correo</strong><p><a href="mailto:libretechtienda@gmail.com">libretechtienda@gmail.com</a></p></div><div class="contact-card"><strong>🕐 Horario</strong><p>Lun-Vie: 8AM-6PM<br>Sáb: 9AM-1PM</p></div><div class="contact-card"><strong>📍 Ubicación</strong><p>Barranquilla, Colombia</p></div></div><h2>Escríbenos</h2><p><a href="https://wa.me/573176134822" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">💬 Chatear por WhatsApp</a></p>' },
+    'seguimiento-pedido': { title: 'Seguimiento de Pedido', content: '<h1>Seguimiento de su Pedido</h1><p>Mantente informado sobre el estado de tu compra.</p><h2>¿Cómo rastreo mi pedido?</h2><ol><li>Cuando tu pedido sea despachado, recibirás por WhatsApp el <strong>número de guía</strong>.</li><li>Ingresa a la página de la transportadora para ver el estado en tiempo real.</li><li>Si tienes dudas, contáctanos por WhatsApp.</li></ol><h2>Estados del pedido</h2><table><thead><tr><th>Estado</th><th>Descripción</th></tr></thead><tbody><tr><td><strong>Confirmado</strong></td><td>Pedido recibido y pago verificado.</td></tr><tr><td><strong>En preparación</strong></td><td>Alistando tu paquete.</td></tr><tr><td><strong>Enviado</strong></td><td>En camino, recibirás guía.</td></tr><tr><td><strong>Entregado</strong></td><td>¡Entregado exitosamente!</td></tr></tbody></table><h2>Tiempos estimados</h2><table><thead><tr><th>Destino</th><th>Tiempo</th></tr></thead><tbody><tr><td>Barranquilla</td><td>1-2 días</td></tr><tr><td>Ciudades principales</td><td>2-4 días</td></tr><tr><td>Otras ciudades</td><td>3-7 días</td></tr></tbody></table><div class="info-card"><h4>¿Necesitas ayuda?</h4><p><a href="https://wa.me/573176134822" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">💬 Consultar mi pedido</a></p></div>' },
+    'politica-privacidad': { title: 'Política de Privacidad', content: '<h1>Política de Privacidad</h1><p><strong>Última actualización:</strong> Enero 2026</p><p>En <strong>LIBRE TECH</strong> nos tomamos muy en serio la protección de tus datos personales.</p><h2>1. Información que Recopilamos</h2><ul><li><strong>Datos de contacto:</strong> Nombre, teléfono, correo electrónico.</li><li><strong>Datos de envío:</strong> Dirección completa, ciudad, departamento.</li><li><strong>Datos de la compra:</strong> Productos, cantidades, montos.</li></ul><h2>2. Uso de la Información</h2><ul><li>Procesar y gestionar tus pedidos.</li><li>Comunicarnos sobre el estado de tu pedido.</li><li>Brindarte soporte al cliente.</li><li>Mejorar nuestros productos y servicios.</li></ul><h2>3. Protección de Datos</h2><p>Implementamos medidas de seguridad para proteger tu información contra acceso no autorizado.</p><h2>4. No Compartimos tu Información</h2><p><strong>No vendemos ni compartimos tu información personal</strong>, excepto con transportadoras para el envío o cuando lo requiera la ley.</p><h2>5. Tus Derechos</h2><p>Según la Ley 1581 de 2012, puedes conocer, actualizar, rectificar y solicitar eliminación de tus datos.</p><h2>6. Contacto</h2><p>WhatsApp: <a href="https://wa.me/573176134822" target="_blank">+57 317 613 4822</a> | Correo: <a href="mailto:libretechtienda@gmail.com">libretechtienda@gmail.com</a></p>' },
     'terminos-condiciones': { title: 'Términos y Condiciones', content: '<h1>Términos y Condiciones</h1><p><strong>Última actualización:</strong> Enero 2026</p><h2>1. Productos y Precios</h2><ul><li>Precios en <strong>pesos colombianos (COP)</strong> con IVA incluido.</li><li>Precios y disponibilidad pueden cambiar sin previo aviso.</li><li>Las imágenes son de referencia.</li></ul><h2>2. Proceso de Compra</h2><ol><li>Selecciona productos y agrégalos al carrito.</li><li>Completa el pedido por WhatsApp.</li><li>Confirmaremos disponibilidad y monto total.</li><li>Realiza el pago acordado.</li><li>Tu pedido será procesado y enviado.</li></ol><h2>3. Envíos</h2><ul><li>Envíos a todo Colombia.</li><li>Tiempos estimados, pueden variar.</li><li>Verifica tu paquete al recibirlo.</li></ul><h2>4. Métodos de Pago</h2><ul><li>Transferencia bancaria (Bancolombia, Nequi, Daviplata)</li><li>PSE</li><li>Contra entrega (solo Barranquilla)</li></ul><h2>5. Devoluciones</h2><p>Consulta nuestra <a href="pagina.html?page=devoluciones-garantias">Política de Devoluciones y Garantías</a>.</p><h2>6. Legislación</h2><p>Se rigen por las leyes de Colombia. Controversias resueltas en tribunales de Barranquilla.</p>' },
-    'devoluciones-garantias': { title: 'Devoluciones y Garantías', content: '<h1>Devoluciones y Garantías</h1><p><strong>Última actualización:</strong> Enero 2026</p><h2>Devoluciones</h2><p>Plazo: <strong>5 días hábiles</strong> desde la recepción.</p><h3>Condiciones</h3><ul><li>Producto <strong>sin uso</strong> y en perfecto estado.</li><li><strong>Empaque original</strong> con todos los accesorios.</li><li>Comprobante de compra.</li></ul><h3>No aplica devolución</h3><ul><li>Productos con signos de uso o daños.</li><li>Sin empaque original.</li><li>Consumibles con sello abierto.</li></ul><h3>Proceso</h3><ol><li>Contáctanos por <a href="https://wa.me/573116488816" target="_blank">WhatsApp</a>.</li><li>Evaluaremos tu solicitud.</li><li>Envía el producto en empaque original.</li><li>Reembolso en 3-5 días hábiles.</li></ol><h2>Garantía</h2><table><thead><tr><th>Categoría</th><th>Garantía</th></tr></thead><tbody><tr><td>Audífonos y parlantes</td><td>3-6 meses</td></tr><tr><td>Smartwatches / Wearables</td><td>6 meses</td></tr><tr><td>Power Banks / Cargadores</td><td>6 meses</td></tr><tr><td>Cables y accesorios</td><td>3 meses</td></tr></tbody></table><h3>Cubre</h3><ul><li>Defectos de fabricación.</li><li>Mal funcionamiento bajo uso normal.</li></ul><h3>No cubre</h3><ul><li>Daños por mal uso, caídas o líquidos.</li><li>Desgaste natural.</li><li>Modificaciones por terceros.</li></ul><div class="info-card"><h4>¿Necesitas soporte?</h4><p><a href="https://wa.me/573116488816" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">💬 Contactar soporte</a></p></div>' }
+    'devoluciones-garantias': { title: 'Devoluciones y Garantías', content: '<h1>Devoluciones y Garantías</h1><p><strong>Última actualización:</strong> Enero 2026</p><h2>Devoluciones</h2><p>Plazo: <strong>5 días hábiles</strong> desde la recepción.</p><h3>Condiciones</h3><ul><li>Producto <strong>sin uso</strong> y en perfecto estado.</li><li><strong>Empaque original</strong> con todos los accesorios.</li><li>Comprobante de compra.</li></ul><h3>No aplica devolución</h3><ul><li>Productos con signos de uso o daños.</li><li>Sin empaque original.</li><li>Consumibles con sello abierto.</li></ul><h3>Proceso</h3><ol><li>Contáctanos por <a href="https://wa.me/573176134822" target="_blank">WhatsApp</a>.</li><li>Evaluaremos tu solicitud.</li><li>Envía el producto en empaque original.</li><li>Reembolso en 3-5 días hábiles.</li></ol><h2>Garantía</h2><table><thead><tr><th>Categoría</th><th>Garantía</th></tr></thead><tbody><tr><td>Audífonos y parlantes</td><td>3-6 meses</td></tr><tr><td>Smartwatches / Wearables</td><td>6 meses</td></tr><tr><td>Power Banks / Cargadores</td><td>6 meses</td></tr><tr><td>Cables y accesorios</td><td>3 meses</td></tr></tbody></table><h3>Cubre</h3><ul><li>Defectos de fabricación.</li><li>Mal funcionamiento bajo uso normal.</li></ul><h3>No cubre</h3><ul><li>Daños por mal uso, caídas o líquidos.</li><li>Desgaste natural.</li><li>Modificaciones por terceros.</li></ul><div class="info-card"><h4>¿Necesitas soporte?</h4><p><a href="https://wa.me/573176134822" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">💬 Contactar soporte</a></p></div>' }
   };
 
 
@@ -2789,6 +2848,585 @@ const Admin = (() => {
       } catch (err) {
         showToast('Error guardando visual: ' + (err.message || err), 'error');
       }
+    });
+  }
+
+  /* ============================================================
+     TAB: INICIO Y MENÚ
+     Orden manual de destacados, orden del menú hamburguesa y
+     configuración de envíos. Todo se persiste dentro de la misma
+     clave site_config 'visual_ui' que ya usa la tienda.
+     ============================================================ */
+
+  // Enlaces fijos del menú hamburguesa (deben coincidir con hamburger-menu.js)
+  const MENU_STATIC_LABELS = {
+    all: 'Todos los productos',
+    featured: 'Destacados',
+    offers: 'Ofertas',
+    pqr: 'PQRs y soporte',
+    share: 'Compartir catálogo'
+  };
+
+  const SHIPPING_DEFAULTS = {
+    freeThreshold: 150000,
+    defaultCost: 15000,
+    defaultEta: '3 a 5 días hábiles',
+    zones: [],
+    note: 'El valor del envío es un estimado. Te confirmamos el costo final por WhatsApp antes de despachar.'
+  };
+
+  // Último top de productos calculado en Analíticas (para publicar el ranking)
+  let lastTopProducts = [];
+
+  // Estado de edición del tab (se vuelca a visual_ui al guardar)
+  let homeFeaturedOrder = [];
+  let homeMenuOrder = [];
+  let homeMenuHidden = [];
+  let homeShipZones = [];
+
+  function renderHomeTab() {
+    const cfg = getVisualUiConfig();
+    homeFeaturedOrder = Array.isArray(cfg.featuredOrder) ? [...cfg.featuredOrder] : [];
+    homeMenuOrder = Array.isArray(cfg.menuOrder) ? [...cfg.menuOrder] : [];
+    homeMenuHidden = Array.isArray(cfg.menuHidden) ? [...cfg.menuHidden] : [];
+
+    renderFeaturedOrderList();
+    renderMenuOrderList();
+    renderHeroTextsForm();
+  }
+
+  /* --- Destacados --- */
+  function getFeaturedProductsInOrder() {
+    const featured = getProducts().filter(p => p.featured === true && p.active !== false);
+    const rank = new Map(homeFeaturedOrder.map((id, i) => [id, i]));
+    return featured.sort((a, b) => {
+      const ra = rank.has(a.id) ? rank.get(a.id) : Number.MAX_SAFE_INTEGER;
+      const rb = rank.has(b.id) ? rank.get(b.id) : Number.MAX_SAFE_INTEGER;
+      return ra - rb;
+    });
+  }
+
+  function renderFeaturedOrderList() {
+    const list = document.getElementById('featuredOrderList');
+    const empty = document.getElementById('featuredOrderEmpty');
+    if (!list) return;
+
+    const featured = getFeaturedProductsInOrder();
+    homeFeaturedOrder = featured.map(p => p.id);
+
+    if (empty) empty.style.display = featured.length === 0 ? 'block' : 'none';
+    list.innerHTML = featured.map((p, i) => `
+      <li class="sortable-item" draggable="true" data-id="${escapeAttr(p.id)}" data-index="${i}">
+        <span class="sortable-handle" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+        </span>
+        <span class="sortable-pos">${i + 1}</span>
+        ${p.image ? `<img class="sortable-thumb" src="${escapeAttr(p.image)}" alt="">` : '<span class="sortable-thumb sortable-thumb--empty"></span>'}
+        <span class="sortable-label">
+          <strong>${escapeHTML(p.name)}</strong>
+          <small>${escapeHTML(p.category || 'Sin categoría')} · ${formatPrice(p.price)}</small>
+        </span>
+        <span class="sortable-actions">
+          <button type="button" class="table-btn" data-move="up" ${i === 0 ? 'disabled' : ''} aria-label="Subir">↑</button>
+          <button type="button" class="table-btn" data-move="down" ${i === featured.length - 1 ? 'disabled' : ''} aria-label="Bajar">↓</button>
+        </span>
+      </li>
+    `).join('');
+
+    initSortableList(list, newOrder => {
+      homeFeaturedOrder = newOrder;
+      renderFeaturedOrderList();
+    });
+  }
+
+  /* --- Menú hamburguesa --- */
+  function getMenuKeys() {
+    const categories = [...new Set(getProducts().filter(p => p.active !== false).map(p => p.category).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+    const available = [...Object.keys(MENU_STATIC_LABELS), ...categories.map(c => 'cat:' + c)];
+
+    const ordered = homeMenuOrder.filter(k => available.includes(k));
+    const rest = available.filter(k => !ordered.includes(k));
+    return [...ordered, ...rest];
+  }
+
+  function menuKeyLabel(key) {
+    if (key.startsWith('cat:')) return key.slice(4);
+    return MENU_STATIC_LABELS[key] || key;
+  }
+
+  function menuKeyType(key) {
+    return key.startsWith('cat:') ? 'Categoría' : 'Enlace fijo';
+  }
+
+  function renderMenuOrderList() {
+    const list = document.getElementById('menuOrderList');
+    if (!list) return;
+
+    const keys = getMenuKeys();
+    homeMenuOrder = keys;
+
+    list.innerHTML = keys.map((key, i) => {
+      const hidden = homeMenuHidden.includes(key);
+      return `
+        <li class="sortable-item${hidden ? ' is-hidden' : ''}" draggable="true" data-id="${escapeAttr(key)}" data-index="${i}">
+          <span class="sortable-handle" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+          </span>
+          <span class="sortable-pos">${i + 1}</span>
+          <span class="sortable-label">
+            <strong>${escapeHTML(menuKeyLabel(key))}</strong>
+            <small>${menuKeyType(key)}</small>
+          </span>
+          <span class="sortable-actions">
+            <label class="sortable-switch" title="${hidden ? 'Mostrar en el menú' : 'Ocultar del menú'}">
+              <input type="checkbox" data-toggle-visible ${hidden ? '' : 'checked'}>
+              <span>${hidden ? 'Oculto' : 'Visible'}</span>
+            </label>
+            <button type="button" class="table-btn" data-move="up" ${i === 0 ? 'disabled' : ''} aria-label="Subir">↑</button>
+            <button type="button" class="table-btn" data-move="down" ${i === keys.length - 1 ? 'disabled' : ''} aria-label="Bajar">↓</button>
+          </span>
+        </li>
+      `;
+    }).join('');
+
+    initSortableList(list, newOrder => {
+      homeMenuOrder = newOrder;
+      renderMenuOrderList();
+    });
+
+    list.querySelectorAll('[data-toggle-visible]').forEach(input => {
+      input.addEventListener('change', e => {
+        const key = e.target.closest('.sortable-item').dataset.id;
+        if (e.target.checked) homeMenuHidden = homeMenuHidden.filter(k => k !== key);
+        else if (!homeMenuHidden.includes(key)) homeMenuHidden.push(key);
+        renderMenuOrderList();
+      });
+    });
+  }
+
+  /**
+   * Lista ordenable reutilizable: drag & drop + botones ↑/↓.
+   * @param {HTMLElement} list contenedor con hijos .sortable-item[data-id]
+   * @param {(order: string[]) => void} onChange recibe el nuevo orden de ids
+   */
+  function initSortableList(list, onChange) {
+    const readOrder = () => [...list.querySelectorAll('.sortable-item')].map(el => el.dataset.id);
+    // El callback vive en el elemento: al re-renderizar solo se actualiza,
+    // evitando acumular listeners delegados sobre el mismo contenedor.
+    list._onSortChange = onChange;
+
+    let dragged = null;
+    list.querySelectorAll('.sortable-item').forEach(item => {
+      item.addEventListener('dragstart', e => {
+        dragged = item;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      item.addEventListener('dragend', () => {
+        item.classList.remove('dragging');
+        dragged = null;
+        list._onSortChange(readOrder());
+      });
+      item.addEventListener('dragover', e => {
+        e.preventDefault();
+        if (!dragged || dragged === item) return;
+        const rect = item.getBoundingClientRect();
+        const after = (e.clientY - rect.top) > rect.height / 2;
+        list.insertBefore(dragged, after ? item.nextSibling : item);
+      });
+    });
+
+    if (list.dataset.sortableBound) return;
+    list.dataset.sortableBound = '1';
+    list.addEventListener('click', e => {
+      const btn = e.target.closest('[data-move]');
+      if (!btn) return;
+      const item = btn.closest('.sortable-item');
+      const order = readOrder();
+      const from = order.indexOf(item.dataset.id);
+      const to = btn.dataset.move === 'up' ? from - 1 : from + 1;
+      if (to < 0 || to >= order.length) return;
+      order.splice(to, 0, order.splice(from, 1)[0]);
+      list._onSortChange(order);
+    });
+  }
+
+  /* ============================================================
+     TAB: CALCULADORA DE ENVÍO
+     ============================================================ */
+
+  function getShippingConfig() {
+    const cfg = getVisualUiConfig().shipping;
+    if (!cfg || typeof cfg !== 'object') return { ...SHIPPING_DEFAULTS, zones: [] };
+    return {
+      freeThreshold: Number(cfg.freeThreshold) || SHIPPING_DEFAULTS.freeThreshold,
+      defaultCost: Number.isFinite(+cfg.defaultCost) ? +cfg.defaultCost : SHIPPING_DEFAULTS.defaultCost,
+      defaultEta: cfg.defaultEta || SHIPPING_DEFAULTS.defaultEta,
+      zones: Array.isArray(cfg.zones) ? cfg.zones.map(normalizeZone) : [],
+      note: typeof cfg.note === 'string' ? cfg.note : SHIPPING_DEFAULTS.note
+    };
+  }
+
+  /** Normaliza una zona al formato actual, migrando el campo antiguo `match`. */
+  function normalizeZone(zone) {
+    const cities = Array.isArray(zone.cities) ? [...zone.cities] : [];
+    // Formato antiguo: "barranquilla, soledad" → lista de ciudades
+    if (cities.length === 0 && typeof zone.match === 'string' && zone.match.trim()) {
+      zone.match.split(',').map(s => s.trim()).filter(Boolean).forEach(c => cities.push(c));
+    }
+    return {
+      name: zone.name || '',
+      departments: Array.isArray(zone.departments) ? [...zone.departments] : [],
+      cities,
+      cost: Number(zone.cost) || 0,
+      eta: zone.eta || ''
+    };
+  }
+
+  function renderShippingTab() {
+    const cfg = getShippingConfig();
+    homeShipZones = cfg.zones;
+
+    const set = (id, value) => { const el = document.getElementById(id); if (el) el.value = value; };
+    set('shipFreeThreshold', cfg.freeThreshold);
+    set('shipDefaultCost', cfg.defaultCost);
+    set('shipDefaultEta', cfg.defaultEta);
+    set('shipNote', cfg.note);
+
+    renderShipZones();
+
+    // Selectores de la sección "Probar la calculadora"
+    if (typeof ColombiaLocations !== 'undefined') {
+      ColombiaLocations.fillDepartmentSelect(document.getElementById('shipTestDept'));
+      ColombiaLocations.fillCitySelect(document.getElementById('shipTestCity'), '');
+    }
+  }
+
+  function departmentOptions(exclude) {
+    if (typeof ColombiaLocations === 'undefined') return '';
+    return ColombiaLocations.getDepartments()
+      .filter(d => !exclude.includes(d))
+      .map(d => `<option value="${escapeAttr(d)}">${escapeHTML(d)}</option>`)
+      .join('');
+  }
+
+  function chipList(items, zoneIndex, field, emptyText) {
+    if (items.length === 0) return `<p class="chip-empty">${emptyText}</p>`;
+    return `<div class="chip-list">${items.map((item, i) => `
+      <span class="chip">
+        ${escapeHTML(item)}
+        <button type="button" class="chip-remove" data-zone="${zoneIndex}" data-field="${field}" data-chip="${i}" aria-label="Quitar ${escapeAttr(item)}">×</button>
+      </span>
+    `).join('')}</div>`;
+  }
+
+  function renderShipZones() {
+    const container = document.getElementById('shipZonesList');
+    if (!container) return;
+
+    if (homeShipZones.length === 0) {
+      container.innerHTML = '<p class="form-hint">Sin zonas configuradas: todos los pedidos usan el costo por defecto.</p>';
+      return;
+    }
+
+    container.innerHTML = homeShipZones.map((z, i) => `
+      <div class="ship-zone" data-index="${i}">
+        <div class="ship-zone-head">
+          <div class="form-group">
+            <label class="form-label">Nombre de la zona</label>
+            <input type="text" class="form-input" data-zone="${i}" data-zone-field="name" value="${escapeAttr(z.name)}" placeholder="Ej: Costa Caribe">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Costo (COP)</label>
+            <input type="number" class="form-input" data-zone="${i}" data-zone-field="cost" value="${z.cost}" min="0" step="500">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Entrega estimada</label>
+            <input type="text" class="form-input" data-zone="${i}" data-zone-field="eta" value="${escapeAttr(z.eta)}" placeholder="1 a 2 días hábiles">
+          </div>
+          <button type="button" class="table-btn delete ship-zone-delete" data-remove-zone="${i}" aria-label="Eliminar zona">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+          </button>
+        </div>
+
+        <div class="ship-zone-body">
+          <div class="ship-zone-col">
+            <label class="form-label">Departamentos completos</label>
+            ${chipList(z.departments, i, 'departments', 'Ningún departamento completo en esta zona.')}
+            <select class="form-input" data-add-dept="${i}">
+              <option value="">+ Agregar departamento…</option>
+              ${departmentOptions(z.departments)}
+            </select>
+          </div>
+
+          <div class="ship-zone-col">
+            <label class="form-label">Ciudades específicas</label>
+            ${chipList(z.cities, i, 'cities', 'Ninguna ciudad específica en esta zona.')}
+            <div class="ship-zone-city-picker">
+              <select class="form-input" data-city-dept="${i}">
+                <option value="">Departamento…</option>
+                ${departmentOptions([])}
+              </select>
+              <select class="form-input" data-add-city="${i}" disabled>
+                <option value="">Ciudad…</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /** El estado vive en homeShipZones; el formulario solo lo refleja. */
+  function collectShipZonesFromForm() {
+    return homeShipZones
+      .map(z => ({ ...z, name: z.name.trim(), eta: z.eta.trim() }))
+      .filter(z => z.name || z.departments.length || z.cities.length);
+  }
+
+  function initShippingTabEvents() {
+    const list = document.getElementById('shipZonesList');
+
+    // Nombre / costo / entrega: se escriben directo en el estado (sin re-render,
+    // para no perder el foco mientras se escribe)
+    list?.addEventListener('input', e => {
+      const input = e.target.closest('[data-zone-field]');
+      if (!input) return;
+      const zone = homeShipZones[+input.dataset.zone];
+      if (!zone) return;
+      const field = input.dataset.zoneField;
+      zone[field] = field === 'cost' ? (parseInt(input.value, 10) || 0) : input.value;
+    });
+
+    list?.addEventListener('change', e => {
+      // Agregar departamento completo
+      const addDept = e.target.closest('[data-add-dept]');
+      if (addDept && addDept.value) {
+        const zone = homeShipZones[+addDept.dataset.addDept];
+        if (zone && !zone.departments.includes(addDept.value)) zone.departments.push(addDept.value);
+        renderShipZones();
+        return;
+      }
+
+      // Elegir departamento para poblar el desplegable de ciudades
+      const cityDept = e.target.closest('[data-city-dept]');
+      if (cityDept) {
+        const citySelect = list.querySelector(`[data-add-city="${cityDept.dataset.cityDept}"]`);
+        if (typeof ColombiaLocations !== 'undefined') {
+          ColombiaLocations.fillCitySelect(citySelect, cityDept.value);
+        }
+        return;
+      }
+
+      // Agregar ciudad
+      const addCity = e.target.closest('[data-add-city]');
+      if (addCity && addCity.value) {
+        const zone = homeShipZones[+addCity.dataset.addCity];
+        if (zone && !zone.cities.includes(addCity.value)) zone.cities.push(addCity.value);
+        renderShipZones();
+      }
+    });
+
+    list?.addEventListener('click', e => {
+      const chip = e.target.closest('.chip-remove');
+      if (chip) {
+        const zone = homeShipZones[+chip.dataset.zone];
+        zone?.[chip.dataset.field].splice(+chip.dataset.chip, 1);
+        renderShipZones();
+        return;
+      }
+
+      const del = e.target.closest('[data-remove-zone]');
+      if (del) {
+        homeShipZones.splice(+del.dataset.removeZone, 1);
+        renderShipZones();
+      }
+    });
+
+    document.getElementById('btnAddShipZone')?.addEventListener('click', () => {
+      homeShipZones.push({ name: '', departments: [], cities: [], cost: 0, eta: '' });
+      renderShipZones();
+    });
+
+    document.getElementById('btnSaveShipping')?.addEventListener('click', () => {
+      const shipping = {
+        freeThreshold: parseInt(document.getElementById('shipFreeThreshold')?.value, 10) || SHIPPING_DEFAULTS.freeThreshold,
+        defaultCost: parseInt(document.getElementById('shipDefaultCost')?.value, 10) || 0,
+        defaultEta: document.getElementById('shipDefaultEta')?.value.trim() || SHIPPING_DEFAULTS.defaultEta,
+        zones: collectShipZonesFromForm(),
+        note: document.getElementById('shipNote')?.value.trim() || SHIPPING_DEFAULTS.note
+      };
+      homeShipZones = shipping.zones.map(normalizeZone);
+      saveHomeConfig({ shipping }, 'Calculadora de envío guardada');
+    });
+
+    // Probador
+    document.getElementById('shipTestDept')?.addEventListener('change', e => {
+      if (typeof ColombiaLocations === 'undefined') return;
+      ColombiaLocations.fillCitySelect(document.getElementById('shipTestCity'), e.target.value);
+      const out = document.getElementById('shipTestResult');
+      if (out) out.innerHTML = '';
+    });
+
+    document.getElementById('btnShipTest')?.addEventListener('click', runShippingTest);
+  }
+
+  function runShippingTest() {
+    const out = document.getElementById('shipTestResult');
+    if (!out) return;
+
+    if (typeof Shipping === 'undefined') {
+      out.innerHTML = '<span class="ship-test-error">shipping.js no está cargado en esta página.</span>';
+      return;
+    }
+
+    const department = document.getElementById('shipTestDept')?.value || '';
+    const city = document.getElementById('shipTestCity')?.value || '';
+    const subtotal = parseInt(document.getElementById('shipTestSubtotal')?.value, 10) || 0;
+
+    if (!city) {
+      out.innerHTML = '<span class="ship-test-error">Elige departamento y ciudad para probar.</span>';
+      return;
+    }
+
+    const quote = Shipping.quote({ city, department, subtotal });
+    const progress = Shipping.getFreeShippingProgress(subtotal);
+
+    out.innerHTML = `
+      <div class="ship-test-card">
+        <div class="ship-test-row">
+          <span>${escapeHTML(city)}, ${escapeHTML(department)}</span>
+          <strong class="${quote.free ? 'ship-free' : ''}">${quote.free ? 'GRATIS' : formatPrice(quote.cost)}</strong>
+        </div>
+        <div class="ship-test-meta">Zona aplicada: <strong>${escapeHTML(quote.zoneName)}</strong> · Entrega ${escapeHTML(quote.eta)}</div>
+        <div class="ship-test-meta">
+          ${progress.reached
+            ? 'El subtotal supera el mínimo de envío gratis.'
+            : `Faltan ${formatPrice(progress.missing)} para el envío gratis.`}
+        </div>
+        <div class="ship-test-meta">Total con envío: <strong>${formatPrice(subtotal + quote.cost)}</strong></div>
+      </div>
+    `;
+  }
+
+  /* ============================================================
+     TEXTOS DEL INICIO (hero)
+     ============================================================ */
+  const HERO_DEFAULTS = {
+    line1: 'Tecnología',
+    line2: 'que mejora',
+    line3: 'tu día a día',
+    subtitle: 'Descubre nuestros productos seleccionados para tu estilo de vida.',
+    ctaText: 'Ver productos'
+  };
+
+  const HERO_FIELDS = {
+    heroLine1: 'line1',
+    heroLine2: 'line2',
+    heroLine3: 'line3',
+    heroSubtitle: 'subtitle',
+    heroCtaText: 'ctaText'
+  };
+
+  function renderHeroTextsForm() {
+    const saved = getVisualUiConfig().heroTexts || {};
+    Object.entries(HERO_FIELDS).forEach(([id, key]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = saved[key] || '';
+    });
+    updateHeroPreview();
+  }
+
+  function updateHeroPreview() {
+    const value = (id, fallback) => (document.getElementById(id)?.value.trim() || fallback);
+    const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+    set('heroPreview1', value('heroLine1', HERO_DEFAULTS.line1));
+    set('heroPreview2', value('heroLine2', HERO_DEFAULTS.line2));
+    set('heroPreview3', value('heroLine3', HERO_DEFAULTS.line3));
+    set('heroPreviewSub', value('heroSubtitle', HERO_DEFAULTS.subtitle));
+    set('heroPreviewCta', value('heroCtaText', HERO_DEFAULTS.ctaText));
+  }
+
+  function initHeroTextsEvents() {
+    Object.keys(HERO_FIELDS).forEach(id => {
+      document.getElementById(id)?.addEventListener('input', updateHeroPreview);
+    });
+
+    document.getElementById('btnSaveHeroTexts')?.addEventListener('click', () => {
+      const heroTexts = {};
+      Object.entries(HERO_FIELDS).forEach(([id, key]) => {
+        const val = document.getElementById(id)?.value.trim();
+        if (val) heroTexts[key] = val;   // vacío = usar el texto por defecto
+      });
+      saveHomeConfig({ heroTexts }, 'Textos del inicio guardados');
+    });
+  }
+
+  /* --- Guardado --- */
+  async function saveHomeConfig(patch, successMessage) {
+    const cfg = { ...getVisualUiConfig(), ...patch };
+    try {
+      await saveVisualUiConfig(cfg);
+      showToast(successMessage, 'success');
+    } catch (err) {
+      showToast('Error guardando: ' + (err.message || err), 'error');
+    }
+  }
+
+  function initHomeTabEvents() {
+    document.getElementById('btnSaveFeaturedOrder')?.addEventListener('click', () => {
+      saveHomeConfig({ featuredOrder: homeFeaturedOrder }, 'Orden de destacados guardado');
+    });
+
+    document.getElementById('btnSaveMenuOrder')?.addEventListener('click', () => {
+      saveHomeConfig({ menuOrder: homeMenuOrder, menuHidden: homeMenuHidden }, 'Menú guardado');
+    });
+
+    initHeroTextsEvents();
+  }
+
+  /* ============================================================
+     NAVEGACIÓN DEL PANEL (sidebar agrupado + buscador)
+     ============================================================ */
+  function closeAdminNav() {
+    const sidebar = document.getElementById('adminSidebar');
+    const toggle = document.getElementById('btnAdminNavToggle');
+    if (!sidebar || !toggle) return;
+    sidebar.classList.remove('nav-open');
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  function initAdminNav() {
+    const sidebar = document.getElementById('adminSidebar');
+    const toggle = document.getElementById('btnAdminNavToggle');
+    const search = document.getElementById('adminNavSearch');
+    const empty = document.getElementById('adminNavEmpty');
+
+    toggle?.addEventListener('click', () => {
+      const open = !sidebar.classList.contains('nav-open');
+      sidebar.classList.toggle('nav-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+
+    search?.addEventListener('input', () => {
+      const q = search.value.trim().toLowerCase();
+      let visible = 0;
+
+      document.querySelectorAll('.admin-tabs .admin-tab').forEach(btn => {
+        const label = (btn.textContent || '').toLowerCase();
+        const match = !q || label.includes(q);
+        btn.hidden = !match;
+        if (match) visible++;
+      });
+
+      // Oculta los grupos que se quedaron sin opciones visibles
+      document.querySelectorAll('.admin-nav-group').forEach(group => {
+        group.hidden = ![...group.querySelectorAll('.admin-tab')].some(b => !b.hidden);
+      });
+
+      if (empty) empty.hidden = visible > 0;
     });
   }
 
@@ -3313,7 +3951,7 @@ const Admin = (() => {
 
 
 
-    const adminEmails = ['admin@libretechtienda.com', 'libretech2026@gmail.com'];
+    const adminEmails = ['admin@libretechtienda.com', 'libretechtienda@gmail.com', 'libretech2026@gmail.com'];
 
 
 
@@ -3916,6 +4554,9 @@ const Admin = (() => {
         .sort((a, b) => b.qty - a.qty)
         .slice(0, 10);
 
+      // Se guarda en memoria para poder publicarlo como ranking de la tienda
+      lastTopProducts = sorted.map(e => ({ id: e.product.id, qty: e.qty }));
+
       if (sorted.length === 0) {
         topEl.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:1rem;">Sin datos</p>';
       } else {
@@ -4012,6 +4653,21 @@ const Admin = (() => {
   function initAnalyticsEvents() {
     document.getElementById('analyticsDateRange')?.addEventListener('change', renderAnalytics);
     document.getElementById('btnRefreshAnalytics')?.addEventListener('click', renderAnalytics);
+    document.getElementById('btnPublishBestSellers')?.addEventListener('click', publishBestSellers);
+  }
+
+  /**
+   * Publica el ranking de más vendidos en site_config para que la tienda
+   * pueda ofrecer el orden "Más vendidos".
+   * Los pedidos no son de lectura pública (RLS), así que el ranking se
+   * calcula aquí —donde sí hay acceso— y se publica ya agregado.
+   */
+  function publishBestSellers() {
+    if (lastTopProducts.length === 0) {
+      showToast('Actualiza las analíticas primero: aún no hay ventas para publicar', 'error');
+      return;
+    }
+    saveHomeConfig({ bestSellers: lastTopProducts }, `Ranking publicado (${lastTopProducts.length} productos)`);
   }
 
 

@@ -22,11 +22,18 @@
   - PQRs y reseñas de productos
   - Búsqueda con dropdown de resultados
 
-  == MÓDULOS JS ==
+  == MÓDULOS JS (en orden de carga) ==
+  - business-config.js — WhatsApp, correo, URL y umbral de envío gratis (fuente única)
   - supabase-client.js — Cliente Supabase + helpers (getSiteConfig, setSiteConfig, getCustomerProfile, upsertCustomerProfile)
-  - app.js   — Renderizado de productos, banners, carrusel hero, wishlist, redes sociales
-  - cart.js  — Carrito, formulario de pedido WhatsApp, checkout
+  - cart.js  — Carrito, obsequios, envío, formulario de pedido WhatsApp, recordatorio flotante
   - auth.js  — Autenticación, perfil de usuario, historial de pedidos
+  - app.js   — Renderizado de productos, orden del catálogo, banners, carrusel hero, textos del hero, scroll reveal
+  - hamburger-menu.js — Menú lateral (orden configurable desde admin)
+  - colombia-locations.js — Departamentos y municipios de Colombia
+  - shipping.js — Cotización de envío por zonas y envío gratis por monto
+  - gifts.js — Obsequios asociados a productos
+  - share.js — Compartir producto/catálogo por enlace directo
+  - whatsapp-bubble.js — Burbuja flotante arrastrable (posición persistente)
 
   == SUPABASE TABLES ==
   - products, orders, order_items, pqrs, reviews
@@ -35,6 +42,24 @@
   - coupons (cupones de descuento con código, tipo, valor, vencimiento, usos)
 
   == ÚLTIMA ACTUALIZACIÓN ==
+  Septiembre 2026 — v3.3:
+  - Botón de ordenar: recomendados, recientes, A-Z, Z-A, precio y más vendidos
+  - Textos del hero editables desde admin (visual_ui.heroTexts)
+  - Calculadora de envío con departamentos y ciudades de Colombia
+  - Fix: la burbuja de WhatsApp saltaba en el primer arrastre (dos scripts en conflicto)
+  - Fix: alineación de "Tipo doc." y "N.º de documento" en Mi perfil
+
+  Septiembre 2026 — v3.2:
+  - Compartir producto (enlace directo a producto.html?id=UUID) y catálogo
+  - Enlaces cortos ?product=UUID redirigidos a la ficha del producto
+  - Obsequios por producto visibles en tarjeta, ficha, carrito y pedido
+  - Barra de progreso de envío gratis (desde $150.000) + calculadora de envío
+  - Recordatorio flotante persistente de carrito
+  - Orden manual de destacados y del menú hamburguesa (desde admin)
+  - Animaciones de entrada por scroll y micro-interacciones (respeta prefers-reduced-motion)
+  - WhatsApp 317 613 4822 / correo libretechtienda@gmail.com
+  - Metaetiqueta estática de verificación de dominio de Facebook
+
   Abril 2026 — v3.1:
   - Banners y redes sociales persistidos en Supabase (site_config)
   - Hero carrusel: imagen como fondo (background-image)
@@ -56,6 +81,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="facebook-domain-verification" content="98kibfdze9w5ipwe3ixo782f6i5ggr" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="LIBRE TECH - Tu tienda de tecnologia en Colombia. Celulares, audifonos, accesorios tech y mas al mejor precio con envio a todo el pais.">
   <meta name="keywords" content="tienda tecnologia, celulares, audifonos, accesorios tech, Colombia, envio contraentrega, LIBRE TECH">
@@ -325,15 +351,16 @@
     </div>
     <div class="hero-content container">
       <div class="hero-text">
+        <!-- Textos editables desde Admin → Inicio y menú → Textos del inicio -->
         <h1 class="hero-title">
-          <span class="hero-title-line">Tecnología</span>
-          <span class="hero-title-line hero-title-line-2">que mejora</span>
-          <span class="hero-title-line hero-title-line-3">tu día a día</span>
+          <span class="hero-title-line" id="heroTitleLine1">Tecnología</span>
+          <span class="hero-title-line hero-title-line-2" id="heroTitleLine2">que mejora</span>
+          <span class="hero-title-line hero-title-line-3" id="heroTitleLine3">tu día a día</span>
         </h1>
-        <p class="hero-subtitle">Descubre nuestros productos seleccionados para tu estilo de vida.</p>
+        <p class="hero-subtitle" id="heroSubtitleText">Descubre nuestros productos seleccionados para tu estilo de vida.</p>
         <div class="hero-actions">
           <a href="#productos" class="hero-cta" id="heroCtaBtn">
-            Ver productos
+            <span id="heroCtaLabel">Ver productos</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </a>
         </div>
@@ -380,6 +407,9 @@
         <div class="brand-dropdown" id="brandDropdown" style="display:none">
           <div class="brand-dropdown-content" id="brandDropdownContent"></div>
         </div>
+
+        <!-- Botón de ordenar (renderizado por app.js) -->
+        <div class="sort-bar" id="sortBar"></div>
 
         <!-- Grid de productos -->
         <div class="products-grid" id="productsGrid"></div>
@@ -459,7 +489,7 @@
       </button>
       <button class="btn-whatsapp" id="btnWhatsApp">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        Continuar pedido por WhatsApp
+        Finalizar compra
       </button>
     </div>
   </aside>
@@ -499,10 +529,10 @@
               <label class="form-label" for="profilePhone">Teléfono / WhatsApp</label>
               <input type="tel" class="form-input" id="profilePhone" maxlength="20" placeholder="Ej: 3001234567">
             </div>
-            <div class="form-group" style="display:grid;grid-template-columns:auto 1fr;gap:8px">
-              <div>
+            <div class="form-group doc-field">
+              <div class="doc-field-col">
                 <label class="form-label" for="profileDocType">Tipo doc.</label>
-                <select class="form-input" id="profileDocType" style="width:80px">
+                <select class="form-input" id="profileDocType">
                   <option value="CC">CC</option>
                   <option value="CE">CE</option>
                   <option value="NIT">NIT</option>
@@ -510,8 +540,8 @@
                   <option value="PP">PP</option>
                 </select>
               </div>
-              <div>
-                <label class="form-label" for="profileDocNumber">Número de documento</label>
+              <div class="doc-field-col">
+                <label class="form-label" for="profileDocNumber">N.º de documento</label>
                 <input type="text" class="form-input" id="profileDocNumber" maxlength="20">
               </div>
             </div>
@@ -678,6 +708,7 @@
               <li><a href="productos.html">Todos los productos</a></li>
               <li><a href="ofertas.html">Ofertas</a></li>
               <li><a href="destacados.html">Productos destacados</a></li>
+              <li><a href="#" data-share="catalog">Compartir catálogo</a></li>
             </ul>
           </div>
           <!-- Atención al cliente -->
@@ -687,7 +718,7 @@
               <li><a href="pagina.html?page=seguimiento-pedido">Seguimiento de pedido</a></li>
               <li><a href="pagina.html?page=preguntas-frecuentes">Preguntas frecuentes</a></li>
               <li><a href="pagina.html?page=devoluciones-garantias">Devoluciones y garantías</a></li>
-              <li><a href="https://wa.me/573116488816" target="_blank" rel="noopener">WhatsApp</a></li>
+              <li><a href="https://wa.me/573176134822" target="_blank" rel="noopener">WhatsApp</a></li>
               <li><a href="pagina.html?page=contactanos">Contáctanos</a></li>
             </ul>
           </div>
@@ -714,130 +745,6 @@
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.654-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
   </div>
 
-  <!-- WhatsApp Bubble Drag Handler Script -->
-  <script>
-    (function() {
-      'use strict';
-      const bubble = document.getElementById('whatsappBubble');
-      if (!bubble) return;
-
-      let isDragging = false;
-      let startX = 0;
-      let startY = 0;
-      let currentX = 0;
-      let currentY = 0;
-      let offsetX = 0;
-      let offsetY = 0;
-
-      // Load saved position from localStorage
-      function loadPosition() {
-        try {
-          const saved = JSON.parse(localStorage.getItem('whatsappBubblePos'));
-          if (saved) {
-            currentX = saved.x;
-            currentY = saved.y;
-            updatePosition();
-          }
-        } catch (e) {
-          // Ignore parse errors
-        }
-      }
-
-      function updatePosition() {
-        bubble.style.left = currentX + 'px';
-        bubble.style.bottom = currentY + 'px';
-        bubble.style.right = 'auto';
-      }
-
-      function savePosition() {
-        try {
-          localStorage.setItem('whatsappBubblePos', JSON.stringify({ x: currentX, y: currentY }));
-        } catch (e) {
-          // Ignore storage errors
-        }
-      }
-
-      function onMouseDown(e) {
-        if (e.button !== 0) return; // Only left click
-        isDragging = true;
-        bubble.classList.add('dragging');
-        startX = e.clientX;
-        startY = e.clientY;
-        offsetX = currentX;
-        offsetY = currentY;
-        e.preventDefault();
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-      }
-
-      function onTouchStart(e) {
-        if (e.touches.length !== 1) return;
-        isDragging = true;
-        bubble.classList.add('dragging');
-        const touch = e.touches[0];
-        startX = touch.clientX;
-        startY = touch.clientY;
-        offsetX = currentX;
-        offsetY = currentY;
-        e.preventDefault();
-        document.addEventListener('touchmove', onTouchMove, { passive: false });
-        document.addEventListener('touchend', onTouchEnd);
-      }
-
-      function onMouseMove(e) {
-        if (!isDragging) return;
-        const deltaX = e.clientX - startX;
-        const deltaY = e.clientY - startY;
-        currentX = Math.max(0, Math.min(window.innerWidth - 60, offsetX + deltaX));
-        currentY = Math.max(0, Math.min(window.innerHeight - 60, offsetY - deltaY));
-        updatePosition();
-      }
-
-      function onTouchMove(e) {
-        if (!isDragging) return;
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - startX;
-        const deltaY = touch.clientY - startY;
-        currentX = Math.max(0, Math.min(window.innerWidth - 60, offsetX + deltaX));
-        currentY = Math.max(0, Math.min(window.innerHeight - 60, offsetY - deltaY));
-        updatePosition();
-        e.preventDefault();
-      }
-
-      function onMouseUp(e) {
-        if (!isDragging) return;
-        isDragging = false;
-        bubble.classList.remove('dragging');
-        savePosition();
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-      }
-
-      function onTouchEnd(e) {
-        if (!isDragging) return;
-        isDragging = false;
-        bubble.classList.remove('dragging');
-        savePosition();
-        document.removeEventListener('touchmove', onTouchMove);
-        document.removeEventListener('touchend', onTouchEnd);
-      }
-
-      function onClick(e) {
-        if (isDragging) {
-          e.preventDefault();
-          return;
-        }
-        const whatsappNumber = '573116488816';
-        const message = 'Hola, tengo una consulta sobre mis productos';
-        window.open('https://wa.me/' + whatsappNumber + '?text=' + encodeURIComponent(message), '_blank');
-      }
-
-      loadPosition();
-      bubble.addEventListener('mousedown', onMouseDown);
-      bubble.addEventListener('touchstart', onTouchStart);
-      bubble.addEventListener('click', onClick);
-    })();
-  </script>
 
   <!-- Dark mode script -->
   <script>
@@ -846,8 +753,10 @@
       if(saved === 'dark') document.documentElement.setAttribute('data-theme','dark');
       function updateIcons(){
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        document.getElementById('themeIconSun').style.display = isDark ? 'none' : 'block';
-        document.getElementById('themeIconMoon').style.display = isDark ? 'block' : 'none';
+        const sunIcon = document.getElementById('themeIconSun');
+        const moonIcon = document.getElementById('themeIconMoon');
+        if (sunIcon) sunIcon.style.display = isDark ? 'none' : 'block';
+        if (moonIcon) moonIcon.style.display = isDark ? 'block' : 'none';
       }
       document.addEventListener('DOMContentLoaded', function(){
         updateIcons();
@@ -861,11 +770,17 @@
     })();
   </script>
 
+  <script src="js/business-config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
   <script src="js/hamburger-menu.js"></script>
+  <script src="js/colombia-locations.js"></script>
+  <script src="js/shipping.js"></script>
+  <script src="js/gifts.js"></script>
+  <script src="js/share.js"></script>
+  <script src="js/whatsapp-bubble.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       try { await SB.syncProducts(); } catch (e) { console.warn('SB sync:', e); }
@@ -944,123 +859,5 @@
     });
   </script>
 
-  <!-- WhatsApp Bubble Drag Script -->
-  <script>
-    (function() {
-      const bubble = document.getElementById('whatsappBubble');
-      if (!bubble) return;
-
-      let isDragging = false;
-      let currentX = 0;
-      let currentY = 0;
-      let initialX = 0;
-      let initialY = 0;
-      const STORAGE_KEY = 'whatsapp_bubble_pos';
-
-      // Load saved position
-      function loadPosition() {
-        try {
-          const saved = localStorage.getItem(STORAGE_KEY);
-          if (saved) {
-            const { x, y } = JSON.parse(saved);
-            bubble.style.left = x + 'px';
-            bubble.style.bottom = 'auto';
-            bubble.style.top = y + 'px';
-          }
-        } catch (e) {
-          console.warn('Error loading bubble position:', e);
-        }
-      }
-
-      // Save position
-      function savePosition() {
-        try {
-          const rect = bubble.getBoundingClientRect();
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({
-            x: parseInt(bubble.style.left),
-            y: parseInt(bubble.style.top)
-          }));
-        } catch (e) {
-          console.warn('Error saving bubble position:', e);
-        }
-      }
-
-      // Handle mouse/touch start
-      function handleStart(e) {
-        if (e.type.includes('touch')) {
-          initialX = e.touches[0].clientX - currentX;
-          initialY = e.touches[0].clientY - currentY;
-        } else {
-          initialX = e.clientX - currentX;
-          initialY = e.clientY - currentY;
-        }
-        isDragging = true;
-        bubble.style.cursor = 'grabbing';
-      }
-
-      // Handle mouse/touch move
-      function handleMove(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-
-        if (e.type.includes('touch')) {
-          currentX = e.touches[0].clientX - initialX;
-          currentY = e.touches[0].clientY - initialY;
-        } else {
-          currentX = e.clientX - initialX;
-          currentY = e.clientY - initialY;
-        }
-
-        // Keep within viewport
-        const rect = bubble.getBoundingClientRect();
-        const maxX = window.innerWidth - rect.width;
-        const maxY = window.innerHeight - rect.height;
-
-        currentX = Math.max(0, Math.min(currentX, maxX));
-        currentY = Math.max(0, Math.min(currentY, maxY));
-
-        bubble.style.left = currentX + 'px';
-        bubble.style.top = currentY + 'px';
-        bubble.style.bottom = 'auto';
-      }
-
-      // Handle mouse/touch end
-      function handleEnd(e) {
-        if (!isDragging) return;
-        isDragging = false;
-        bubble.style.cursor = 'grab';
-        savePosition();
-      }
-
-      // Handle click to open WhatsApp
-      function handleClick(e) {
-        if (isDragging) return;
-        window.open('https://wa.me/573116488816', '_blank', 'noopener');
-      }
-
-      // Event listeners
-      bubble.addEventListener('mousedown', handleStart);
-      bubble.addEventListener('touchstart', handleStart, { passive: false });
-
-      document.addEventListener('mousemove', handleMove);
-      document.addEventListener('touchmove', handleMove, { passive: false });
-
-      document.addEventListener('mouseup', handleEnd);
-      document.addEventListener('touchend', handleEnd);
-
-      bubble.addEventListener('click', handleClick);
-
-      // Keyboard support
-      bubble.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          handleClick(e);
-        }
-      });
-
-      // Load saved position on load
-      window.addEventListener('load', loadPosition);
-      loadPosition();
-    })();
-  </script>
 </body>
 </html>

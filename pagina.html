@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="facebook-domain-verification" content="98kibfdze9w5ipwe3ixo782f6i5ggr" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LIBRE TECH</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -222,6 +223,7 @@
               <li><a href="index.html#productos">Todos los productos</a></li>
               <li><a href="index.html#productos?filter=ofertas">Ofertas</a></li>
               <li><a href="index.html#productos?filter=destacados">Productos destacados</a></li>
+              <li><a href="#" data-share="catalog">Compartir catálogo</a></li>
             </ul>
           </div>
           <!-- Atención al cliente -->
@@ -231,7 +233,7 @@
               <li><a href="pagina.html?page=seguimiento-pedido">Seguimiento de pedido</a></li>
               <li><a href="pagina.html?page=preguntas-frecuentes">Preguntas frecuentes</a></li>
               <li><a href="pagina.html?page=devoluciones-garantias">Devoluciones y garantías</a></li>
-              <li><a href="https://wa.me/573116488816" target="_blank" rel="noopener">WhatsApp</a></li>
+              <li><a href="https://wa.me/573176134822" target="_blank" rel="noopener">WhatsApp</a></li>
               <li><a href="pagina.html?page=contactanos">Contáctanos</a></li>
             </ul>
           </div>
@@ -262,8 +264,10 @@
       if(saved === 'dark') document.documentElement.setAttribute('data-theme','dark');
       function updateIcons(){
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        document.getElementById('themeIconSun').style.display = isDark ? 'none' : 'block';
-        document.getElementById('themeIconMoon').style.display = isDark ? 'block' : 'none';
+        const sunIcon = document.getElementById('themeIconSun');
+        const moonIcon = document.getElementById('themeIconMoon');
+        if (sunIcon) sunIcon.style.display = isDark ? 'none' : 'block';
+        if (moonIcon) moonIcon.style.display = isDark ? 'block' : 'none';
       }
       document.addEventListener('DOMContentLoaded', function(){
         updateIcons();
@@ -277,16 +281,24 @@
     })();
   </script>
 
+  <script src="js/business-config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
   <script src="js/hamburger-menu.js"></script>
+  <script src="js/colombia-locations.js"></script>
+  <script src="js/shipping.js"></script>
+  <script src="js/gifts.js"></script>
+  <script src="js/share.js"></script>
+  <script src="js/whatsapp-bubble.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       try { await SB.syncProducts(); } catch (e) { console.warn('SB sync:', e); }
       Cart.init();
       Auth.init();
+      // Trae obsequios y configuración de envíos desde Supabase
+      Store.loadSiteConfigFromDB();
     });
   </script>
 
@@ -386,7 +398,7 @@
 <p>Una vez despachado tu pedido, te enviaremos el número de guía por WhatsApp. También puedes consultar el estado de tu pedido en nuestra sección de <a href="pagina.html?page=seguimiento-pedido">Seguimiento de Pedido</a>.</p>
 </div>
 
-<p style="margin-top:1.5rem">¿No encontraste lo que buscabas? <a href="https://wa.me/573116488816" target="_blank">Escríbenos por WhatsApp</a> y te ayudamos.</p>` },
+<p style="margin-top:1.5rem">¿No encontraste lo que buscabas? <a href="https://wa.me/573176134822" target="_blank">Escríbenos por WhatsApp</a> y te ayudamos.</p>` },
 
       'contactanos': { title: 'Contáctanos', content: `<h1>Contáctanos</h1>
 <p>¿Tienes alguna pregunta, sugerencia o necesitas ayuda con tu pedido? Estamos aquí para ti. ¡No dudes en comunicarte con nosotros!</p>
@@ -394,12 +406,12 @@
 <div class="contact-grid">
 <div class="contact-card">
 <strong>💬 WhatsApp</strong>
-<p><a href="https://wa.me/573116488816" target="_blank">+57 300 560 6287</a></p>
+<p><a href="https://wa.me/573176134822" target="_blank">+57 317 613 4822</a></p>
 <p>Nuestro canal principal de atención</p>
 </div>
 <div class="contact-card">
 <strong>📧 Correo Electrónico</strong>
-<p><a href="mailto:libretech2026@gmail.com">libretech2026@gmail.com</a></p>
+<p><a href="mailto:libretechtienda@gmail.com">libretechtienda@gmail.com</a></p>
 <p>Para consultas detalladas</p>
 </div>
 <div class="contact-card">
@@ -414,7 +426,7 @@
 
 <h2>Escríbenos</h2>
 <p>La forma más rápida de contactarnos es por WhatsApp. Recibirás respuesta en minutos durante el horario de atención.</p>
-<p style="margin-top:1rem"><a href="https://wa.me/573116488816" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">💬 Chatear por WhatsApp</a></p>
+<p style="margin-top:1rem"><a href="https://wa.me/573176134822" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">💬 Chatear por WhatsApp</a></p>
 
 <h2>Nuestra Ubicación</h2>
 <div style="margin-top:1rem;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.15)"><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-75.06%2C10.91%2C-74.95%2C11.02&layer=mapnik&marker=10.9639,-74.7964" width="100%" height="350" style="border:0;display:block" loading="lazy" title="Barranquilla, Colombia"></iframe></div>` },
@@ -454,7 +466,7 @@
 <div class="info-card">
 <h4>¿Necesitas ayuda con tu pedido?</h4>
 <p>Contáctanos por WhatsApp con tu número de pedido y te daremos información actualizada al instante.</p>
-<p style="margin-top:0.5rem"><a href="https://wa.me/573116488816" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">💬 Consultar mi pedido</a></p>
+<p style="margin-top:0.5rem"><a href="https://wa.me/573176134822" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">💬 Consultar mi pedido</a></p>
 </div>` },
 
       'politica-privacidad': { title: 'Política de Privacidad', content: `<h1>Política de Privacidad</h1>
@@ -505,8 +517,8 @@
 <h2>7. Contacto</h2>
 <p>Si tienes preguntas sobre esta política o deseas ejercer tus derechos sobre tus datos, contáctanos:</p>
 <ul>
-<li><strong>WhatsApp:</strong> <a href="https://wa.me/573116488816" target="_blank">+57 300 560 6287</a></li>
-<li><strong>Correo:</strong> <a href="mailto:libretech2026@gmail.com">libretech2026@gmail.com</a></li>
+<li><strong>WhatsApp:</strong> <a href="https://wa.me/573176134822" target="_blank">+57 317 613 4822</a></li>
+<li><strong>Correo:</strong> <a href="mailto:libretechtienda@gmail.com">libretechtienda@gmail.com</a></li>
 </ul>` },
 
       'terminos-condiciones': { title: 'Términos y Condiciones', content: `<h1>Términos y Condiciones</h1>
@@ -573,8 +585,8 @@
 <h2>11. Contacto</h2>
 <p>Para consultas sobre estos términos, contáctanos:</p>
 <ul>
-<li><strong>WhatsApp:</strong> <a href="https://wa.me/573116488816" target="_blank">+57 300 560 6287</a></li>
-<li><strong>Correo:</strong> <a href="mailto:libretech2026@gmail.com">libretech2026@gmail.com</a></li>
+<li><strong>WhatsApp:</strong> <a href="https://wa.me/573176134822" target="_blank">+57 317 613 4822</a></li>
+<li><strong>Correo:</strong> <a href="mailto:libretechtienda@gmail.com">libretechtienda@gmail.com</a></li>
 </ul>` },
 
       'devoluciones-garantias': { title: 'Devoluciones y Garantías', content: `<h1>Política de Devoluciones y Garantías</h1>
@@ -603,7 +615,7 @@
 
 <h3>Proceso de devolución</h3>
 <ol>
-<li>Contáctanos por <a href="https://wa.me/573116488816" target="_blank">WhatsApp</a> indicando tu número de pedido y razón de la devolución.</li>
+<li>Contáctanos por <a href="https://wa.me/573176134822" target="_blank">WhatsApp</a> indicando tu número de pedido y razón de la devolución.</li>
 <li>Nuestro equipo evaluará la solicitud y te dará instrucciones de envío.</li>
 <li>Envía el producto en su empaque original.</li>
 <li>Una vez recibido y verificado el estado del producto, procederemos con el reembolso o cambio.</li>
@@ -644,7 +656,7 @@
 
 <h3>¿Cómo hacer válida la garantía?</h3>
 <ol>
-<li>Contáctanos por <a href="https://wa.me/573116488816" target="_blank">WhatsApp</a> con tu número de pedido y una descripción del problema.</li>
+<li>Contáctanos por <a href="https://wa.me/573176134822" target="_blank">WhatsApp</a> con tu número de pedido y una descripción del problema.</li>
 <li>Envía fotos o video del defecto.</li>
 <li>Nuestro equipo evaluará el caso y te indicará los pasos a seguir.</li>
 <li>Si aplica la garantía, recibirás un reemplazo o reparación sin costo.</li>
@@ -653,7 +665,7 @@
 <div class="info-card">
 <h4>¿Necesitas hacer una devolución o reclamar garantía?</h4>
 <p>Contáctanos directamente y resolveremos tu caso lo antes posible.</p>
-<p style="margin-top:0.5rem"><a href="https://wa.me/573116488816" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">💬 Contactar soporte</a></p>
+<p style="margin-top:0.5rem"><a href="https://wa.me/573176134822" target="_blank" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">💬 Contactar soporte</a></p>
 </div>` }
     };
 
@@ -680,123 +692,5 @@
   })();
   </script>
 
-  <!-- WhatsApp Bubble Drag Script -->
-  <script>
-    (function() {
-      const bubble = document.getElementById('whatsappBubble');
-      if (!bubble) return;
-
-      let isDragging = false;
-      let currentX = 0;
-      let currentY = 0;
-      let initialX = 0;
-      let initialY = 0;
-      const STORAGE_KEY = 'whatsapp_bubble_pos';
-
-      // Load saved position
-      function loadPosition() {
-        try {
-          const saved = localStorage.getItem(STORAGE_KEY);
-          if (saved) {
-            const { x, y } = JSON.parse(saved);
-            bubble.style.left = x + 'px';
-            bubble.style.bottom = 'auto';
-            bubble.style.top = y + 'px';
-          }
-        } catch (e) {
-          console.warn('Error loading bubble position:', e);
-        }
-      }
-
-      // Save position
-      function savePosition() {
-        try {
-          const rect = bubble.getBoundingClientRect();
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({
-            x: parseInt(bubble.style.left),
-            y: parseInt(bubble.style.top)
-          }));
-        } catch (e) {
-          console.warn('Error saving bubble position:', e);
-        }
-      }
-
-      // Handle mouse/touch start
-      function handleStart(e) {
-        if (e.type.includes('touch')) {
-          initialX = e.touches[0].clientX - currentX;
-          initialY = e.touches[0].clientY - currentY;
-        } else {
-          initialX = e.clientX - currentX;
-          initialY = e.clientY - currentY;
-        }
-        isDragging = true;
-        bubble.style.cursor = 'grabbing';
-      }
-
-      // Handle mouse/touch move
-      function handleMove(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-
-        if (e.type.includes('touch')) {
-          currentX = e.touches[0].clientX - initialX;
-          currentY = e.touches[0].clientY - initialY;
-        } else {
-          currentX = e.clientX - initialX;
-          currentY = e.clientY - initialY;
-        }
-
-        // Keep within viewport
-        const rect = bubble.getBoundingClientRect();
-        const maxX = window.innerWidth - rect.width;
-        const maxY = window.innerHeight - rect.height;
-
-        currentX = Math.max(0, Math.min(currentX, maxX));
-        currentY = Math.max(0, Math.min(currentY, maxY));
-
-        bubble.style.left = currentX + 'px';
-        bubble.style.top = currentY + 'px';
-        bubble.style.bottom = 'auto';
-      }
-
-      // Handle mouse/touch end
-      function handleEnd(e) {
-        if (!isDragging) return;
-        isDragging = false;
-        bubble.style.cursor = 'grab';
-        savePosition();
-      }
-
-      // Handle click to open WhatsApp
-      function handleClick(e) {
-        if (isDragging) return;
-        window.open('https://wa.me/573116488816', '_blank', 'noopener');
-      }
-
-      // Event listeners
-      bubble.addEventListener('mousedown', handleStart);
-      bubble.addEventListener('touchstart', handleStart, { passive: false });
-
-      document.addEventListener('mousemove', handleMove);
-      document.addEventListener('touchmove', handleMove, { passive: false });
-
-      document.addEventListener('mouseup', handleEnd);
-      document.addEventListener('touchend', handleEnd);
-
-      bubble.addEventListener('click', handleClick);
-
-      // Keyboard support
-      bubble.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          handleClick(e);
-        }
-      });
-
-      // Load saved position on load
-      window.addEventListener('load', loadPosition);
-      loadPosition();
-    })();
-  </script>
 </body>
 </html>

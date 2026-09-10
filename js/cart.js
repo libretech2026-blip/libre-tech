@@ -8,11 +8,13 @@ const Cart = (() => {
 
   const STORAGE_KEY_BASE = 'libretech_cart';
   const ORDERS_KEY = 'libretech_orders';
-  const WHATSAPP_NUMBER = '573116488816';
+  const WHATSAPP_NUMBER = (window.LIBRETECH && window.LIBRETECH.whatsapp) || '573176134822';
 
   let items = [];
   let appliedCoupon = null; // { id, code, type, value, discount }
   let orderFormOverrideItems = null;
+  // Envio calculado desde el carrito; se reutiliza en el resumen del pedido
+  let shippingEstimate = null; // { city, department, quote }
 
   function getStorageKey() {
     const user = (typeof Auth !== 'undefined') && Auth.getUser && Auth.getUser();
@@ -22,6 +24,7 @@ const Cart = (() => {
   // --- Inicialización ---
   function init() {
     load();
+    ensureCartEnhancements();
     bindEvents();
     updateUI();
     // Reload cart when user logs in/out
@@ -29,6 +32,8 @@ const Cart = (() => {
       load();
       updateUI();
     });
+    // La config de envios/obsequios llega de Supabase despues del render inicial
+    document.addEventListener('site-config-loaded', updateUI);
   }
 
   // --- Persistencia (localStorage) ---
@@ -89,6 +94,7 @@ const Cart = (() => {
     save();
     updateUI();
     showToast(`${product.name} agregado al carrito`, 'success');
+    pulseCartReminder();
   }
 
   function removeItem(productId) {
@@ -190,15 +196,23 @@ const Cart = (() => {
   function updateUI() {
     updateBadge();
     renderCartItems();
+    renderGiftNotice();
     updateCartFooter();
+    updateCartReminder();
   }
 
   function updateBadge() {
     const badge = document.getElementById('cartBadge');
     if (!badge) return;
     const count = getCount();
+    const prev = parseInt(badge.textContent, 10) || 0;
     badge.textContent = count;
     badge.style.display = count > 0 ? 'inline-flex' : 'none';
+    if (count > prev) {
+      badge.classList.remove('badge-bump');
+      void badge.offsetWidth; // reinicia la animacion
+      badge.classList.add('badge-bump');
+    }
   }
 
   function renderCartItems() {
@@ -225,6 +239,7 @@ const Cart = (() => {
       const el = document.createElement('div');
       el.className = 'cart-item';
       const productUrl = `producto.html?id=${encodeURIComponent(product.id)}`;
+      const gift = getGiftFor(product.id);
       el.innerHTML = `
         <a href="${productUrl}" class="cart-item-image cart-item-link" data-action="goto-product" data-id="${product.id}" rel="noopener" aria-label="Ver ${escapeAttr(product.name)}">
           ${product.image
@@ -235,6 +250,10 @@ const Cart = (() => {
         <div class="cart-item-info">
           <a href="${productUrl}" class="cart-item-name cart-item-link" data-action="goto-product" data-id="${product.id}" rel="noopener">${escapeHTML(product.name)}</a>
           <div class="cart-item-price">${product.offerActive && product.offerPrice ? `<span class="offer-price">${formatPrice(product.offerPrice)}</span> <span class="product-price-original">${formatPrice(product.price)}</span>` : formatPrice(product.price)}</div>
+          ${gift ? `<div class="cart-item-gift" title="Obsequio incluido">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+            <span>Incluye de regalo: <strong>${escapeHTML(gift)}</strong></span>
+          </div>` : ''}
           <div class="cart-item-controls">
             <button class="qty-btn" data-action="decrease" data-id="${product.id}" aria-label="Disminuir cantidad">−</button>
             <span class="qty-value">${item.quantity}</span>
@@ -268,6 +287,232 @@ const Cart = (() => {
       const count = getCount();
       countEl.textContent = count > 0 ? `(${count} ${count === 1 ? 'item' : 'items'})` : '';
     }
+
+    renderFreeShippingProgress();
+    renderShippingCalculator();
+  }
+
+  /* ============================================================
+     OBSEQUIOS
+     ============================================================ */
+  function getGiftFor(productId) {
+    return (typeof Gifts !== 'undefined' && Gifts.forProduct) ? Gifts.forProduct(productId) : '';
+  }
+
+  function getGiftsForItems(orderItems) {
+    return (typeof Gifts !== 'undefined' && Gifts.forItems) ? Gifts.forItems(orderItems || items) : [];
+  }
+
+  function renderGiftNotice() {
+    const box = document.getElementById('cartGiftNotice');
+    if (!box) return;
+
+    const gifts = getGiftsForItems(items);
+    if (gifts.length === 0) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+
+    box.style.display = 'block';
+    box.innerHTML = `
+      <div class="gift-notice-head">
+        <span class="gift-notice-icon" aria-hidden="true">🎁</span>
+        <strong>${gifts.length === 1 ? '¡Tu compra incluye un obsequio!' : `¡Tu compra incluye ${gifts.length} obsequios!`}</strong>
+      </div>
+      <ul class="gift-notice-list">
+        ${gifts.map(g => `<li><span class="gift-notice-product">${escapeHTML(g.name)}</span><span class="gift-notice-gift">${escapeHTML(g.gift)}</span></li>`).join('')}
+      </ul>
+    `;
+  }
+
+  /* ============================================================
+     ENVIO: barra de progreso + calculadora
+     ============================================================ */
+  function renderFreeShippingProgress() {
+    const box = document.getElementById('cartShippingProgress');
+    if (!box || typeof Shipping === 'undefined') return;
+
+    const progress = Shipping.getFreeShippingProgress(getTotal());
+    box.classList.toggle('reached', progress.reached);
+    box.innerHTML = `
+      <div class="ship-progress-text">
+        ${progress.reached
+          ? `<span class="ship-progress-icon" aria-hidden="true">🚚</span> <strong>¡Felicidades! Tu envío es GRATIS</strong>`
+          : `Te faltan <strong>${formatPrice(progress.missing)}</strong> para <strong>envío gratis</strong>`}
+      </div>
+      <div class="ship-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress.percent}" aria-label="Progreso hacia el envío gratis">
+        <div class="ship-progress-fill" style="width:${progress.percent}%"></div>
+      </div>
+      <div class="ship-progress-legend">
+        <span>${formatPrice(progress.amount)}</span>
+        <span>Envío gratis desde ${formatPrice(progress.threshold)}</span>
+      </div>
+    `;
+  }
+
+  function renderShippingCalculator() {
+    const box = document.getElementById('cartShippingCalc');
+    if (!box || typeof Shipping === 'undefined') return;
+
+    // Solo se reconstruye la estructura una vez para no perder lo que el usuario escribe
+    if (!box.dataset.ready) {
+      box.innerHTML = `
+        <button type="button" class="ship-calc-toggle" id="shipCalcToggle" aria-expanded="false" aria-controls="shipCalcBody">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <span>Calcular costo de envío</span>
+          <svg class="ship-calc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="ship-calc-body" id="shipCalcBody" hidden>
+          <div class="ship-calc-fields">
+            <select id="shipCalcDept" class="ship-calc-input" aria-label="Departamento"></select>
+            <select id="shipCalcCity" class="ship-calc-input" aria-label="Ciudad" disabled></select>
+            <button type="button" class="ship-calc-btn" id="shipCalcBtn">Calcular</button>
+          </div>
+          <div class="ship-calc-result" id="shipCalcResult"></div>
+        </div>
+      `;
+      box.dataset.ready = '1';
+
+      const deptSelect = box.querySelector('#shipCalcDept');
+      const citySelect = box.querySelector('#shipCalcCity');
+
+      if (typeof ColombiaLocations !== 'undefined') {
+        ColombiaLocations.fillDepartmentSelect(deptSelect, shippingEstimate?.department);
+        ColombiaLocations.fillCitySelect(citySelect, shippingEstimate?.department, shippingEstimate?.city);
+        // Al elegir departamento se recargan sus ciudades
+        deptSelect.addEventListener('change', () => {
+          ColombiaLocations.fillCitySelect(citySelect, deptSelect.value);
+          document.getElementById('shipCalcResult').innerHTML = '';
+        });
+      }
+
+      const toggle = box.querySelector('#shipCalcToggle');
+      const body = box.querySelector('#shipCalcBody');
+      toggle.addEventListener('click', () => {
+        const open = body.hasAttribute('hidden');
+        body.toggleAttribute('hidden', !open);
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.classList.toggle('open', open);
+        if (open) deptSelect?.focus();
+      });
+
+      box.querySelector('#shipCalcBtn').addEventListener('click', () => calculateShipping());
+      citySelect.addEventListener('change', () => { if (citySelect.value) calculateShipping(); });
+    }
+
+    // Refresca el resultado si el total cambio (afecta el envio gratis)
+    if (shippingEstimate) calculateShipping({ silent: true });
+  }
+
+  function calculateShipping(options = {}) {
+    if (typeof Shipping === 'undefined') return;
+    const cityEl = document.getElementById('shipCalcCity');
+    const deptEl = document.getElementById('shipCalcDept');
+    const resultEl = document.getElementById('shipCalcResult');
+    if (!resultEl) return;
+
+    const city = (cityEl?.value || shippingEstimate?.city || '').trim();
+    const department = (deptEl?.value || shippingEstimate?.department || '').trim();
+
+    if (!city) {
+      if (options.silent !== true) {
+        resultEl.innerHTML = '<span class="ship-calc-error">Elige tu departamento y ciudad para estimar el envío.</span>';
+      }
+      return;
+    }
+
+    const quote = Shipping.quote({ city, department, subtotal: getTotal() });
+    shippingEstimate = { city, department, quote };
+
+    resultEl.innerHTML = `
+      <div class="ship-calc-row">
+        <span>${escapeHTML(city)}${department ? ', ' + escapeHTML(department) : ''}</span>
+        <strong class="${quote.free ? 'ship-free' : ''}">${quote.free ? 'GRATIS' : formatPrice(quote.cost)}</strong>
+      </div>
+      <div class="ship-calc-meta">Zona: ${escapeHTML(quote.zoneName)} · Entrega estimada ${escapeHTML(quote.eta)}</div>
+      ${quote.free ? `<div class="ship-calc-meta ship-free">Superaste ${formatPrice(quote.threshold)}: el envío corre por nuestra cuenta.</div>` : ''}
+      <div class="ship-calc-note">${escapeHTML(quote.note)}</div>
+    `;
+  }
+
+  /* ============================================================
+     RECORDATORIO PERSISTENTE DE CARRITO
+     ============================================================ */
+  function ensureCartEnhancements() {
+    const footer = document.getElementById('cartFooter');
+    if (footer && !document.getElementById('cartShippingProgress')) {
+      const anchor = footer.querySelector('.cart-subtotal') || footer.firstChild;
+
+      const progress = document.createElement('div');
+      progress.className = 'ship-progress';
+      progress.id = 'cartShippingProgress';
+
+      const gift = document.createElement('div');
+      gift.className = 'gift-notice';
+      gift.id = 'cartGiftNotice';
+      gift.style.display = 'none';
+
+      const calc = document.createElement('div');
+      calc.className = 'ship-calc';
+      calc.id = 'cartShippingCalc';
+
+      footer.insertBefore(progress, anchor);
+      footer.insertBefore(gift, anchor);
+      footer.insertBefore(calc, anchor);
+    }
+
+    if (!document.getElementById('cartReminder')) {
+      const reminder = document.createElement('button');
+      reminder.type = 'button';
+      reminder.className = 'cart-reminder';
+      reminder.id = 'cartReminder';
+      reminder.setAttribute('aria-label', 'Tienes productos en el carrito. Abrir carrito');
+      reminder.innerHTML = `
+        <span class="cart-reminder-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+          <span class="cart-reminder-count" id="cartReminderCount">0</span>
+        </span>
+        <span class="cart-reminder-text">
+          <strong id="cartReminderTitle">Tienes productos en tu carrito</strong>
+          <span id="cartReminderTotal"></span>
+        </span>
+        <span class="cart-reminder-cta">Ver carrito</span>
+      `;
+      reminder.addEventListener('click', open);
+      document.body.appendChild(reminder);
+    }
+  }
+
+  function updateCartReminder() {
+    const reminder = document.getElementById('cartReminder');
+    if (!reminder) return;
+
+    const count = getCount();
+    if (count === 0) {
+      reminder.classList.remove('visible');
+      return;
+    }
+
+    const countEl = document.getElementById('cartReminderCount');
+    const titleEl = document.getElementById('cartReminderTitle');
+    const totalEl = document.getElementById('cartReminderTotal');
+    if (countEl) countEl.textContent = count;
+    if (titleEl) titleEl.textContent = count === 1 ? '1 producto en tu carrito' : `${count} productos en tu carrito`;
+    if (totalEl) totalEl.textContent = `Total ${formatPrice(getTotal())}`;
+
+    // El carrito abierto no necesita recordatorio
+    const cartOpen = document.getElementById('cartSidebar')?.classList.contains('active');
+    reminder.classList.toggle('visible', !cartOpen);
+  }
+
+  function pulseCartReminder() {
+    const reminder = document.getElementById('cartReminder');
+    if (!reminder) return;
+    reminder.classList.remove('pulse');
+    void reminder.offsetWidth; // reinicia la animacion
+    reminder.classList.add('pulse');
+    setTimeout(() => reminder.classList.remove('pulse'), 900);
   }
 
   // --- Abrir/Cerrar carrito ---
@@ -275,12 +520,14 @@ const Cart = (() => {
     document.getElementById('cartOverlay')?.classList.add('active');
     document.getElementById('cartSidebar')?.classList.add('active');
     document.body.style.overflow = 'hidden';
+    updateCartReminder();
   }
 
   function close() {
     document.getElementById('cartOverlay')?.classList.remove('active');
     document.getElementById('cartSidebar')?.classList.remove('active');
     document.body.style.overflow = '';
+    updateCartReminder();
   }
 
   // --- Eventos ---
@@ -340,15 +587,34 @@ const Cart = (() => {
     });
     document.getElementById('whatsappOrderForm')?.addEventListener('submit', submitWhatsAppOrder);
 
-    // Order form auth buttons — open login dropdown
-    document.getElementById('orderFormLoginBtn')?.addEventListener('click', () => {
-      closeOrderForm();
-      if (typeof Auth !== 'undefined' && Auth.openLoginDropdown) Auth.openLoginDropdown();
+    // Order form auth buttons — abren el panel de sesion/registro.
+    // stopPropagation evita que el listener global de auth.js (cierre al
+    // hacer clic fuera del menu de usuario) cierre el panel en el mismo clic.
+    document.getElementById('orderFormLoginBtn')?.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      openAuthPanel('login');
     });
-    document.getElementById('orderFormRegisterBtn')?.addEventListener('click', () => {
-      closeOrderForm();
-      if (typeof Auth !== 'undefined' && Auth.openLoginDropdown) Auth.openLoginDropdown();
+    document.getElementById('orderFormRegisterBtn')?.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      openAuthPanel('register');
     });
+  }
+
+  /**
+   * Cierra el formulario de pedido y abre el panel de autenticacion.
+   * Se difiere al siguiente tick para que el listener global de auth.js
+   * ("cerrar al hacer clic fuera") ya haya corrido cuando abrimos el panel.
+   */
+  function openAuthPanel(mode) {
+    closeOrderForm();
+    close();
+    setTimeout(() => {
+      if (typeof Auth === 'undefined') return;
+      if (mode === 'register' && Auth.openRegisterDropdown) Auth.openRegisterDropdown();
+      else if (Auth.openLoginDropdown) Auth.openLoginDropdown();
+    }, 0);
   }
 
   // --- Generar número de pedido YYYYMMDDXXXX ---
@@ -414,7 +680,7 @@ const Cart = (() => {
       const coupon = await SB.validateCoupon(input.value, total);
       const discount = coupon.type === 'percentage' ? Math.round(total * coupon.value / 100) : Math.min(coupon.value, total);
       appliedCoupon = { id: coupon.id, code: coupon.code, type: coupon.type, value: coupon.value, discount };
-      openOrderForm(); // refresh summary
+      refreshOrderSummary();
     } catch (e) {
       if (statusEl) statusEl.innerHTML = `<span style="color:#ef4444">${escapeHTML(e.message)}</span>`;
     }
@@ -422,10 +688,16 @@ const Cart = (() => {
 
   function removeCoupon() {
     appliedCoupon = null;
-    openOrderForm(); // refresh summary
+    refreshOrderSummary();
   }
 
-  async function openOrderForm() {
+  /**
+   * Abre (o refresca) el formulario de pedido.
+   * @param {{prefill?: boolean}} options prefill:false conserva lo que el
+   *   cliente ya escribio — se usa al refrescar el resumen (cupon, envio).
+   */
+  async function openOrderForm(options = {}) {
+    const { prefill = true } = options;
     const modal = document.getElementById('orderFormModal');
     if (!modal) return;
 
@@ -434,7 +706,7 @@ const Cart = (() => {
     const saveLabel = document.getElementById('orderSaveDataLabel');
 
     // Show/hide auth banner and save checkbox
-    if (user) {
+    if (user && prefill) {
       if (authBanner) authBanner.style.display = 'none';
       if (saveLabel) saveLabel.style.display = 'flex';
 
@@ -459,6 +731,9 @@ const Cart = (() => {
       } else {
         document.getElementById('orderName').value = user.user_metadata?.name || '';
       }
+    } else if (user) {
+      if (authBanner) authBanner.style.display = 'none';
+      if (saveLabel) saveLabel.style.display = 'flex';
     } else {
       if (authBanner) authBanner.style.display = 'block';
       if (saveLabel) saveLabel.style.display = 'none';
@@ -469,42 +744,47 @@ const Cart = (() => {
     if (summaryEl) {
       const products = getProducts();
       const orderItems = orderFormOverrideItems || items;
-      let html = '<p style="font-weight:600;font-size:0.9rem;margin:0 0 8px;color:var(--text-primary)">Resumen del pedido:</p>';
-      orderItems.forEach((item, i) => {
+      let html = '<p class="order-summary-title">Resumen del pedido</p>';
+      orderItems.forEach(item => {
         const product = products.find(p => p.id === item.productId);
         if (!product) return;
         const ep = getEffectivePrice(product);
-        html += `<div style="display:flex;justify-content:space-between;font-size:0.85rem;padding:3px 0;color:var(--text-secondary)">
+        html += `<div class="order-summary-row">
           <span>${item.quantity}x ${escapeHTML(product.name.substring(0, 40))}${product.name.length > 40 ? '…' : ''}</span>
-          <span style="font-weight:500">${formatPrice(ep * item.quantity)}</span>
+          <span class="order-summary-amount">${formatPrice(ep * item.quantity)}</span>
         </div>`;
       });
-      html += `<div style="border-top:1px solid var(--border-color);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;font-weight:700;color:var(--text-primary)">
+      html += `<div class="order-summary-subtotal">
         <span>Subtotal</span><span>${formatPrice(getOrderTotal(orderItems))}</span>
       </div>`;
 
       // Coupon input
-      html += `<div class="coupon-box" style="margin-top:10px">
-        <div style="display:flex;gap:8px;align-items:stretch">
-          <input type="text" id="couponInput" placeholder="Código de cupón" style="flex:1 1 auto;min-width:0;padding:10px 12px;border:1px solid var(--border-color);border-radius:var(--radius-md);font-size:0.85rem;text-transform:uppercase;background:var(--bg-primary);color:var(--text-primary)" />
-          <button type="button" id="btnApplyCoupon" style="flex:0 0 auto;white-space:nowrap;padding:10px 16px;background:linear-gradient(135deg,var(--primary-blue),#2563eb);color:#fff;border:none;border-radius:var(--radius-md);font-size:0.85rem;cursor:pointer;font-weight:700;letter-spacing:0.02em;box-shadow:0 2px 8px rgba(26,75,140,0.25);transition:transform .15s ease">Aplicar</button>
+      html += `<div class="coupon-box">
+        <div class="coupon-box-row">
+          <input type="text" id="couponInput" class="coupon-input" placeholder="Código de cupón" />
+          <button type="button" id="btnApplyCoupon" class="coupon-btn">Aplicar</button>
         </div>
-        <div id="couponStatus" style="font-size:0.8rem;margin-top:6px"></div>
+        <div id="couponStatus" class="coupon-status"></div>
       </div>`;
-      
 
       // Show discount if coupon applied
       if (appliedCoupon) {
-        html += `<div style="display:flex;justify-content:space-between;font-size:0.85rem;padding:4px 0;color:#22c55e;font-weight:600">
-          <span>Cupon (${escapeHTML(appliedCoupon.code)})</span><span>-${formatPrice(appliedCoupon.discount)}</span>
+        html += `<div class="order-summary-row order-summary-discount">
+          <span>Cupón (${escapeHTML(appliedCoupon.code)})</span><span>-${formatPrice(appliedCoupon.discount)}</span>
         </div>`;
-        html += `<div style="display:flex;justify-content:space-between;font-weight:700;color:var(--text-primary);font-size:1rem;padding-top:4px">
-          <span>Total</span><span>${formatPrice(getOrderTotal(orderItems) - appliedCoupon.discount)}</span>
-        </div>`;
-      } else {
-        html += `<div style="display:flex;justify-content:space-between;font-weight:700;color:var(--text-primary);font-size:1rem;padding-top:4px">
-          <span>Total</span><span>${formatPrice(getOrderTotal(orderItems))}</span>
-        </div>`;
+      }
+
+      // Envio + obsequios
+      html += buildOrderShippingHTML(orderItems);
+      html += buildOrderGiftsHTML(orderItems);
+
+      const shipping = getOrderShipping(orderItems);
+      const grandTotal = getOrderGrandTotal(orderItems);
+      html += `<div class="order-summary-total">
+        <span>Total${shipping.included ? ' (con envío)' : ''}</span><span>${formatPrice(grandTotal)}</span>
+      </div>`;
+      if (!shipping.included) {
+        html += `<div class="order-summary-hint">El costo del envío se confirma por WhatsApp según tu ciudad.</div>`;
       }
 
       summaryEl.innerHTML = html;
@@ -518,11 +798,113 @@ const Cart = (() => {
           document.getElementById('btnApplyCoupon').textContent = 'Quitar';
           document.getElementById('btnApplyCoupon').onclick = removeCoupon;
         }
+        bindOrderShippingEvents();
       }, 0);
     }
 
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+  }
+
+  /* ============================================================
+     ENVIO Y OBSEQUIOS EN EL RESUMEN DEL PEDIDO
+     ============================================================ */
+
+  /** Subtotal del pedido ya con el cupon aplicado. */
+  function getOrderNetSubtotal(orderItems) {
+    const subtotal = getOrderTotal(orderItems);
+    return appliedCoupon ? Math.max(0, subtotal - appliedCoupon.discount) : subtotal;
+  }
+
+  /**
+   * Envio del pedido. `included: false` significa que el cliente aun no
+   * indico ciudad, asi que el total se muestra sin envio.
+   */
+  function getOrderShipping(orderItems) {
+    if (typeof Shipping === 'undefined') return { included: false, cost: 0, free: false };
+
+    const city = (document.getElementById('orderCity')?.value || shippingEstimate?.city || '').trim();
+    const department = (document.getElementById('orderDepartment')?.value || shippingEstimate?.department || '').trim();
+    const subtotal = getOrderNetSubtotal(orderItems);
+    const quote = Shipping.quote({ city, department, subtotal });
+
+    return { included: !!city, city, department, cost: quote.cost, free: quote.free, quote };
+  }
+
+  function getOrderGrandTotal(orderItems) {
+    const shipping = getOrderShipping(orderItems);
+    return getOrderNetSubtotal(orderItems) + (shipping.included ? shipping.cost : 0);
+  }
+
+  function buildOrderShippingHTML(orderItems) {
+    if (typeof Shipping === 'undefined') return '';
+
+    const shipping = getOrderShipping(orderItems);
+    const progress = Shipping.getFreeShippingProgress(getOrderNetSubtotal(orderItems));
+    const q = shipping.quote;
+
+    return `
+      <div class="order-shipping" id="orderShippingBox">
+        <div class="order-shipping-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <strong>Envío</strong>
+        </div>
+        <div class="ship-progress ${progress.reached ? 'reached' : ''}">
+          <div class="ship-progress-text">
+            ${progress.reached
+              ? '<strong>Envío GRATIS aplicado</strong>'
+              : `Te faltan <strong>${formatPrice(progress.missing)}</strong> para envío gratis`}
+          </div>
+          <div class="ship-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress.percent}">
+            <div class="ship-progress-fill" style="width:${progress.percent}%"></div>
+          </div>
+        </div>
+        <div class="order-summary-row">
+          <span>${shipping.included ? escapeHTML(q.zoneName) : 'Escribe tu ciudad para calcularlo'}</span>
+          <span class="order-summary-amount ${shipping.free ? 'ship-free' : ''}">
+            ${shipping.included ? (shipping.free ? 'GRATIS' : formatPrice(shipping.cost)) : 'Por calcular'}
+          </span>
+        </div>
+        ${shipping.included ? `<div class="order-shipping-meta">Entrega estimada: ${escapeHTML(q.eta)}</div>` : ''}
+        <button type="button" class="order-shipping-recalc" id="btnRecalcShipping">Recalcular con mi ciudad</button>
+        <div class="order-shipping-note">${escapeHTML(q.note)}</div>
+      </div>
+    `;
+  }
+
+  function buildOrderGiftsHTML(orderItems) {
+    const gifts = getGiftsForItems(orderItems);
+    if (gifts.length === 0) return '';
+    return `
+      <div class="order-gifts">
+        <div class="order-gifts-head"><span aria-hidden="true">🎁</span> <strong>Obsequios incluidos</strong></div>
+        <ul class="order-gifts-list">
+          ${gifts.map(g => `<li><span>${escapeHTML(g.name)}</span><em>${escapeHTML(g.gift)}</em></li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  function bindOrderShippingEvents() {
+    document.getElementById('btnRecalcShipping')?.addEventListener('click', () => {
+      const city = document.getElementById('orderCity')?.value.trim();
+      if (!city) {
+        showToast('Escribe tu ciudad en el formulario para calcular el envío', 'info');
+        document.getElementById('orderCity')?.focus();
+        return;
+      }
+      shippingEstimate = {
+        city,
+        department: document.getElementById('orderDepartment')?.value.trim() || '',
+        quote: null
+      };
+      refreshOrderSummary();
+    });
+  }
+
+  /** Reconstruye el resumen conservando lo que el cliente ya escribio. */
+  function refreshOrderSummary() {
+    openOrderForm({ prefill: false });
   }
 
   function closeOrderForm() {
@@ -598,14 +980,30 @@ const Cart = (() => {
       message += `   Cant: ${item.quantity} x ${formatPrice(ep).replace(/\s/g, '')} = ${formatPrice(ep * item.quantity).replace(/\s/g, '')}\n\n`;
     });
 
+    // Obsequios aplicables
+    const gifts = getGiftsForItems(orderItems);
+    if (gifts.length > 0) {
+      message += `*OBSEQUIOS INCLUIDOS*\n`;
+      gifts.forEach(g => { message += `- ${g.name}: ${g.gift}\n`; });
+      message += `\n`;
+    }
+
     message += `--------------------------------\n`;
     const subtotal = getOrderTotal(orderItems);
+    const netSubtotal = appliedCoupon ? Math.max(0, subtotal - appliedCoupon.discount) : subtotal;
+    const shipping = getOrderShipping(orderItems);
+
+    message += `Subtotal: ${formatPrice(subtotal).replace(/\s/g, '')}\n`;
     if (appliedCoupon) {
-      message += `Subtotal: ${formatPrice(subtotal).replace(/\s/g, '')}\n`;
       message += `Cupon ${appliedCoupon.code}: -${formatPrice(appliedCoupon.discount).replace(/\s/g, '')}\n`;
-      message += `*TOTAL: ${formatPrice(subtotal - appliedCoupon.discount).replace(/\s/g, '')}*\n\n`;
+    }
+    if (shipping.included) {
+      message += `Envio (${shipping.quote.zoneName}): ${shipping.free ? 'GRATIS' : formatPrice(shipping.cost).replace(/\s/g, '')}\n`;
+      message += `Entrega estimada: ${shipping.quote.eta}\n`;
+      message += `*TOTAL: ${formatPrice(netSubtotal + shipping.cost).replace(/\s/g, '')}*\n\n`;
     } else {
-      message += `*TOTAL: ${formatPrice(subtotal).replace(/\s/g, '')}*\n\n`;
+      message += `Envio: por confirmar\n`;
+      message += `*TOTAL (sin envio): ${formatPrice(netSubtotal).replace(/\s/g, '')}*\n\n`;
     }
 
     // Date and time
@@ -633,6 +1031,7 @@ const Cart = (() => {
 
     // Clean up
     appliedCoupon = null;
+    shippingEstimate = null;
     closeOrderForm();
     if (!orderFormOverrideItems) {
       clear();
@@ -759,8 +1158,10 @@ const Cart = (() => {
     open,
     close,
     openOrderFormWithItems,
+    updateUI,
     showToast,
     escapeHTML,
-    escapeAttr
+    escapeAttr,
+    WHATSAPP_NUMBER
   };
 })();

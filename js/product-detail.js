@@ -39,6 +39,9 @@ const ProductDetail = (() => {
     trackView(productId);
     initWishlistUI();
     renderSocialLinks();
+
+    // Los obsequios llegan con la configuración del sitio (Supabase)
+    document.addEventListener('site-config-loaded', () => renderGift(currentProduct));
   }
 
   function trackView(productId) {
@@ -277,8 +280,30 @@ const ProductDetail = (() => {
       `).join('');
     }
 
+    // Obsequio incluido
+    renderGift(p);
+
+    // Compartir: el enlace directo es producto.html?id=<id>
+    const shareBtn = document.getElementById('pdShareBtn');
+    if (shareBtn) shareBtn.dataset.shareId = p.id;
+
     // Render reviews under specifications
     renderRatingUI();
+  }
+
+  // --- Obsequio del producto (configurado desde admin) ---
+  function renderGift(product) {
+    const box = document.getElementById('pdGift');
+    const text = document.getElementById('pdGiftText');
+    if (!box || !text) return;
+
+    const gift = (typeof Gifts !== 'undefined') ? Gifts.forProduct(product.id) : '';
+    if (!gift) {
+      box.hidden = true;
+      return;
+    }
+    text.textContent = gift;
+    box.hidden = false;
   }
 
   // --- Common color name to hex ---
@@ -321,6 +346,10 @@ const ProductDetail = (() => {
 
     grid.innerHTML = recommended.map(p => `
       <article class="product-card" data-product-id="${p.id}">
+        <button class="product-share-btn" type="button" data-share="product" data-share-id="${p.id}"
+                title="Compartir ${Cart.escapeAttr(p.name)}" aria-label="Compartir ${Cart.escapeAttr(p.name)}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
         <a href="producto.html?id=${encodeURIComponent(p.id)}" class="product-card-link">
           <div class="product-card-image">
             ${p.image

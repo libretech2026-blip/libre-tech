@@ -411,7 +411,7 @@ const SB = (() => {
     if (user.user_metadata?.is_admin === true) return true;
     if (user.app_metadata?.is_admin === true) return true;
     // Fallback: check admin email (update this list as needed)
-    const adminEmails = ['admin@libretechtienda.com', 'libretech2026@gmail.com'];
+    const adminEmails = ['admin@libretechtienda.com', 'libretechtienda@gmail.com', 'libretech2026@gmail.com'];
     if (user.email && adminEmails.includes(user.email.toLowerCase())) return true;
     return false;
   }
@@ -745,38 +745,8 @@ const SB = (() => {
   };
 })();
 
-// ---- Products cache (stale-while-revalidate) ----
-  const PRODUCTS_TTL = 5 * 60 * 1000; // 5 min
-  let _productsInflight = null;
-
-  const _origSyncProducts = syncProducts;
-  async function syncProductsCached() {
-    // Leer cache IndexedDB rápido
-    const cached = await _idb.get('__products_cache__');
-    if (cached && cached.value && Array.isArray(cached.value)) {
-      const age = Date.now() - (cached.ts || 0);
-      // Si cache fresco, devolverlo
-      if (age < PRODUCTS_TTL) {
-        return cached.value;
-      }
-      // Stale: devolver cache + refrescar en background
-      if (!_productsInflight) {
-        _productsInflight = _origSyncProducts().then(fresh => {
-          _idb.set('__products_cache__', fresh).catch(() => {});
-          _productsInflight = null;
-          return fresh;
-        }).catch(err => {
-          _productsInflight = null;
-          throw err;
-        });
-      }
-      return cached.value;
-    }
-    // Primera vez: pedir a Supabase y cachear
-    const fresh = await _origSyncProducts();
-    _idb.set('__products_cache__', fresh).catch(() => {});
-    return fresh;
-  }
-
-  // Sobrescribir el método exportado
-  syncProducts = syncProductsCached;
+/* NOTA: aquí existía un bloque de caché "stale-while-revalidate" fuera del
+   IIFE que intentaba reasignar `syncProducts`. Al estar fuera del cierre
+   nunca tuvo acceso a esa función y lanzaba un ReferenceError en cada carga
+   de página, dejando el bloque inoperante. Se eliminó: SB.syncProducts ya
+   cachea en localStorage y usa ese caché como respaldo si Supabase falla. */
