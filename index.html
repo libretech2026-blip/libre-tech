@@ -42,6 +42,12 @@
   - coupons (cupones de descuento con código, tipo, valor, vencimiento, usos)
 
   == ÚLTIMA ACTUALIZACIÓN ==
+  Septiembre 2026 — v3.5.1:
+  - Fix: el carrito se vaciaba al iniciar sesión (la clave de localStorage
+    dependía del usuario; ahora es única por dispositivo y migra las antiguas)
+  - Imágenes: las 4 primeras tarjetas y la foto de la ficha cargan con
+    prioridad alta, esqueleto mientras llegan y caché propia en el SW
+
   Septiembre 2026 — v3.5:
   - Rendimiento: parseo del catálogo memorizado (app.js/cart.js/gifts.js),
     grid montado con DocumentFragment, carruseles en pausa con la pestaña

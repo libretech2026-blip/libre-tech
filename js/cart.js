@@ -16,20 +16,72 @@ const Cart = (() => {
   // Envio calculado desde el carrito; se reutiliza en el resumen del pedido
   let shippingEstimate = null; // { city, department, quote }
 
+  /**
+   * Clave única del carrito para el dispositivo.
+   * Antes se le añadía el id del usuario: al iniciar sesión se pasaba a leer
+   * otra clave (vacía la primera vez) y el carrito del invitado "se perdía".
+   */
   function getStorageKey() {
-    const user = (typeof Auth !== 'undefined') && Auth.getUser && Auth.getUser();
-    return user ? STORAGE_KEY_BASE + '_' + user.id : STORAGE_KEY_BASE;
+    return STORAGE_KEY_BASE;
+  }
+
+  function readCart(key) {
+    try {
+      const data = JSON.parse(localStorage.getItem(key) || '[]');
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /** Une dos carritos sumando las cantidades del mismo producto (tope: stock). */
+  function mergeCartItems(base, extra) {
+    const result = base.map(item => ({ ...item }));
+    extra.forEach(item => {
+      if (!item || !item.productId) return;
+      const existing = result.find(i => i.productId === item.productId);
+      if (!existing) {
+        result.push({ ...item });
+        return;
+      }
+      const total = (existing.quantity || 0) + (item.quantity || 0);
+      const stock = getProductStock(item.productId);
+      existing.quantity = stock > 0 ? Math.min(total, stock) : total;
+    });
+    return result;
+  }
+
+  /**
+   * Recupera los carritos guardados con el formato anterior
+   * (libretech_cart_<uid>) y los fusiona en la clave única.
+   * Solo ocurre una vez: las claves antiguas se borran al migrarlas.
+   */
+  function migrateLegacyCarts() {
+    try {
+      const legacyKeys = Object.keys(localStorage).filter(k => k.startsWith(STORAGE_KEY_BASE + '_'));
+      if (legacyKeys.length === 0) return;
+
+      let merged = readCart(STORAGE_KEY_BASE);
+      legacyKeys.forEach(key => {
+        merged = mergeCartItems(merged, readCart(key));
+        localStorage.removeItem(key);
+      });
+      if (merged.length > 0) localStorage.setItem(STORAGE_KEY_BASE, JSON.stringify(merged));
+    } catch (e) {
+      console.warn('[Cart] migrateLegacyCarts:', e.message);
+    }
   }
 
   // --- Inicialización ---
   function init() {
+    migrateLegacyCarts();
     load();
     ensureCartEnhancements();
     bindEvents();
     updateUI();
-    // Reload cart when user logs in/out
+    // El carrito ya no depende de la sesión: al entrar o salir solo se
+    // refresca la interfaz (antes se recargaba otra clave y quedaba vacío).
     document.addEventListener('auth-changed', () => {
-      load();
       updateUI();
     });
     // La config de envios/obsequios llega de Supabase despues del render inicial

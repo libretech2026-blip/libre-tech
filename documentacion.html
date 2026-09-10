@@ -242,7 +242,7 @@
   <div class="doc-header">
     <h1>📘 LIBRE TECH - Documentación</h1>
     <p>Documentación técnica y registro de cambios del proyecto</p>
-    <span class="version">v3.5.0 — Última actualización: 10 de septiembre de 2026</span>
+    <span class="version">v3.5.1 — Última actualización: 10 de septiembre de 2026</span>
   </div>
 
   <div class="doc-container">
@@ -499,6 +499,44 @@
     <!-- 5. CHANGELOG -->
     <section class="doc-section" id="changelog">
       <h2>5. Registro de cambios (Changelog)</h2>
+
+      <div class="changelog-entry">
+        <span class="date">10 de septiembre de 2026</span>
+        <h4>v3.5.1 — Carrito al iniciar sesión y carga de imágenes</h4>
+        <p>Cambios de esta versión:</p>
+        <ul>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>El carrito se vaciaba al iniciar sesión</strong> — La clave de localStorage incluía el id del
+            usuario (<code>libretech_cart</code> como invitado y <code>libretech_cart_&lt;uid&gt;</code> tras entrar), así
+            que al autenticarse se leía otra clave —vacía la primera vez— y lo que había en el carrito parecía borrarse.
+            Ahora se usa una sola clave por dispositivo: el carrito sobrevive al inicio y al cierre de sesión. Los
+            carritos guardados con el formato anterior se migran y fusionan automáticamente la primera vez (sumando
+            cantidades del mismo producto, con tope en el stock) y las claves antiguas se eliminan. El pedido se sigue
+            asociando a la cuenta en el momento de enviarlo.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>Carga de imágenes</strong> — Las cuatro primeras tarjetas del grid (las visibles sin hacer scroll)
+            y la foto principal de la ficha se piden con <code>loading="eager"</code> y
+            <code>fetchpriority="high"</code>; el resto sigue en <code>lazy</code> con prioridad baja. Antes todo era
+            <code>lazy</code>, lo que retrasaba justamente la imagen más grande de la pantalla inicial.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Esqueleto de carga</strong> — Mientras la foto llega, la tarjeta muestra un degradado animado en
+            lugar de un hueco vacío, y la imagen aparece con un fundido corto. El espacio ya estaba reservado, así que
+            no hay saltos de maquetación.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Caché de fotos en el Service Worker</strong> — Las imágenes de Supabase Storage se guardan en una
+            caché propia (<code>libretech-images-v1</code>, máximo 150 fotos, estrategia
+            <em>stale-while-revalidate</em>) que sobrevive a los despliegues y se limpia por tamaño. Volver a la tienda
+            o navegar entre páginas ya no vuelve a descargarlas.
+          </li>
+        </ul>
+      </div>
 
       <div class="changelog-entry">
         <span class="date">10 de septiembre de 2026</span>

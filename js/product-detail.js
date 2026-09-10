@@ -130,10 +130,10 @@ const ProductDetail = (() => {
     const imgContainerMobile = document.getElementById('pdMainImageMobile');
     const mainImageSrc = Cart.escapeAttr(allImages[0]);
     if (imgContainer && allImages.length > 0) {
-      imgContainer.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async" id="pdMainImg" style="cursor:zoom-in;">`;
+      imgContainer.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="eager" fetchpriority="high" decoding="async" id="pdMainImg" style="cursor:zoom-in;">`;
     }
     if (imgContainerMobile && allImages.length > 0) {
-      imgContainerMobile.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async" id="pdMainImgMobile" style="cursor:zoom-in;">`;
+      imgContainerMobile.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="eager" fetchpriority="high" decoding="async" id="pdMainImgMobile" style="cursor:zoom-in;">`;
     }
 
     const addZoomListeners = () => {

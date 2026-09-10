@@ -4,7 +4,10 @@
    ============================================================ */
 
 // Subir la versión invalida el caché anterior tras cada despliegue
-const CACHE_NAME = 'libretech-v6';
+const CACHE_NAME = 'libretech-v7';
+// Caché aparte para las fotos: se limpia por tamaño, no por versión
+const IMAGE_CACHE = 'libretech-images-v1';
+const IMAGE_CACHE_LIMIT = 150;
 const STATIC_ASSETS = [
   '/index.html',
   '/producto.html',
@@ -42,7 +45,10 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        // La caché de fotos sobrevive a los despliegues: se limpia por tamaño
+        keys
+          .filter(key => key !== CACHE_NAME && key !== IMAGE_CACHE)
+          .map(key => caches.delete(key))
       )
     )
   );
@@ -55,6 +61,14 @@ self.addEventListener('fetch', event => {
 
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
+
+  // Fotos de producto (Supabase Storage): stale-while-revalidate.
+  // Son inmutables por URL, así que servirlas desde caché hace que volver
+  // a la tienda o navegar entre páginas muestre las imágenes al instante.
+  if (isProductImage(url)) {
+    event.respondWith(handleImageRequest(event.request));
+    return;
+  }
 
   // Skip cross-origin requests (Supabase, Google Fonts, CDN, etc.)
   if (url.origin !== self.location.origin) return;
@@ -89,3 +103,33 @@ self.addEventListener('fetch', event => {
     })
   );
 });
+
+/* ------------------------------------------------------------------
+   Imágenes de producto
+------------------------------------------------------------------ */
+function isProductImage(url) {
+  return url.hostname.endsWith('.supabase.co') && url.pathname.includes('/storage/v1/object/');
+}
+
+async function handleImageRequest(request) {
+  const cache = await caches.open(IMAGE_CACHE);
+  const cached = await cache.match(request);
+
+  const network = fetch(request).then(response => {
+    // Las respuestas opacas (sin CORS) también sirven para pintar la imagen
+    if (response && (response.ok || response.type === 'opaque')) {
+      cache.put(request, response.clone()).then(() => trimImageCache(cache));
+    }
+    return response;
+  }).catch(() => cached);
+
+  return cached || network;
+}
+
+/** Mantiene la caché de imágenes acotada (FIFO por orden de inserción). */
+async function trimImageCache(cache) {
+  const keys = await cache.keys();
+  if (keys.length <= IMAGE_CACHE_LIMIT) return;
+  const excess = keys.length - IMAGE_CACHE_LIMIT;
+  for (let i = 0; i < excess; i++) await cache.delete(keys[i]);
+}

@@ -871,12 +871,13 @@ const Store = (() => {
     // en lugar de uno por tarjeta.
     const fragment = document.createDocumentFragment();
     products.forEach((product, i) => {
-      const card = createProductCard(product);
+      const card = createProductCard(product, i);
       // Entrada escalonada (limitada para que la última fila no tarde demasiado)
       card.style.setProperty('--card-index', Math.min(i, 9));
       fragment.appendChild(card);
     });
     grid.appendChild(fragment);
+    trackImageLoading(grid);
 
     updateProductsCount(products.length);
     observeReveals(grid);
@@ -928,10 +929,20 @@ const Store = (() => {
   }
 
   // --- Crear tarjeta de producto ---
-  function createProductCard(product) {
+  /**
+   * @param {object} product
+   * @param {number} [index] posición en el grid: las primeras tarjetas son
+   *   visibles sin hacer scroll, así que su imagen se pide de inmediato y con
+   *   prioridad alta (lazy retrasaba justo la imagen más importante, la LCP).
+   */
+  function createProductCard(product, index = 99) {
     const card = document.createElement('article');
     card.className = 'product-card reveal';
     card.dataset.productId = product.id;
+
+    const isAboveFold = index < 4;
+    const imgLoading = isAboveFold ? 'eager' : 'lazy';
+    const imgPriority = isAboveFold ? 'high' : 'low';
 
     const isNew = isRecentProduct(product.createdAt);
     const detailLink = `producto.html?id=${encodeURIComponent(product.id)}`;
@@ -946,14 +957,14 @@ const Store = (() => {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       </button>
       <a href="${detailLink}" class="product-card-link">
-        <div class="product-card-image">
+        <div class="product-card-image${product.image ? ' is-loading' : ''}">
           ${isOutOfStock ? '<span class="product-badge out-of-stock">Agotado</span>' : ''}
           ${!isOutOfStock && isNew ? '<span class="product-badge new">Nuevo</span>' : ''}
           ${product.offerActive && product.offerPrice ? '<span class="product-badge sale">Oferta</span>' : ''}
           ${gift ? `<span class="product-badge gift" title="${Cart.escapeAttr(gift)}">🎁 Regalo</span>` : ''}
           ${isOutOfStock ? '<div class="product-sold-out-overlay"></div>' : ''}
           ${product.image
-            ? `<img src="${Cart.escapeAttr(product.image)}" alt="${Cart.escapeAttr(product.name)}" loading="lazy" decoding="async" decoding="async" width="260" height="260">`
+            ? `<img src="${Cart.escapeAttr(product.image)}" alt="${Cart.escapeAttr(product.name)}" loading="${imgLoading}" fetchpriority="${imgPriority}" decoding="async" width="260" height="260">`
             : `<div class="product-no-image">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -1740,6 +1751,33 @@ const Store = (() => {
   }
 
   /** Observa los .reveal dentro de root (o de todo el documento). */
+  /**
+   * Sustituye el esqueleto de carga por la imagen cuando esta termina.
+   * El evento `load` no burbujea, por eso se escucha en fase de captura;
+   * las imágenes que ya venían de caché se marcan al momento.
+   */
+  function trackImageLoading(container) {
+    if (!container || container.dataset.imgTracked) return;
+    container.dataset.imgTracked = '1';
+
+    const done = img => {
+      const box = img.closest('.product-card-image');
+      if (box) box.classList.remove('is-loading');
+    };
+
+    container.addEventListener('load', e => {
+      if (e.target.tagName === 'IMG') done(e.target);
+    }, true);
+
+    container.addEventListener('error', e => {
+      if (e.target.tagName === 'IMG') done(e.target);
+    }, true);
+
+    container.querySelectorAll('.product-card-image img').forEach(img => {
+      if (img.complete) done(img);
+    });
+  }
+
   function observeReveals(root) {
     const scope = root || document;
     const targets = scope.querySelectorAll('.reveal:not(.revealed)');

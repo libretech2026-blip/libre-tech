@@ -11852,3 +11852,44 @@ textarea:focus-visible {
 
 [data-theme="dark"] .bulk-bar { background: rgba(90, 160, 255, 0.1); }
 [data-theme="dark"] .products-table tr.is-selected { background: rgba(90, 160, 255, 0.08); }
+
+/* ============================================================
+   10. CARGA DE IMÁGENES — esqueleto y aparición suave
+   El hueco de la tarjeta ya reserva su espacio (padding-top),
+   así que aquí solo se cubre el tiempo de descarga.
+   ============================================================ */
+.product-card-image.is-loading {
+  background-image: linear-gradient(
+    100deg,
+    var(--bg-secondary) 28%,
+    var(--bg-tertiary) 45%,
+    var(--bg-secondary) 62%
+  );
+  background-size: 220% 100%;
+  animation: ltImgShimmer 1.15s ease-in-out infinite;
+}
+
+.product-card-image img {
+  opacity: 1;
+  transition: opacity 260ms var(--ease-out-soft);
+}
+
+.product-card-image.is-loading img { opacity: 0; }
+
+@keyframes ltImgShimmer {
+  from { background-position: 140% 0; }
+  to   { background-position: -40% 0; }
+}
+
+/* La ficha de producto reserva la proporción de la foto principal para que
+   el texto no salte cuando termina de cargar. */
+.pd-main-image img,
+.pd-thumb img {
+  background: var(--bg-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card-image.is-loading { animation: none; }
+  .product-card-image img { transition: none; }
+  .product-card-image.is-loading img { opacity: 1; }
+}
