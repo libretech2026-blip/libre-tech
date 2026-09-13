@@ -554,20 +554,41 @@
           </li>
           <li>
             <span class="badge-status badge-done">Cambio</span>
-            <strong>«Ofertas» destacada en el menú hamburguesa</strong> — La opción se pinta sobre un degradado rojo, en
-            mayúsculas y con un distintivo «%» al final del renglón. El resto de opciones no cambia.
+            <strong>«Ofertas» destacada en el menú hamburguesa</strong> — Conserva exactamente la misma forma que el resto
+            de opciones; solo cambia el color del texto a rojo y el contorno de las letras palpita con un
+            <code>text-shadow</code> animado (no altera la maquetación, así que no hay saltos). Se anula con
+            <code>prefers-reduced-motion</code>.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Departamento y ciudad como listas desplegables</strong> — En «Datos para tu pedido» los dos campos de
+            texto libre pasaron a ser <code>&lt;select&gt;</code> encadenados con el catálogo de
+            <code>colombia-locations.js</code>: al elegir departamento se cargan sus municipios. Se acabaron las erratas
+            que impedían cotizar el envío. El departamento va primero porque manda sobre la lista de ciudades, y al
+            cambiar cualquiera de los dos se recalcula el envío al vuelo. Los datos guardados en el perfil se reconocen
+            aunque vengan sin tildes o en otra caja, y si el perfil solo tenía ciudad se deduce su departamento.
           </li>
           <li>
             <span class="badge-status badge-done">Cambio</span>
-            <strong>Departamento obligatorio en el pedido</strong> — El campo pasó a <code>required</code> en las cinco
-            páginas con formulario de pedido. Además de la validación del navegador, <code>cart.js</code> valida los cinco
-            campos obligatorios: marca en rojo los que falten, escribe el motivo debajo, lleva el foco al primero y
-            muestra un aviso. El error desaparece en cuanto se corrige el campo.
+            <strong>Departamento y ciudad obligatorios</strong> — Además de la validación del navegador,
+            <code>cart.js</code> valida los cinco campos obligatorios: marca en rojo los que falten, escribe el motivo
+            debajo, lleva el foco al primero y muestra un aviso. El error desaparece en cuanto se corrige el campo.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Tema claro/oscuro unificado</strong> (<code>js/theme.js</code>) — Cada página repetía su propio
+            script: unas enlazaban <code>#themeToggle</code>, que no existía en el marcado, y otras enlazaban
+            <code>#btnThemeProfile</code> a la vez que <code>auth.js</code> — dos manejadores que se anulaban entre sí, así
+            que el botón no hacía nada. Además solo aparecía dentro del menú de usuario, de modo que un visitante sin
+            sesión nunca lo veía. Ahora hay un único botón en la cabecera, presente en las siete páginas de la tienda y en
+            el panel, y un solo módulo que lo maneja. El <code>&lt;head&gt;</code> aplica la preferencia antes de pintar
+            para que no haya parpadeo. Sin preferencia guardada, el tema es claro (antes <code>pqr.html</code> seguía al
+            sistema y las demás no).
           </li>
           <li>
             <span class="badge-status badge-done">Cambio</span>
-            <strong>«Finaliza compra»</strong> — El botón de envío del formulario de pedido (el que se abre desde «Pide y
-            paga en casa» y desde el carrito) dice ahora <em>Finaliza compra</em> en lugar de «Enviar pedido por
+            <strong>«Finalizar compra»</strong> — El botón de envío del formulario de pedido (el que se abre desde «Pide y
+            paga en casa» y desde el carrito) dice ahora <em>Finalizar compra</em> en lugar de «Enviar pedido por
             WhatsApp». La funcionalidad es la misma.
           </li>
           <li>
@@ -585,6 +606,17 @@
             Card. Se añadió JSON-LD de <code>OnlineStore</code> en el inicio, metadatos sociales y
             <code>canonical</code> en catálogo, destacados y ofertas, y se unificó la marca como «Libre Tech» en
             <code>manifest.json</code> y en los metadatos dinámicos de la ficha de producto.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Borrado de pedidos: <code>public.is_admin()</code> no coincidía con el frontend</strong> —
+            <code>SB.isAdmin()</code> acepta la marca <code>is_admin</code> de los metadatos <em>o</em> la lista de
+            correos, pero la función de la base solo miraba el correo. Un administrador marcado únicamente por metadatos
+            entraba al panel y pulsaba «Eliminar», y la base borraba 0 filas <em>sin lanzar error</em> (así funciona RLS),
+            por lo que los pedidos reaparecían al recargar. La función ahora comprueba las dos vías, igual que el
+            frontend. Para aplicarlo en una base ya existente hay que ejecutar
+            <code>database/fix_eliminar_pedidos.sql</code>, que además crea la política
+            <code>Admin can delete orders</code> por si falta y trae consultas para comprobar el resultado.
           </li>
         </ul>
       </div>

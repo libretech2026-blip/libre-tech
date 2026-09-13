@@ -1409,14 +1409,7 @@ const Store = (() => {
     dropdown.classList.add('active');
   }
 
-  // Theme toggle in header
-  const themeToggleBtn = document.getElementById('themeToggle');
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', e => {
-      e.preventDefault();
-      toggleTheme();
-    });
-  }
+  // El tema claro/oscuro lo maneja theme.js (botón único en la cabecera)
 
   // --- Header scroll effect ---
   function initHeaderScroll() {
@@ -1869,33 +1862,4 @@ const Store = (() => {
   };
 })();
 
-// --- Theme toggle function ---
-function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.getAttribute('data-theme') === 'dark';
-  const newTheme = isDark ? 'light' : 'dark';
-  
-  html.setAttribute('data-theme', newTheme);
-  localStorage.setItem('libretech_theme', newTheme);
-  
-  // Update theme toggle button icons
-  const themeToggle = document.getElementById('themeToggle');
-  const themeIconSun = document.getElementById('themeIconSun');
-  const themeIconMoon = document.getElementById('themeIconMoon');
-  
-  if (themeToggle) {
-    if (newTheme === 'dark') {
-      if (themeIconSun) themeIconSun.style.display = 'none';
-      if (themeIconMoon) themeIconMoon.style.display = '';
-    } else {
-      if (themeIconSun) themeIconSun.style.display = '';
-      if (themeIconMoon) themeIconMoon.style.display = 'none';
-    }
-  }
-  
-  // Update profile theme button icons
-  const profileThemeIcon = document.getElementById('themeIconProfile');
-  if (profileThemeIcon) {
-    // The profile theme button uses a different SVG, so we just toggle visibility based on theme
-  }
-}
+/* El tema claro/oscuro vive en js/theme.js (módulo Theme) */

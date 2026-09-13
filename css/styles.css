@@ -3307,6 +3307,27 @@ input, select, textarea {
   box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.14);
 }
 
+/* Los <select> con clase .form-input llevan su propia flecha para quedar
+   idénticos a los <input> de al lado (departamento, ciudad, tipo de doc.) */
+select.form-input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236e6e73' stroke-width='2' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  cursor: pointer;
+}
+
+/* Ciudad antes de elegir departamento */
+select.form-input:disabled {
+  background-color: var(--bg-secondary);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+  opacity: 1;             /* Safari en iOS la aclara demasiado por defecto */
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -10255,47 +10276,36 @@ input, select, textarea {
 
 .menu-category--static .menu-item-icon { color: var(--primary-orange); }
 
-/* ---- "Ofertas": la única opción del menú que va destacada en rojo ---- */
-.hamburger-menu-content .menu-category--offers {
-  border-bottom-color: transparent;
-}
-
+/* ---- "Ofertas": misma forma que el resto del menú, solo en rojo ----
+   El texto va en rojo y su contorno palpita suavemente con text-shadow,
+   que no cambia la maquetación (no hay saltos ni reflow). */
 .hamburger-menu-content .menu-category--offers .menu-category-btn {
-  background: linear-gradient(100deg, var(--danger), #d81b0f);
-  color: #fff;
+  color: var(--danger);
   font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  font-size: 0.92rem;
-  border-radius: var(--radius-md);
-  margin: 6px var(--spacing-md);
-  padding: var(--spacing-md) var(--spacing-lg);
-  width: auto;
-  box-shadow: 0 4px 14px rgba(255, 59, 48, 0.32);
+  animation: offersGlow 2s ease-in-out infinite;
 }
 
-.hamburger-menu-content .menu-category--offers .menu-category-btn:hover,
-.hamburger-menu-content .menu-category--offers .menu-category-btn:focus-visible {
-  background: linear-gradient(100deg, #d81b0f, #b31509);
-  color: #fff;
-  box-shadow: 0 6px 18px rgba(255, 59, 48, 0.42);
+.hamburger-menu-content .menu-category--offers .menu-category-btn:hover {
+  background: rgba(255, 59, 48, 0.07);
+  color: var(--danger);
 }
 
 .hamburger-menu-content .menu-category--offers .menu-item-icon {
-  color: #fff;
+  color: var(--danger);
   opacity: 1;
 }
 
-/* Distintivo "%" al final del renglón, para reconocerlo de un vistazo */
-.hamburger-menu-content .menu-category--offers .menu-category-btn::after {
-  content: '%';
-  margin-left: auto;
-  font-size: 0.9rem;
-  font-weight: 900;
-  line-height: 1;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
+@keyframes offersGlow {
+  0%, 100% { text-shadow: 0 0 0 rgba(255, 59, 48, 0); }
+  50%      { text-shadow: 0 0 7px rgba(255, 59, 48, 0.85); }
+}
+
+/* Sin animación para quien prefiere el movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  .hamburger-menu-content .menu-category--offers .menu-category-btn {
+    animation: none;
+    text-shadow: 0 0 6px rgba(255, 59, 48, 0.45);
+  }
 }
 
 .hamburger-menu-content .menu-category-toggle svg {
@@ -11135,7 +11145,7 @@ textarea:focus-visible {
   border-color: var(--border-light);
 }
 
-[data-theme="dark"] .doc-field select.form-input {
+[data-theme="dark"] select.form-input {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1a6' stroke-width='2' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
 

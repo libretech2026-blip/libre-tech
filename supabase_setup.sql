@@ -88,13 +88,38 @@ BEGIN
 END $$;
 
 -- 1b. Helper: check if current user is admin (SECURITY DEFINER so it can read auth.users)
+--
+-- IMPORTANTE: debe coincidir con SB.isAdmin() de js/supabase-client.js. Antes
+-- esta funcion solo miraba el correo, mientras que el frontend ademas aceptaba
+-- la marca is_admin en los metadatos. Un admin marcado solo por metadatos podia
+-- entrar al panel y pulsar "Eliminar", pero la base borraba 0 filas sin error
+-- (asi funciona RLS), asi que los pedidos reaparecian al recargar.
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean AS $$
 DECLARE
-  user_email text;
+  u record;
 BEGIN
-  SELECT email INTO user_email FROM auth.users WHERE id = auth.uid();
-  RETURN user_email IN ('admin@libretechtienda.com', 'libretechtienda@gmail.com', 'libretech2026@gmail.com');
+  SELECT email, raw_user_meta_data, raw_app_meta_data
+    INTO u
+    FROM auth.users
+   WHERE id = auth.uid();
+
+  IF u IS NULL THEN
+    RETURN false;
+  END IF;
+
+  -- Marca is_admin en los metadatos (se pone desde el panel de Supabase)
+  IF COALESCE(u.raw_user_meta_data->>'is_admin', '') = 'true'
+     OR COALESCE(u.raw_app_meta_data->>'is_admin', '') = 'true' THEN
+    RETURN true;
+  END IF;
+
+  -- Lista de correos de administrador (mantener igual que en el frontend)
+  RETURN lower(u.email) IN (
+    'admin@libretechtienda.com',
+    'libretechtienda@gmail.com',
+    'libretech2026@gmail.com'
+  );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 

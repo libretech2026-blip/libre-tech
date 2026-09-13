@@ -646,6 +646,9 @@ const Cart = (() => {
     });
     document.getElementById('whatsappOrderForm')?.addEventListener('submit', submitWhatsAppOrder);
 
+    // Departamento → municipios (catálogo de ColombiaLocations)
+    initOrderLocationSelects();
+
     // Al corregir un campo se retira su aviso de error
     document.getElementById('whatsappOrderForm')?.addEventListener('input', e => {
       if (e.target.classList?.contains('has-error') && e.target.value.trim()) {
@@ -767,6 +770,7 @@ const Cart = (() => {
     const modal = document.getElementById('orderFormModal');
     if (!modal) return;
 
+    initOrderLocationSelects();   // idempotente: solo llena las listas una vez
     if (prefill) clearOrderFormErrors();
 
     const user = (typeof Auth !== 'undefined' && Auth.getUser) ? Auth.getUser() : null;
@@ -787,8 +791,7 @@ const Cart = (() => {
             document.getElementById('orderPhone').value = profile.phone || '';
             document.getElementById('orderAddress').value = profile.address || '';
             document.getElementById('orderNeighborhood').value = profile.neighborhood || '';
-            document.getElementById('orderCity').value = profile.city || '';
-            document.getElementById('orderDepartment').value = profile.department || '';
+            setOrderLocation(profile.department, profile.city);
             document.getElementById('orderNotes').value = profile.notes || '';
           } else {
             document.getElementById('orderName').value = user.user_metadata?.name || '';
@@ -928,7 +931,7 @@ const Cart = (() => {
           </div>
         </div>
         <div class="order-summary-row">
-          <span>${shipping.included ? escapeHTML(q.zoneName) : 'Escribe tu ciudad para calcularlo'}</span>
+          <span>${shipping.included ? escapeHTML(q.zoneName) : 'Selecciona tu ciudad para calcularlo'}</span>
           <span class="order-summary-amount ${shipping.free ? 'ship-free' : ''}">
             ${shipping.included ? (shipping.free ? 'GRATIS' : formatPrice(shipping.cost)) : 'Por calcular'}
           </span>
@@ -957,8 +960,9 @@ const Cart = (() => {
     document.getElementById('btnRecalcShipping')?.addEventListener('click', () => {
       const city = document.getElementById('orderCity')?.value.trim();
       if (!city) {
-        showToast('Escribe tu ciudad en el formulario para calcular el envío', 'info');
-        document.getElementById('orderCity')?.focus();
+        showToast('Selecciona departamento y ciudad para calcular el envío', 'info');
+        const dept = document.getElementById('orderDepartment');
+        (dept && !dept.value ? dept : document.getElementById('orderCity'))?.focus();
         return;
       }
       shippingEstimate = {
@@ -986,6 +990,78 @@ const Cart = (() => {
     if (!Array.isArray(customItems) || customItems.length === 0) return;
     orderFormOverrideItems = customItems.map(item => ({ ...item }));
     openOrderForm();
+  }
+
+  /* ------------------------------------------------------------
+     DEPARTAMENTO Y CIUDAD DEL PEDIDO
+     Dos listas encadenadas con el catálogo de ColombiaLocations: al elegir
+     departamento se cargan sus municipios. Evita erratas que rompían la
+     cotización de envío cuando eran campos de texto libre.
+     ------------------------------------------------------------ */
+  function normalizeLocation(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  /** Selecciona una opción ignorando tildes y mayúsculas. */
+  function selectOptionByValue(select, value) {
+    if (!select) return false;
+    const target = normalizeLocation(value);
+    if (!target) { select.value = ''; return false; }
+    const match = Array.from(select.options).find(o => o.value && normalizeLocation(o.value) === target);
+    if (!match) return false;
+    select.value = match.value;
+    return true;
+  }
+
+  function initOrderLocationSelects() {
+    const dept = document.getElementById('orderDepartment');
+    const city = document.getElementById('orderCity');
+    if (!dept || !city || typeof ColombiaLocations === 'undefined') return;
+    if (dept.dataset.locationsReady) return;
+    dept.dataset.locationsReady = '1';
+
+    ColombiaLocations.fillDepartmentSelect(dept);
+    ColombiaLocations.fillCitySelect(city, '');
+
+    dept.addEventListener('change', () => {
+      ColombiaLocations.fillCitySelect(city, dept.value);
+      setFieldError('orderDepartment', '');
+      refreshOrderSummary();   // el envío se cotiza por zona
+    });
+
+    city.addEventListener('change', () => {
+      setFieldError('orderCity', '');
+      refreshOrderSummary();
+    });
+  }
+
+  /**
+   * Coloca el departamento y la ciudad guardados en el perfil.
+   * Los perfiles antiguos guardaban texto libre (y a veces solo la ciudad),
+   * así que se comparan sin tildes y se deduce el departamento si falta.
+   */
+  function setOrderLocation(department, cityName) {
+    const dept = document.getElementById('orderDepartment');
+    const city = document.getElementById('orderCity');
+    if (!dept || !city || typeof ColombiaLocations === 'undefined') return;
+
+    let deptName = department;
+    if (!normalizeLocation(deptName) && cityName) {
+      deptName = ColombiaLocations.findDepartmentByCity(cityName);
+    }
+
+    if (!selectOptionByValue(dept, deptName)) {
+      dept.value = '';
+      ColombiaLocations.fillCitySelect(city, '');
+      return;
+    }
+
+    ColombiaLocations.fillCitySelect(city, dept.value);
+    selectOptionByValue(city, cityName);
   }
 
   /* ------------------------------------------------------------
@@ -1018,12 +1094,14 @@ const Cart = (() => {
 
   /** @returns {boolean} true si el formulario está completo */
   function validateOrderForm() {
+    // En el mismo orden en que aparecen en el formulario: el foco va al
+    // primero que falte, y la ciudad depende del departamento.
     const required = [
       { id: 'orderName',       message: 'Escribe tu nombre completo' },
       { id: 'orderPhone',      message: 'Escribe tu teléfono o WhatsApp' },
       { id: 'orderAddress',    message: 'Escribe tu dirección de entrega' },
-      { id: 'orderCity',       message: 'Escribe tu ciudad' },
-      { id: 'orderDepartment', message: 'Selecciona o escribe tu departamento' }
+      { id: 'orderDepartment', message: 'Selecciona tu departamento' },
+      { id: 'orderCity',       message: 'Selecciona tu ciudad' }
     ];
 
     clearOrderFormErrors();

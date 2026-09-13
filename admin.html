@@ -1577,6 +1577,7 @@
   </script>
 
   <script src="js/business-config.js"></script>
+  <script src="js/theme.js"></script>
   <script src="js/colombia-locations.js"></script>
   <script src="js/shipping.js"></script>
   <script src="js/supabase-client.js"></script>
@@ -1596,21 +1597,7 @@
         });
       });
 
-      // 2. Theme toggle
-      function updateAdminThemeIcons(){
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const sun = document.querySelector('.admin-sun-icon');
-        const moon = document.querySelector('.admin-moon-icon');
-        if(sun) sun.style.display = isDark ? 'none' : 'block';
-        if(moon) moon.style.display = isDark ? 'block' : 'none';
-      }
-      updateAdminThemeIcons();
-      document.getElementById('adminThemeToggle')?.addEventListener('click', () => {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        if(isDark){ document.documentElement.removeAttribute('data-theme'); localStorage.setItem('libretech_theme','light'); }
-        else { document.documentElement.setAttribute('data-theme','dark'); localStorage.setItem('libretech_theme','dark'); }
-        updateAdminThemeIcons();
-      });
+      // 2. El tema claro/oscuro lo maneja js/theme.js (mismo módulo que la tienda)
 
       // 3. Admin init (async, after UI is wired)
       (async () => {

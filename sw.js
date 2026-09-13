@@ -4,7 +4,7 @@
    ============================================================ */
 
 // Subir la versión invalida el caché anterior tras cada despliegue
-const CACHE_NAME = 'libretech-v8';
+const CACHE_NAME = 'libretech-v9';
 // Caché aparte para las fotos: se limpia por tamaño, no por versión
 const IMAGE_CACHE = 'libretech-images-v1';
 const IMAGE_CACHE_LIMIT = 150;
@@ -13,6 +13,7 @@ const STATIC_ASSETS = [
   '/producto.html',
   '/css/styles.css',
   '/js/business-config.js',
+  '/js/theme.js',
   '/js/colombia-locations.js',
   '/js/app.js',
   '/js/cart.js',

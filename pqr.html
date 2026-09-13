@@ -2,6 +2,8 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <!-- Tema guardado: se aplica antes de pintar para que no haya parpadeo -->
+  <script>try{if(localStorage.getItem('libretech_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}</script>
   <meta name="facebook-domain-verification" content="98kibfdze9w5ipwe3ixo782f6i5ggr" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Envía tus peticiones, quejas, reclamos o sugerencias a Libre Tech. Te respondemos por correo y desde tu cuenta en la tienda.">
@@ -47,6 +49,11 @@
       <!-- Acciones -->
       <div class="header-actions">
 
+        <!-- Tema claro / oscuro (lo maneja js/theme.js) -->
+        <button class="header-btn" id="btnThemeToggle" title="Tema oscuro" aria-label="Tema oscuro" aria-pressed="false">
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
         <!-- Botón carrito -->
         <button class="header-btn" id="btnOpenCart" title="Ver carrito" aria-label="Abrir carrito de compras">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -256,35 +263,10 @@
     </div>
   </footer>
 
-  <!-- Dark mode toggle script (same as other pages) -->
-  <script>
-    (function(){
-      const saved = localStorage.getItem('libretech_theme');
-      if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme:dark)').matches)) {
-        document.documentElement.setAttribute('data-theme','dark');
-      }
-      document.addEventListener('DOMContentLoaded', () => {
-        const toggle = document.getElementById('btnThemeProfile');
-        const sun = document.getElementById('themeIconSun');
-        const moon = document.getElementById('themeIconMoon');
-        function applyIcons() {
-          const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-          if (sun) sun.style.display = dark ? 'none' : 'block';
-          if (moon) moon.style.display = dark ? 'block' : 'none';
-        }
-        applyIcons();
-        if (toggle) toggle.addEventListener('click', () => {
-          const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-          document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
-          localStorage.setItem('libretech_theme', isDark ? 'light' : 'dark');
-          applyIcons();
-        });
-      });
-    })();
-  </script>
 
   <!-- App scripts -->
   <script src="js/business-config.js"></script>
+  <script src="js/theme.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/auth.js"></script>
