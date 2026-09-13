@@ -646,6 +646,13 @@ const Cart = (() => {
     });
     document.getElementById('whatsappOrderForm')?.addEventListener('submit', submitWhatsAppOrder);
 
+    // Al corregir un campo se retira su aviso de error
+    document.getElementById('whatsappOrderForm')?.addEventListener('input', e => {
+      if (e.target.classList?.contains('has-error') && e.target.value.trim()) {
+        setFieldError(e.target.id, '');
+      }
+    });
+
     // Order form auth buttons — abren el panel de sesion/registro.
     // stopPropagation evita que el listener global de auth.js (cierre al
     // hacer clic fuera del menu de usuario) cierre el panel en el mismo clic.
@@ -759,6 +766,8 @@ const Cart = (() => {
     const { prefill = true } = options;
     const modal = document.getElementById('orderFormModal');
     if (!modal) return;
+
+    if (prefill) clearOrderFormErrors();
 
     const user = (typeof Auth !== 'undefined' && Auth.getUser) ? Auth.getUser() : null;
     const authBanner = document.getElementById('orderFormAuthBanner');
@@ -979,9 +988,63 @@ const Cart = (() => {
     openOrderForm();
   }
 
+  /* ------------------------------------------------------------
+     VALIDACIÓN DE CAMPOS OBLIGATORIOS DEL PEDIDO
+     Además del `required` del navegador, se marca el campo en rojo y se
+     escribe el motivo debajo, para que el aviso se vea igual en móvil.
+     ------------------------------------------------------------ */
+  function setFieldError(fieldId, message) {
+    const input = document.getElementById(fieldId);
+    if (!input) return;
+    const group = input.closest('.form-group') || input.parentElement;
+    input.classList.toggle('has-error', !!message);
+    input.setAttribute('aria-invalid', message ? 'true' : 'false');
+
+    let hint = group?.querySelector('.form-error');
+    if (!message) { hint?.remove(); return; }
+
+    if (!hint) {
+      hint = document.createElement('small');
+      hint.className = 'form-error';
+      group?.appendChild(hint);
+    }
+    hint.textContent = message;
+  }
+
+  function clearOrderFormErrors() {
+    ['orderName', 'orderPhone', 'orderAddress', 'orderCity', 'orderDepartment']
+      .forEach(id => setFieldError(id, ''));
+  }
+
+  /** @returns {boolean} true si el formulario está completo */
+  function validateOrderForm() {
+    const required = [
+      { id: 'orderName',       message: 'Escribe tu nombre completo' },
+      { id: 'orderPhone',      message: 'Escribe tu teléfono o WhatsApp' },
+      { id: 'orderAddress',    message: 'Escribe tu dirección de entrega' },
+      { id: 'orderCity',       message: 'Escribe tu ciudad' },
+      { id: 'orderDepartment', message: 'Selecciona o escribe tu departamento' }
+    ];
+
+    clearOrderFormErrors();
+
+    const missing = required.filter(f => !(document.getElementById(f.id)?.value || '').trim());
+    missing.forEach(f => setFieldError(f.id, f.message));
+
+    if (missing.length === 0) return true;
+
+    const first = document.getElementById(missing[0].id);
+    first?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    first?.focus({ preventScroll: true });
+    showToast(missing[0].message, 'error');
+    return false;
+  }
+
   // --- Submit order via WhatsApp ---
   async function submitWhatsAppOrder(e) {
     e.preventDefault();
+
+    if (!validateOrderForm()) return;
 
     const name = document.getElementById('orderName').value.trim();
     const phone = document.getElementById('orderPhone').value.trim();
@@ -990,11 +1053,6 @@ const Cart = (() => {
     const city = document.getElementById('orderCity').value.trim();
     const department = document.getElementById('orderDepartment').value.trim();
     const notes = document.getElementById('orderNotes').value.trim();
-
-    if (!name || !phone || !address || !city) {
-      showToast('Completa los campos obligatorios', 'error');
-      return;
-    }
 
     const orderNumber = generateOrderNumber();
     const products = getProducts();

@@ -395,12 +395,25 @@ const SB = (() => {
   /* ----------------------------------------------------------
      STORAGE — Product images
   ---------------------------------------------------------- */
+  // La extensión sale del tipo MIME: es más fiable que el nombre del archivo
+  // (que puede venir sin extensión) y mantiene los GIF como GIF.
+  const IMAGE_EXTENSIONS = {
+    'image/webp': 'webp',
+    'image/jpeg': 'jpg',
+    'image/png':  'png',
+    'image/gif':  'gif'
+  };
+
   async function uploadImage(file, productId) {
-    const ext = file.name.split('.').pop() || 'webp';
+    const ext = IMAGE_EXTENSIONS[file.type] || (file.name.split('.').pop() || 'webp').toLowerCase();
     const path = `${productId}/${Date.now()}.${ext}`;
     const { error } = await client.storage
       .from('product-images')
-      .upload(path, file, { cacheControl: '3600', upsert: true });
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: file.type || 'application/octet-stream'
+      });
     if (error) throw error;
     const { data: urlData } = client.storage
       .from('product-images')

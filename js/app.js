@@ -160,10 +160,15 @@ const Store = (() => {
     });
   }
 
-   function setActiveCategory(category, sourceChip, options = {}) {
+  /**
+   * Aplica el filtro de categoría en la página actual.
+   * @param {string} category nombre de la categoría o 'all'
+   * @param {{preserveBrand?: boolean, brand?: string}} [options]
+   *        preserveBrand conserva la marca elegida; brand la fuerza.
+   */
+  function setActiveCategory(category, options = {}) {
     const safeCategory = category || 'all';
     const preserveBrand = options.preserveBrand === true;
-    const skipBrandDropdown = options.skipBrandDropdown === true;
     const brand = options.brand || undefined;
 
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
@@ -177,22 +182,133 @@ const Store = (() => {
       currentBrand = brand;
     }
 
-    if (skipBrandDropdown) {
-      const dd = document.getElementById('brandDropdown');
-      if (dd) dd.style.display = 'none';
-    } else {
-      showBrandDropdown(currentCategory, sourceChip || selectedChip);
-    }
-
-    showAll = currentCategory !== 'all';
+    // El catálogo siempre lista todo; en el lobby "Todos" vuelve a destacados
+    showAll = isProductsPage() || currentCategory !== 'all';
+    renderBrandFilters();
     renderFeaturedProducts();
     syncCategoryBubbleState();
+    syncFiltersToUrl();
   }
 
+  /**
+   * Refleja los filtros activos en la URL (sin recargar) para que la vista
+   * se pueda compartir o recuperar con el botón "atrás".
+   * Solo aplica en la página del catálogo, que es la que lee estos parámetros.
+   */
+  function syncFiltersToUrl() {
+    if (!isProductsPage() || !window.history?.replaceState) return;
+    const url = new URL(window.location.href);
+    if (currentCategory && currentCategory !== 'all') url.searchParams.set('category', currentCategory);
+    else url.searchParams.delete('category');
+    if (currentBrand && currentBrand !== 'all') url.searchParams.set('brand', currentBrand);
+    else url.searchParams.delete('brand');
+    window.history.replaceState({}, '', url);
+  }
+
+  function isProductsPage() {
+    return /(^|\/)productos\.html$/i.test(window.location.pathname);
+  }
+
+
+  /* ------------------------------------------------------------
+     CARRUSEL DE BURBUJAS DE CATEGORÍAS
+
+     En escritorio las páginas se mueven con `transform`. En móvil se
+     recorren deslizando el dedo: scroll horizontal nativo con enganche por
+     página, porque mezclar transform y scroll haría que se pisaran.
+     Los puntos funcionan igual en ambos modos; solo cambia cómo se llega.
+     ------------------------------------------------------------ */
+  let categoryCarouselPageCount = 0;
+  let categoryCarouselEls = null;      // { viewport, track, dots }
+  let _carouselListenersBound = false;
+
+  const bubblesMobileQuery = window.matchMedia('(max-width: 768px)');
+
+  function isBubbleSwipeMode() {
+    return bubblesMobileQuery.matches && !!categoryCarouselEls?.viewport;
+  }
+
+  function markActiveBubbleDot() {
+    categoryCarouselEls?.dots.querySelectorAll('.category-bubbles-dot').forEach((dot, i) => {
+      dot.classList.toggle('active', i === categoryCarouselPage);
+    });
+  }
+
+  /**
+   * Publica el ancho de página en --bubble-page-w. El CSS móvil lo usa como
+   * flex-basis de cada página, así el scroll se engancha exactamente en el
+   * borde de una página con cualquier tamaño de pantalla.
+   */
+  function syncBubblePageWidth() {
+    const viewport = categoryCarouselEls?.viewport;
+    if (!viewport) return 0;
+    const width = viewport.clientWidth;
+    if (width > 0) viewport.style.setProperty('--bubble-page-w', width + 'px');
+    return width;
+  }
+
+  function updateCategoryCarousel(options = {}) {
+    if (!categoryCarouselEls) return;
+    const { viewport, track } = categoryCarouselEls;
+
+    if (isBubbleSwipeMode()) {
+      track.style.transform = 'none';
+      const width = syncBubblePageWidth();
+      if (options.scroll !== false && width > 0) {
+        viewport.scrollTo({ left: categoryCarouselPage * width, behavior: options.behavior || 'smooth' });
+      }
+    } else {
+      if (viewport) viewport.scrollLeft = 0;
+      track.style.transform = `translateX(-${categoryCarouselPage * 100}%)`;
+    }
+    markActiveBubbleDot();
+  }
+
+  /**
+   * Los listeners viven en elementos que sobreviven a cada render, así que
+   * se enganchan una sola vez y leen el estado del módulo.
+   */
+  function bindCategoryCarouselListeners(viewport, track, dots) {
+    categoryCarouselEls = { viewport, track, dots };
+    if (_carouselListenersBound) return;
+    _carouselListenersBound = true;
+
+    // Deslizar con el dedo actualiza el punto activo
+    if (viewport) {
+      let scrollRaf = 0;
+      viewport.addEventListener('scroll', () => {
+        if (!isBubbleSwipeMode()) return;
+        cancelAnimationFrame(scrollRaf);
+        scrollRaf = requestAnimationFrame(() => {
+          const width = viewport.clientWidth || 1;
+          const page = Math.min(Math.max(Math.round(viewport.scrollLeft / width), 0), categoryCarouselPageCount - 1);
+          if (page === categoryCarouselPage) return;
+          categoryCarouselPage = page;
+          markActiveBubbleDot();
+        });
+      }, { passive: true });
+    }
+
+    // Girar el teléfono recalcula el ancho de página
+    let resizeRaf = 0;
+    window.addEventListener('resize', () => {
+      cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(() => updateCategoryCarousel({ behavior: 'auto' }));
+    }, { passive: true });
+
+    // Cambiar entre móvil y escritorio reinicia la posición
+    const onBreakpointChange = () => {
+      categoryCarouselPage = 0;
+      updateCategoryCarousel({ behavior: 'auto' });
+    };
+    if (bubblesMobileQuery.addEventListener) bubblesMobileQuery.addEventListener('change', onBreakpointChange);
+    else if (bubblesMobileQuery.addListener) bubblesMobileQuery.addListener(onBreakpointChange);
+  }
 
   function renderCategoryBubbleCarousel() {
     const track = document.getElementById('categoryBubblesTrack');
     const dots = document.getElementById('categoryBubblesDots');
+    const viewport = document.getElementById('categoryBubblesViewport');
     if (!track || !dots) return;
 
     // Generar categorías dinámicamente desde productos
@@ -277,140 +393,40 @@ const Store = (() => {
     `).join('');
 
     categoryCarouselPage = 0;
+    categoryCarouselPageCount = pageCount;
+    bindCategoryCarouselListeners(viewport, track, dots);
 
-    function updateCategoryCarousel() {
-      track.style.transform = `translateX(-${categoryCarouselPage * 100}%)`;
-      dots.querySelectorAll('.category-bubbles-dot').forEach((dot, i) => {
-        dot.classList.toggle('active', i === categoryCarouselPage);
-      });
-    }
-
-    // Auto-rotate categories every 8 seconds if there's more than one page
-    let categoryCarouselAutoInterval = null;
-    
-    function startCategoryAutoRotate() {
-      if (pageCount <= 1) return;
-      categoryCarouselAutoInterval = setInterval(() => {
-        if (document.hidden) return; // pestaña en segundo plano: no se anima
-        categoryCarouselPage = (categoryCarouselPage + 1) % pageCount;
-        updateCategoryCarousel();
-      }, 8000);
-    }
-
-    function stopCategoryAutoRotate() {
-      clearInterval(categoryCarouselAutoInterval);
-    }
-
-    // startCategoryAutoRotate(); // Autoplay desactivado
-
-    let _activeBubbleBtn = null;
-
-    function closeSubDropdown() {
-      document.querySelectorAll('.category-sub-dropdown').forEach(d => d.remove());
-      _activeBubbleBtn = null;
-    }
-
-    function positionCategorySubDropdown(dropdown, btn) {
-      const rect = btn.getBoundingClientRect();
-      const isMobileView = window.innerWidth <= 768;
-
-      dropdown.style.position = 'fixed';
-      dropdown.style.zIndex = '100000';
-      dropdown.classList.toggle('is-mobile', isMobileView);
-
-      if (isMobileView) {
-        dropdown.style.top = '50%';
-        dropdown.style.left = '50%';
-      } else {
-        const centerX = rect.left + (rect.width / 2);
-        const safeLeft = Math.min(Math.max(centerX, 160), window.innerWidth - 160);
-        const safeTop = Math.max(16, Math.min(rect.bottom + 8, window.innerHeight - 24));
-        dropdown.style.top = safeTop + 'px';
-        dropdown.style.left = safeLeft + 'px';
-      }
-    }
-
+    /**
+     * Tocar una burbuja lleva al catálogo con esa categoría ya aplicada.
+     * "Destacados" no es una categoría real: tiene su propia página.
+     */
     track.onclick = e => {
       const btn = e.target.closest('.category-bubble-item');
       if (!btn) return;
 
-      if (e.target.closest('.category-sub-dropdown')) return;
-
       const cat = btn.dataset.category || 'all';
 
-      if (_activeBubbleBtn === btn) { closeSubDropdown(); return; }
-      closeSubDropdown();
+      if (cat === 'Destacados') { window.location.href = 'destacados.html'; return; }
 
-      // Destacados clears filters and shows all featured products
-      if (cat === 'Destacados') {
-        currentCategory = 'all';
-        currentBrand = 'all';
-        setActiveCategory('all');
+      if (isProductsPage()) {
+        setActiveCategory(cat);
+        document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         return;
       }
 
-      // Regular categories with brands
-      if (cat === 'all') { setActiveCategory('all'); return; }
-
-      const brands = [...new Set(
-        getActiveProducts().filter(p => p.category === cat).map(p => p.brand).filter(Boolean)
-      )].sort();
-
-      if (brands.length === 0) { setActiveCategory(cat); return; }
-
-      const label = cat.charAt(0).toUpperCase() + cat.slice(1);
-      const dropdown = document.createElement('div');
-      dropdown.className = 'category-sub-dropdown';
-
-      let html = `<div class="category-sub-dropdown-title">${Cart.escapeHTML(label)}</div>`;
-      html += `<button class="category-sub-item${currentCategory === cat && currentBrand === 'all' ? ' active' : ''}" data-brand="all" data-cat="${Cart.escapeAttr(cat)}"><span class="category-sub-item-dot"></span>Todas las marcas</button>`;
-      brands.forEach(brand => {
-        const active = currentCategory === cat && currentBrand === brand;
-        html += `<button class="category-sub-item${active ? ' active' : ''}" data-brand="${Cart.escapeAttr(brand)}" data-cat="${Cart.escapeAttr(cat)}"><span class="category-sub-item-dot"></span>${Cart.escapeHTML(brand)}</button>`;
-      });
-      dropdown.innerHTML = html;
-
-      document.body.appendChild(dropdown);
-      positionCategorySubDropdown(dropdown, btn);
-      _activeBubbleBtn = btn;
-
-      requestAnimationFrame(() => dropdown.classList.add('visible'));
-
-      dropdown.addEventListener('click', ev => {
-        ev.preventDefault();
-        ev.stopPropagation();
-
-        const item = ev.target.closest('.category-sub-item');
-        if (!item) return;
-
-        const selectedBrand = item.dataset.brand;
-        const selectedCat = item.dataset.cat;
-
-        currentBrand = selectedBrand === 'all' ? 'all' : selectedBrand;
-        closeSubDropdown();
-        setActiveCategory(selectedCat, null, { preserveBrand: true, skipBrandDropdown: true });
-      });
+      window.location.href = cat === 'all'
+        ? 'productos.html'
+        : `productos.html?category=${encodeURIComponent(cat)}`;
     };
 
-    document.addEventListener('click', e => {
-      if (!e.target.closest('.category-bubble-item')) closeSubDropdown();
-    });
-
-     dots.onclick = e => {
+    dots.onclick = e => {
       const dot = e.target.closest('.category-bubbles-dot');
       if (!dot) return;
       categoryCarouselPage = parseInt(dot.dataset.page, 10) || 0;
       updateCategoryCarousel();
     };
 
-
-    function nextPage() {
-      if (pageCount <= 1) return;
-      categoryCarouselPage = (categoryCarouselPage + 1) % pageCount;
-      updateCategoryCarousel();
-    }
-
-    updateCategoryCarousel();
+    updateCategoryCarousel({ behavior: 'auto' });
     syncCategoryBubbleState();
   }
 
@@ -603,6 +619,12 @@ const Store = (() => {
       bar.appendChild(chip);
     });
 
+    // El chip activo debe reflejar la categoría vigente (por ejemplo, la que
+    // llegó como ?category= desde una burbuja)
+    bar.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.classList.toggle('active', (chip.dataset.category || 'all') === currentCategory);
+    });
+
     const count = document.createElement('span');
     count.className = 'products-count';
     count.id = 'productsCount';
@@ -611,41 +633,58 @@ const Store = (() => {
     syncCategoryBubbleState();
   }
 
-  // --- Brand dropdown (replaces old fixed sub-bar) ---
-  function showBrandDropdown(category, anchorEl) {
-    const dropdown = document.getElementById('brandDropdown');
-    const content = document.getElementById('brandDropdownContent');
-    if (!dropdown || !content) return;
+  /* ------------------------------------------------------------
+     FILTRO DE MARCAS (#brandsBar)
+     Se combina con el filtro de categoría: solo se ofrecen las marcas
+     que existen dentro de la categoría activa. Si la marca elegida deja
+     de estar disponible al cambiar de categoría, se vuelve a "Todas".
+     ------------------------------------------------------------ */
+  function getBrandsForCategory(category) {
+    const products = category && category !== 'all'
+      ? getActiveProducts().filter(p => p.category === category)
+      : getActiveProducts();
+    return [...new Set(products.map(p => p.brand).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  }
 
-    if (category === 'all') { dropdown.style.display = 'none'; return; }
+  function renderBrandFilters() {
+    const bar = document.getElementById('brandsBar');
+    if (!bar) return;
 
-    const products = getActiveProducts().filter(p => p.category === category);
-    const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
-    if (brands.length === 0) { dropdown.style.display = 'none'; return; }
+    const brands = getBrandsForCategory(currentCategory);
 
-    content.innerHTML = '';
-    const allBtn = document.createElement('button');
-    allBtn.className = 'brand-dd-item' + (currentBrand === 'all' ? ' active' : '');
-    allBtn.dataset.brand = 'all';
-    allBtn.textContent = 'Todas las marcas';
-    content.appendChild(allBtn);
-
-    brands.forEach(brand => {
-      const btn = document.createElement('button');
-      btn.className = 'brand-dd-item' + (currentBrand === brand ? ' active' : '');
-      btn.dataset.brand = brand;
-      btn.textContent = brand;
-      content.appendChild(btn);
-    });
-
-    // Position below the anchor chip
-    if (anchorEl) {
-      const rect = anchorEl.getBoundingClientRect();
-      const bar = document.getElementById('filtersBar');
-      const barRect = bar ? bar.getBoundingClientRect() : rect;
-      dropdown.style.left = (rect.left - barRect.left) + 'px';
+    // La marca activa puede no existir en la nueva categoría
+    if (currentBrand !== 'all' && !brands.some(b => b.toLowerCase() === currentBrand.toLowerCase())) {
+      currentBrand = 'all';
     }
-    dropdown.style.display = 'block';
+
+    if (brands.length === 0) {
+      bar.innerHTML = '';
+      bar.style.display = 'none';
+      return;
+    }
+
+    bar.style.display = '';
+    const isActive = brand => (brand === 'all'
+      ? currentBrand === 'all'
+      : currentBrand.toLowerCase() === brand.toLowerCase());
+
+    bar.innerHTML = `
+      <span class="brands-bar-label">Marca</span>
+      <div class="brands-bar-chips">
+        <button type="button" class="brand-chip${isActive('all') ? ' active' : ''}" data-brand="all">Todas</button>
+        ${brands.map(b => `
+          <button type="button" class="brand-chip${isActive(b) ? ' active' : ''}" data-brand="${Cart.escapeAttr(b)}">${Cart.escapeHTML(b)}</button>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function setActiveBrand(brand) {
+    currentBrand = brand || 'all';
+    renderBrandFilters();
+    renderFeaturedProducts();
+    syncFiltersToUrl();
   }
 
   function updateProductsCount(knownCount) {
@@ -668,8 +707,6 @@ const Store = (() => {
   const SORT_OPTIONS = [
     { value: 'relevance',  label: 'Recomendados',           icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
     { value: 'recent',     label: 'Más recientes',          icon: 'M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-    { value: 'az',         label: 'Nombre: A → Z',          icon: 'M3 6h18M3 12h12M3 18h6' },
-    { value: 'za',         label: 'Nombre: Z → A',          icon: 'M3 6h6M3 12h12M3 18h18' },
     { value: 'price_asc',  label: 'Precio: menor a mayor',  icon: 'M12 19V5M5 12l7-7 7 7' },
     { value: 'price_desc', label: 'Precio: mayor a menor',  icon: 'M12 5v14M19 12l-7 7-7-7' },
     { value: 'best',       label: 'Más vendidos',           icon: 'M20 12V22H4V12M22 7H2v5h20V7zM12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z' }
@@ -720,15 +757,10 @@ const Store = (() => {
   function sortProducts(products, mode) {
     const list = [...(products || [])];
     const by = mode || currentSort;
-    const name = p => (p.name || '').toLocaleLowerCase('es');
 
     switch (by) {
       case 'recent':
         return list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      case 'az':
-        return list.sort((a, b) => name(a).localeCompare(name(b), 'es', { sensitivity: 'base' }));
-      case 'za':
-        return list.sort((a, b) => name(b).localeCompare(name(a), 'es', { sensitivity: 'base' }));
       case 'price_asc':
         return list.sort((a, b) => priceOf(a) - priceOf(b));
       case 'price_desc':
@@ -1243,25 +1275,14 @@ const Store = (() => {
     document.getElementById('filtersBar')?.addEventListener('click', e => {
       const chip = e.target.closest('.filter-chip');
       if (!chip) return;
-      setActiveCategory(chip.dataset.category, chip);
+      setActiveCategory(chip.dataset.category);
     });
 
-    // Brand dropdown items
-    document.getElementById('brandDropdown')?.addEventListener('click', e => {
-      const item = e.target.closest('.brand-dd-item');
-      if (!item) return;
-      document.querySelectorAll('.brand-dd-item').forEach(b => b.classList.remove('active'));
-      item.classList.add('active');
-      currentBrand = item.dataset.brand;
-      renderFeaturedProducts();
-    });
-
-    // Close brand dropdown on outside click
-    document.addEventListener('click', e => {
-      if (!e.target.closest('#brandDropdown') && !e.target.closest('.filter-chip')) {
-        const dd = document.getElementById('brandDropdown');
-        if (dd) dd.style.display = 'none';
-      }
+    // Brand filter chips
+    document.getElementById('brandsBar')?.addEventListener('click', e => {
+      const chip = e.target.closest('.brand-chip');
+      if (!chip) return;
+      setActiveBrand(chip.dataset.brand);
     });
 
     // Search with debounce
@@ -1669,11 +1690,13 @@ const Store = (() => {
     if (brandParam) {
       currentBrand = decodeURIComponent(brandParam);
     }
-    
+
     seedReviews();
     loadSortMode();
     renderSortControl(renderFeaturedProducts);
     renderCategoryBubbleCarousel();
+    renderCategories();
+    renderBrandFilters();
     renderFeaturedProducts();
     renderPromoBanners();
     renderCustomerReviews();
@@ -1693,8 +1716,17 @@ const Store = (() => {
 
     // Re-render when auth state changes
     document.addEventListener('auth-changed', () => {
+      renderCategories();
+      renderBrandFilters();
       renderFeaturedProducts();
       renderCategoryBubbleCarousel();
+    });
+
+    // Cuando llega el catálogo/configuración desde Supabase, las categorías
+    // y marcas disponibles pueden haber cambiado.
+    document.addEventListener('site-config-loaded', () => {
+      renderCategories();
+      renderBrandFilters();
     });
   }
 
@@ -1828,6 +1860,8 @@ const Store = (() => {
     renderPromoPhotoBanners,
     setHeroBackgroundImage,
     setActiveCategory,
+    setActiveBrand,
+    renderBrandFilters,
     renderBannerCarousel,
     renderCustomerReviews,
     observeReveals,

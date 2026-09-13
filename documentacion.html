@@ -501,6 +501,95 @@
       <h2>5. Registro de cambios (Changelog)</h2>
 
       <div class="changelog-entry">
+        <span class="date">12 de septiembre de 2026</span>
+        <h4>v3.6.0 — GIFs en el panel, burbujas deslizables, filtro de marcas y SEO</h4>
+        <p>Cambios de esta versión:</p>
+        <ul>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>GIFs animados en productos y banners</strong> — Las tres subidas del panel (imágenes de producto,
+            banners y burbujas de categoría) aceptan JPG, PNG, WebP y GIF. El GIF se sube <em>sin recomprimir</em>:
+            pasarlo por un <code>&lt;canvas&gt;</code> se quedaría con el primer fotograma y perdería la animación.
+            La tienda ya los muestra en movimiento porque se pintan con <code>&lt;img&gt;</code> normales, en escritorio y
+            en móvil.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Optimización automática de imágenes</strong> — Las imágenes fijas se redimensionan al lado máximo del
+            tipo de subida (1200&nbsp;px productos, 1920&nbsp;px banners, 600&nbsp;px burbujas) y se reexportan a WebP con
+            calidad 0,86 antes de subirlas. Si el resultado no pesa menos que el original, se conserva el original; si el
+            navegador no soporta WebP, también. <code>SB.uploadImage</code> deduce la extensión del tipo MIME y envía el
+            <code>contentType</code> correcto.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Requisitos junto a cada campo de subida</strong> — Cada zona de carga indica resolución recomendada,
+            peso máximo y formatos admitidos. En banners el texto cambia según la posición elegida (hero 1920×900,
+            carrusel 1600×640, completos 1600×500, laterales 400×600). Límites: 5&nbsp;MB producto, 8&nbsp;MB banner,
+            3&nbsp;MB burbuja.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>Burbujas de categorías deslizables en móvil</strong> — Por debajo de 768&nbsp;px el carrusel usa
+            scroll horizontal nativo con enganche por página en lugar de <code>transform</code>, así que se recorre con el
+            dedo. <code>app.js</code> publica el ancho exacto de página en <code>--bubble-page-w</code> para que el
+            enganche caiga siempre en el borde de una página. El scroll queda contenido en el viewport
+            (<code>overscroll-behavior-x: contain</code>), de modo que la página nunca se desplaza en horizontal, y los
+            puntos de navegación se siguen usando y se sincronizan con el deslizamiento.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>Las burbujas llevan al catálogo</strong> — Se eliminó el desplegable de marcas que se abría al tocar
+            una burbuja. Ahora la burbuja navega a <code>productos.html?category=&lt;categoría&gt;</code> con el filtro ya
+            aplicado; «Destacados» sigue llevando a <code>destacados.html</code>. Si ya estás en el catálogo, la burbuja
+            aplica el filtro en el sitio sin recargar.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Filtro de marcas en el catálogo</strong> — <code>productos.html</code> muestra los chips de categoría
+            (antes ocultos) y una nueva barra de marcas. Los dos filtros se combinan: con «Audífonos» + «JBL» se listan
+            solo los audífonos JBL. La barra solo ofrece marcas que existen dentro de la categoría activa y, si la marca
+            elegida deja de estar disponible al cambiar de categoría, vuelve a «Todas». Los filtros se reflejan en la URL
+            (<code>?category=&amp;brand=</code>) para poder compartir la vista.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>«Ofertas» destacada en el menú hamburguesa</strong> — La opción se pinta sobre un degradado rojo, en
+            mayúsculas y con un distintivo «%» al final del renglón. El resto de opciones no cambia.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>Departamento obligatorio en el pedido</strong> — El campo pasó a <code>required</code> en las cinco
+            páginas con formulario de pedido. Además de la validación del navegador, <code>cart.js</code> valida los cinco
+            campos obligatorios: marca en rojo los que falten, escribe el motivo debajo, lleva el foco al primero y
+            muestra un aviso. El error desaparece en cuanto se corrige el campo.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>«Finaliza compra»</strong> — El botón de envío del formulario de pedido (el que se abre desde «Pide y
+            paga en casa» y desde el carrito) dice ahora <em>Finaliza compra</em> en lugar de «Enviar pedido por
+            WhatsApp». La funcionalidad es la misma.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>Sin ordenamiento alfabético</strong> — Se retiraron las opciones «Nombre: A → Z» y «Nombre: Z → A» del
+            botón de ordenar y las ramas <code>case 'az'</code> / <code>case 'za'</code> de
+            <code>Store.sortProducts</code>. Quedan Recomendados, Más recientes, Precio (asc/desc) y Más vendidos, en
+            inicio, catálogo, destacados y ofertas. Una preferencia antigua guardada en <code>sessionStorage</code> ya no
+            valida y cae en «Recomendados», sin errores en consola.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong>SEO</strong> — Nuevo título «Libre Tech | Tecnología, Celulares y Accesorios en Colombia» y nueva
+            descripción, replicados en <code>&lt;title&gt;</code>, <code>meta description</code>, Open Graph y Twitter
+            Card. Se añadió JSON-LD de <code>OnlineStore</code> en el inicio, metadatos sociales y
+            <code>canonical</code> en catálogo, destacados y ofertas, y se unificó la marca como «Libre Tech» en
+            <code>manifest.json</code> y en los metadatos dinámicos de la ficha de producto.
+          </li>
+        </ul>
+      </div>
+
+      <div class="changelog-entry">
         <span class="date">10 de septiembre de 2026</span>
         <h4>v3.5.1 — Carrito al iniciar sesión y carga de imágenes</h4>
         <p>Cambios de esta versión:</p>

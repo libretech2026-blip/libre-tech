@@ -1,7 +1,7 @@
 {
-  "name": "LIBRE TECH - Tienda de Tecnologia",
-  "short_name": "LIBRE TECH",
-  "description": "Tu tienda de tecnologia en Colombia. Celulares, audifonos, accesorios y mas.",
+  "name": "Libre Tech | Tecnología, Celulares y Accesorios en Colombia",
+  "short_name": "Libre Tech",
+  "description": "Descubre celulares, audífonos, accesorios y tecnología en Libre Tech. Compra online con excelentes precios y recibe tus productos en cualquier lugar de Colombia.",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#ffffff",

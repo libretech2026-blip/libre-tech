@@ -760,25 +760,127 @@ const Admin = (() => {
     }
   }
 
+  /* ============================================================
+     SUBIDA Y OPTIMIZACIÓN DE IMÁGENES Y GIFS
+
+     Formatos aceptados: JPG, PNG, WebP y GIF (animado incluido).
+
+     Los GIF se suben tal cual: recomprimirlos en un <canvas> se quedaría
+     con el primer fotograma y perderían la animación. Por eso su límite de
+     peso es el único control que tienen.
+
+     El resto de formatos se redimensiona al lado máximo indicado y se
+     reexporta a WebP (mucho más liviano con calidad casi idéntica). Si el
+     resultado no es más pequeño que el original, se conserva el original.
+     ============================================================ */
+
+  const IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+  // Presets por tipo de subida: lado máximo y peso máximo aceptado.
+  const MEDIA_PRESETS = {
+    product:  { maxSide: 1200, maxBytes: 5 * 1024 * 1024, maxGifBytes: 5 * 1024 * 1024, label: 'imagen del producto' },
+    banner:   { maxSide: 1920, maxBytes: 8 * 1024 * 1024, maxGifBytes: 8 * 1024 * 1024, label: 'banner' },
+    bubble:   { maxSide: 600,  maxBytes: 3 * 1024 * 1024, maxGifBytes: 3 * 1024 * 1024, label: 'imagen de categoría' }
+  };
+
+  const WEBP_QUALITY = 0.86;
+
+  function formatFileSize(bytes) {
+    if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1).replace('.0', '') + ' MB';
+    return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+  }
+
+  function isAnimatedFormat(file) {
+    return file.type === 'image/gif';
+  }
+
+  /**
+   * Valida tipo y peso. Devuelve un mensaje de error o null si todo está bien.
+   */
+  function validateMediaFile(file, preset) {
+    if (!file || !IMAGE_MIME_TYPES.includes(file.type)) {
+      return 'Formato no admitido. Usa JPG, PNG, WebP o GIF.';
+    }
+    const limit = isAnimatedFormat(file) ? preset.maxGifBytes : preset.maxBytes;
+    if (file.size > limit) {
+      return `El archivo pesa ${formatFileSize(file.size)} y el máximo para ${preset.label} es ${formatFileSize(limit)}.`;
+    }
+    return null;
+  }
+
+  function loadImageElement(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('No se pudo leer la imagen')); };
+      img.src = url;
+    });
+  }
+
+  function canvasToBlob(canvas, type, quality) {
+    return new Promise(resolve => canvas.toBlob(resolve, type, quality));
+  }
+
+  function replaceExtension(name, ext) {
+    return (name || 'imagen').replace(/\.[^.]+$/, '') + '.' + ext;
+  }
+
+  /**
+   * Devuelve el archivo listo para subir (optimizado cuando se puede).
+   * Nunca lanza: si la optimización falla se devuelve el archivo original.
+   * @param {File} file
+   * @param {{maxSide:number}} preset
+   */
+  async function optimizeMediaFile(file, preset) {
+    // Los GIF conservan su animación: se suben sin tocar
+    if (isAnimatedFormat(file)) return file;
+
+    try {
+      const img = await loadImageElement(file);
+      const scale = Math.min(1, preset.maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+      const width = Math.round(img.naturalWidth * scale);
+      const height = Math.round(img.naturalHeight * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const blob = await canvasToBlob(canvas, 'image/webp', WEBP_QUALITY);
+      // Navegador sin WebP, o recomprimir no compensa: se deja el original
+      if (!blob || blob.type !== 'image/webp' || blob.size >= file.size) return file;
+
+      return new File([blob], replaceExtension(file.name, 'webp'), {
+        type: 'image/webp',
+        lastModified: Date.now()
+      });
+    } catch (e) {
+      console.warn('[Admin] No se pudo optimizar la imagen, se sube el original:', e.message);
+      return file;
+    }
+  }
+
+  /**
+   * Valida + optimiza. Devuelve el archivo a subir, o null si no es válido
+   * (en ese caso ya se avisó al administrador con un toast).
+   */
+  async function prepareMediaFile(file, presetKey) {
+    const preset = MEDIA_PRESETS[presetKey] || MEDIA_PRESETS.product;
+    const error = validateMediaFile(file, preset);
+    if (error) { showToast(error, 'error'); return null; }
+    return optimizeMediaFile(file, preset);
+  }
+
   // --- Imagen upload (Supabase Storage con fallback a dataURL) ---
 
   async function handleImageUpload(file) {
 
-    if (!file || !file.type.startsWith('image/')) {
+    const prepared = await prepareMediaFile(file, 'product');
 
-      showToast('Solo se permiten archivos de imagen', 'error');
-
-      return;
-
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-
-      showToast('La imagen no debe superar 2MB', 'error');
-
-      return;
-
-    }
+    if (!prepared) return;
 
 
 
@@ -790,7 +892,7 @@ const Admin = (() => {
 
         const pid = editingProductId || ('new-' + Date.now());
 
-        const url = await SB.uploadImage(file, pid);
+        const url = await SB.uploadImage(prepared, pid);
 
         if (!currentImages.includes(url)) currentImages.push(url);
 
@@ -822,7 +924,7 @@ const Admin = (() => {
 
     };
 
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(prepared);
 
   }
 
@@ -3043,7 +3145,7 @@ const Admin = (() => {
           <span class="sortable-actions">
             <label class="btn btn-secondary btn-sm vui-cat-upload" title="Subir o cambiar la imagen de la burbuja">
               Imagen
-              <input type="file" accept="image/*" class="vui-cat-file" data-cat-key="${escapeAttr(bubble.key)}" hidden>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="vui-cat-file" data-cat-key="${escapeAttr(bubble.key)}" hidden>
             </label>
             <button type="button" class="table-btn vui-cat-clear" data-cat-key="${escapeAttr(bubble.key)}" ${saved ? '' : 'disabled'} title="Quitar imagen">Quitar</button>
             <label class="sortable-switch" title="${hidden ? 'Mostrar la burbuja en la tienda' : 'Ocultar la burbuja en la tienda'}">
@@ -3107,16 +3209,12 @@ const Admin = (() => {
     list?.addEventListener('change', async e => {
       const input = e.target.closest('.vui-cat-file');
       if (!input || !input.files || !input.files[0]) return;
-      const file = input.files[0];
-      if (file.size > 5 * 1024 * 1024) {
-        showToast('Imagen máx. 5MB', 'error');
-        input.value = '';
-        return;
-      }
+      const prepared = await prepareMediaFile(input.files[0], 'bubble');
+      if (!prepared) { input.value = ''; return; }
       const key = input.dataset.catKey;
       try {
         showToast('Subiendo imagen de categoría...', 'info');
-        const publicUrl = await SB.uploadImage(file, `bubbles/${key}`);
+        const publicUrl = await SB.uploadImage(prepared, `bubbles/${key}`);
         const cfg = collectVisualUiConfigFromForm();
         cfg.categoryBubbleImages[key] = publicUrl;
         _visualUiInMemory = cfg;
@@ -3920,6 +4018,17 @@ const Admin = (() => {
 
 
 
+  // Resolución recomendada para cada posición de banner de la tienda
+  const BANNER_SIZE_HINTS = {
+    'hero-carousel':   '1920 × 900 px (horizontal, se usa como fondo y se recorta a lo ancho)',
+    'carousel':        '1600 × 640 px (horizontal 5:2)',
+    'after-featured':  '1600 × 500 px (horizontal)',
+    'after-categories':'1600 × 500 px (horizontal)',
+    'before-footer':   '1600 × 500 px (horizontal)',
+    'side-left':       '400 × 600 px (vertical 2:3)',
+    'side-right':      '400 × 600 px (vertical 2:3)'
+  };
+
   function toggleBannerFormFields() {
     const pos = document.getElementById('vbPosition').value;
     const linkType = document.getElementById('vbLinkType').value;
@@ -3931,6 +4040,13 @@ const Admin = (() => {
     document.getElementById('vbHeightGroup').style.display = isSide ? '' : 'none';
     document.getElementById('vbLinkTypeGroup').style.display = isHero ? 'none' : '';
     document.getElementById('vbHeroHint').style.display = isHero ? 'block' : 'none';
+
+    // Resolución recomendada según dónde se vaya a mostrar el banner
+    const sizeHint = document.getElementById('vbSizeHint');
+    if (sizeHint) {
+      const recommended = BANNER_SIZE_HINTS[pos] || BANNER_SIZE_HINTS['after-featured'];
+      sizeHint.innerHTML = `<strong>Resolución recomendada:</strong> ${recommended}.`;
+    }
 
     // Link type sub-fields (only for non-hero)
     document.getElementById('vbProductGroup').style.display = (!isHero && linkType === 'product') ? '' : 'none';
@@ -4127,7 +4243,9 @@ const Admin = (() => {
        imageInput.addEventListener('change', async () => {
         const file = imageInput.files[0];
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) { showToast('Imagen máx. 5MB', 'error'); return; }
+
+        const prepared = await prepareMediaFile(file, 'banner');
+        if (!prepared) { imageInput.value = ''; return; }
 
         const preview = document.getElementById('vbImagePreview');
         const uploadText = document.getElementById('vbUploadText');
@@ -4139,12 +4257,12 @@ const Admin = (() => {
           preview.style.display = 'block';
           uploadText.style.display = 'none';
         };
-        localReader.readAsDataURL(file);
+        localReader.readAsDataURL(prepared);
 
         // Subir a Supabase Storage y guardar solo la URL pública
         try {
           showToast('Subiendo imagen...', 'info');
-          const publicUrl = await SB.uploadImage(file, 'banners');
+          const publicUrl = await SB.uploadImage(prepared, 'banners');
           vbCurrentImage = publicUrl;
           preview.src = publicUrl;
           showToast('Imagen subida', 'success');

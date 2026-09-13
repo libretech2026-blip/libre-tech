@@ -814,7 +814,13 @@
               </div>
 
               <h4 style="font-size:0.9rem;margin-bottom:4px">Burbujas de categorías</h4>
-              <p class="form-hint" style="margin-bottom:var(--spacing-md)">Arrastra las burbujas o usa las flechas para cambiar el orden en que aparecen en la tienda, y usa el interruptor para ocultarlas o mostrarlas. La imagen de cada burbuja se sube desde aquí.</p>
+              <p class="form-hint">Arrastra las burbujas o usa las flechas para cambiar el orden en que aparecen en la tienda, y usa el interruptor para ocultarlas o mostrarlas. La imagen de cada burbuja se sube desde aquí.</p>
+              <div class="upload-specs" style="margin-bottom:var(--spacing-md)">
+                <p><strong>Resolución recomendada:</strong> 400 × 400 px (cuadrada, 1:1). La burbuja es circular, así que deja el motivo centrado.</p>
+                <p><strong>Peso máximo:</strong> 3 MB por archivo — lo ideal es menos de 200 KB.</p>
+                <p><strong>Formatos:</strong> JPG, PNG, WebP y GIF animado (el GIF conserva su movimiento).</p>
+                <p class="upload-specs-note">Las imágenes fijas se optimizan automáticamente a WebP al subirlas; los GIF se suben tal cual, así que cuida su peso.</p>
+              </div>
               <ul class="sortable-list" id="visualCategoryBubblesList" style="max-height:620px;overflow-y:auto;padding-right:4px"></ul>
 
               <div style="display:flex;justify-content:flex-end;margin-top:var(--spacing-lg)">
@@ -1350,13 +1356,19 @@
                   <circle cx="8.5" cy="8.5" r="1.5"/>
                   <path d="M21 15l-5-5L5 21"/>
                 </svg>
-                <span>Haz clic o arrastra imágenes aquí</span>
+                <span>Haz clic o arrastra imágenes o GIFs aquí</span>
               </div>
-              <input type="file" id="imageInput" accept="image/*" multiple style="display:none">
+              <input type="file" id="imageInput" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display:none">
             </div>
             <div class="image-previews-grid" id="imagePreviewsGrid"></div>
             <img id="imagePreview" src="" alt="Vista previa" style="display:none">
-            <p class="form-hint">JPG, PNG o WebP. Puedes subir varias imágenes. La primera será la principal.</p>
+            <div class="upload-specs">
+              <p><strong>Resolución recomendada:</strong> 1000 × 1000 px (cuadrada, 1:1). Mínimo 600 × 600 px.</p>
+              <p><strong>Peso máximo:</strong> 5 MB por archivo — lo ideal es menos de 500 KB.</p>
+              <p><strong>Formatos:</strong> JPG, PNG, WebP y GIF animado (el GIF conserva su movimiento).</p>
+              <p class="upload-specs-note">Las imágenes fijas se optimizan automáticamente a WebP al subirlas; los GIF se suben tal cual, así que cuida su peso.</p>
+            </div>
+            <p class="form-hint">Puedes subir varias imágenes. La primera será la principal.</p>
           </div>
 
           <div class="form-group">
@@ -1462,7 +1474,7 @@
             <input type="number" class="form-input" id="vbHeight" min="50" max="800" placeholder="Ej: 300 (vacío = automática)">
           </div>
           <div class="form-group">
-            <label class="form-label">Imagen del banner</label>
+            <label class="form-label">Imagen o GIF del banner</label>
             <div class="image-upload-area" id="vbImageArea">
               <div class="upload-text" id="vbUploadText">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -1470,10 +1482,16 @@
                   <circle cx="8.5" cy="8.5" r="1.5"/>
                   <path d="M21 15l-5-5L5 21"/>
                 </svg>
-                <span>Haz clic o arrastra una imagen aquí</span>
+                <span>Haz clic o arrastra una imagen o GIF aquí</span>
               </div>
               <img id="vbImagePreview" src="" alt="Vista previa" style="display:none;max-height:180px;border-radius:8px">
-              <input type="file" id="vbImageInput" accept="image/*" style="display:none">
+              <input type="file" id="vbImageInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
+            </div>
+            <div class="upload-specs">
+              <p id="vbSizeHint"><strong>Resolución recomendada:</strong> 1600 × 500 px (horizontal).</p>
+              <p><strong>Peso máximo:</strong> 8 MB por archivo — lo ideal es menos de 1 MB para que el banner cargue rápido.</p>
+              <p><strong>Formatos:</strong> JPG, PNG, WebP y GIF animado (el GIF conserva su movimiento).</p>
+              <p class="upload-specs-note">Las imágenes fijas se optimizan automáticamente a WebP al subirlas; los GIF se suben tal cual, así que cuida su peso.</p>
             </div>
             <p id="vbHeroHint" style="display:none;font-size:0.78rem;color:var(--primary-blue);margin-top:4px">ℹ️ En el Hero Carrusel, esta imagen se usará como fondo del slide.</p>
           </div>

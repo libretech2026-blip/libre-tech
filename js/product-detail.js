@@ -75,16 +75,16 @@ const ProductDetail = (() => {
     const p = currentProduct;
 
     // Update page title
-    document.title = `${p.name} | LIBRE TECH`;
+    document.title = `${p.name} | Libre Tech`;
 
     // Breadcrumb
     const bc = document.getElementById('breadcrumbProduct');
     if (bc) bc.textContent = p.name;
 
     // Update meta description and Open Graph tags
-    const metaDesc = `${p.name} - Compra en LIBRE TECH al mejor precio. ${p.description || ''}`.substring(0, 160);
+    const metaDesc = `${p.name} — Cómpralo en Libre Tech con envío a todo Colombia. ${p.description || ''}`.substring(0, 160);
     document.querySelector('meta[name="description"]')?.setAttribute('content', metaDesc);
-    document.querySelector('meta[property="og:title"]')?.setAttribute('content', `${p.name} | LIBRE TECH`);
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', `${p.name} | Libre Tech`);
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', metaDesc);
     if (p.image) {
       document.querySelector('meta[property="og:image"]')?.setAttribute('content', p.image);
@@ -98,13 +98,13 @@ const ProductDetail = (() => {
       name: p.name,
       description: p.description || '',
       image: p.image || '',
-      brand: { '@type': 'Brand', name: p.brand || 'LIBRE TECH' },
+      brand: { '@type': 'Brand', name: p.brand || 'Libre Tech' },
       offers: {
         '@type': 'Offer',
         priceCurrency: 'COP',
         price: p.offerActive && p.offerPrice ? p.offerPrice : p.price,
         availability: (p.stock ?? 0) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-        seller: { '@type': 'Organization', name: 'LIBRE TECH' }
+        seller: { '@type': 'Organization', name: 'Libre Tech' }
       }
     };
     let ldScript = document.getElementById('productJsonLd');

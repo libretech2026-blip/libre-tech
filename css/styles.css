@@ -1648,120 +1648,6 @@ input, select, textarea {
   overflow: hidden;
 }
 
-/* ---- Category sub-dropdown ---- */
-.category-bubble-item {
-  position: relative; /* anchor for dropdown */
-}
-
-.category-sub-dropdown {
-  position: fixed;
-  top: 0;
-  left: 0;
-  transform: translate(-50%, 0) scale(0.92);
-  transform-origin: top center;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 16px 40px rgba(0,0,0,0.24), 0 4px 12px rgba(0,0,0,0.12);
-  min-width: 190px;
-  width: min(240px, calc(100vw - 32px));
-  max-width: calc(100vw - 32px);
-  max-height: min(60vh, 320px);
-  overflow-y: auto;
-  z-index: 100000;
-  padding: 10px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.category-sub-dropdown.visible {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translate(-50%, 0) scale(1);
-}
-
-.category-sub-dropdown.is-mobile {
-  transform: translate(-50%, -50%) scale(0.92);
-  transform-origin: center;
-}
-
-.category-sub-dropdown.is-mobile.visible {
-  transform: translate(-50%, -50%) scale(1);
-}
-
-.category-sub-dropdown-title {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-tertiary);
-  padding: 3px 8px 6px;
-}
-
-.category-sub-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 7px 10px;
-  border: none;
-  background: none;
-  border-radius: var(--radius-md);
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  text-align: left;
-}
-
-.category-sub-item:hover {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-}
-
-.category-sub-item.active {
-  background: rgba(26,75,140,0.08);
-  color: var(--primary-blue);
-  font-weight: 700;
-}
-
-.category-sub-item-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--border-color);
-  flex-shrink: 0;
-}
-
-.category-sub-item.active .category-sub-item-dot {
-  background: var(--primary-orange);
-}
-
-@media (max-width: 600px) {
-  .category-sub-dropdown {
-    min-width: 130px;
-    font-size: 0.78rem;
-  }
-}
-
-[data-theme="dark"] .category-sub-dropdown {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-}
-
-[data-theme="dark"] .category-sub-item:hover {
-  background: rgba(255,255,255,0.06);
-  color: var(--text-primary);
-}
-
-[data-theme="dark"] .category-sub-item.active {
-  background: rgba(96,165,250,0.12);
-  color: #60a5fa;
-}
-
 .showcase-header {
   display: flex;
   flex-direction: column;
@@ -1871,29 +1757,12 @@ input, select, textarea {
   font-weight: 500;
 }
 
-/* Brand Sub-Filters */
-.brand-sub-filters {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: var(--spacing-sm) 0 var(--spacing-md);
-  overflow-x: auto;
-  scrollbar-width: none;
-  animation: filterSlideIn 0.3s ease-out;
-}
-
-.brand-sub-filters::-webkit-scrollbar { display: none; }
-
-@keyframes filterSlideIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 @keyframes bannerAutoScroll {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
 
+/* Chips del filtro de marcas (ver .brands-bar más abajo) */
 .brand-chip {
   display: inline-flex;
   align-items: center;
@@ -1906,6 +1775,7 @@ input, select, textarea {
   font-size: 0.78rem;
   font-weight: 600;
   white-space: nowrap;
+  flex-shrink: 0;
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
   cursor: pointer;
   letter-spacing: 0.01em;
@@ -3422,9 +3292,19 @@ input, select, textarea {
 }
 
 .form-error {
+  display: block;
   font-size: 0.8rem;
+  font-weight: 600;
   color: var(--danger);
   margin-top: 4px;
+}
+
+/* Campo obligatorio sin completar (formulario de pedido) */
+.form-input.has-error,
+.form-select.has-error,
+.form-textarea.has-error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.14);
 }
 
 /* Buttons */
@@ -3807,6 +3687,38 @@ input, select, textarea {
   border-radius: 4px;
   padding: 2px 6px;
   font-weight: 600;
+}
+
+/* ------------------------------------------------------------
+   Ficha de requisitos junto a cada campo de subida del panel:
+   resolución recomendada, peso máximo y formatos admitidos.
+   ------------------------------------------------------------ */
+.upload-specs {
+  margin-top: var(--spacing-sm);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  border-left: 3px solid var(--primary-blue);
+  background: var(--bg-secondary);
+}
+
+.upload-specs p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.upload-specs p + p { margin-top: 3px; }
+
+.upload-specs strong { color: var(--text-primary); }
+
+.upload-specs .upload-specs-note {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border-light);
+  font-size: 0.76rem;
+  color: var(--text-tertiary);
 }
 
 /* Product Form Modal */
@@ -5141,42 +5053,53 @@ input, select, textarea {
 
 
 @media (max-width: 768px) {
+  /* En móvil las burbujas se recorren deslizando el dedo: scroll horizontal
+     nativo con enganche por página. El scroll queda contenido en el
+     viewport, así que la página nunca se desplaza en horizontal. */
+  /* El carrusel se recorre deslizando el dedo: scroll horizontal nativo con
+     enganche por página. El ancho exacto de cada página lo publica app.js en
+     --bubble-page-w (el ancho útil del viewport), así el enganche cae siempre
+     en el borde de una página. El scroll queda contenido dentro del viewport,
+     de modo que la página nunca se desplaza en horizontal. */
   .category-bubbles-viewport {
-    overflow: hidden !important;
+    display: block;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
     width: 100%;
+    max-width: 100%;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
   }
+  .category-bubbles-viewport::-webkit-scrollbar { display: none; }
+
   .category-bubbles-section { overflow: visible !important; }
   .category-bubbles-track {
     display: flex;
-    width: 100%;
+    /* anula el ancho en línea que pone el JS para el modo escritorio */
+    width: max-content !important;
+    max-width: none;
+    /* el desplazamiento lo hace el scroll, no el transform */
+    transform: none !important;
+    transition: none;
   }
   .category-bubbles-page {
     display: grid !important;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    flex: 0 0 100%;
-    min-width: 100%;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    box-sizing: border-box;
+    flex: 0 0 var(--bubble-page-w, 100vw);
+    width: var(--bubble-page-w, 100vw);
+    min-width: 0;
     gap: var(--spacing-sm);
     justify-items: center;
     padding: 0 var(--spacing-xs);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
   .category-bubbles-page > .category-bubble-item {
     width: 100%;
     min-width: 0;
-  }
-  .category-sub-dropdown {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) scale(0.92);
-    width: min(88vw, 320px);
-    max-width: 88vw;
-    max-height: 60vh;
-    overflow-y: auto;
-    z-index: 100000 !important;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.06);
-  }
-  .category-sub-dropdown.visible {
-    transform: translate(-50%, -50%) scale(1);
   }
 
   .category-bubble-avatar {
@@ -5278,85 +5201,49 @@ input, select, textarea {
 }
 
 /* ============================================================
-   BRAND DROPDOWN (replaces fixed sub-bar)
+   FILTRO DE MARCAS (#brandsBar)
+   Barra visible bajo los chips de categoría en productos.html.
+   Se combina con la categoría activa: solo lista marcas disponibles.
    ============================================================ */
-.brand-dropdown {
-  position: relative;
-  z-index: 50;
-}
-
-.brand-dropdown-content {
-  position: absolute;
-  top: 6px;
-  left: 0;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.04);
-  padding: var(--spacing-sm) var(--spacing-sm);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 220px;
-  max-height: 360px;
-  overflow-y: auto;
-  animation: dropdownFadeIn 0.2s ease-out;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-color) transparent;
-}
-
-.brand-dropdown-content::-webkit-scrollbar {
-  width: 4px;
-}
-
-.brand-dropdown-content::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-
-@keyframes dropdownFadeIn {
-  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.brand-dd-item {
+.brands-bar {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  width: 100%;
-  text-align: left;
-  padding: 10px 14px;
-  border: none;
-  background: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.84rem;
-  cursor: pointer;
-  color: var(--text-secondary);
-  transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, transform 0.15s, opacity 0.15s;
-  font-weight: 500;
+  margin-bottom: var(--spacing-md);
+  min-width: 0;
 }
 
-.brand-dd-item:hover {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
+.brands-bar:empty { display: none; }
+
+.brands-bar-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
 }
 
-.brand-dd-item.active {
-  background: linear-gradient(135deg, rgba(26, 75, 140, 0.08), rgba(99, 102, 241, 0.06));
-  color: var(--primary-blue);
-  font-weight: 700;
-  position: relative;
+.brands-bar-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  min-width: 0;
 }
 
-.brand-dd-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 4px;
-  bottom: 4px;
-  width: 3px;
-  background: var(--primary-blue);
-  border-radius: 3px;
+.brands-bar-chips::-webkit-scrollbar { display: none; }
+
+@media (max-width: 600px) {
+  .brands-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .brands-bar-chips { width: 100%; }
 }
 
 /* ============================================================
@@ -6871,25 +6758,6 @@ input, select, textarea {
 
 [data-theme="dark"] .brand-chip:hover {
   background: rgba(232, 119, 34, 0.08);
-}
-
-[data-theme="dark"] .brand-dropdown-content {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.4);
-}
-
-[data-theme="dark"] .brand-dd-item:hover {
-  background: rgba(255,255,255,0.05);
-}
-
-[data-theme="dark"] .brand-dd-item.active {
-  background: rgba(99, 102, 241, 0.1);
-  color: #a5b4fc;
-}
-
-[data-theme="dark"] .brand-dd-item.active::before {
-  background: #a5b4fc;
 }
 
 [data-theme="dark"] .hero-carousel {
@@ -10386,6 +10254,49 @@ input, select, textarea {
 }
 
 .menu-category--static .menu-item-icon { color: var(--primary-orange); }
+
+/* ---- "Ofertas": la única opción del menú que va destacada en rojo ---- */
+.hamburger-menu-content .menu-category--offers {
+  border-bottom-color: transparent;
+}
+
+.hamburger-menu-content .menu-category--offers .menu-category-btn {
+  background: linear-gradient(100deg, var(--danger), #d81b0f);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 0.92rem;
+  border-radius: var(--radius-md);
+  margin: 6px var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  width: auto;
+  box-shadow: 0 4px 14px rgba(255, 59, 48, 0.32);
+}
+
+.hamburger-menu-content .menu-category--offers .menu-category-btn:hover,
+.hamburger-menu-content .menu-category--offers .menu-category-btn:focus-visible {
+  background: linear-gradient(100deg, #d81b0f, #b31509);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(255, 59, 48, 0.42);
+}
+
+.hamburger-menu-content .menu-category--offers .menu-item-icon {
+  color: #fff;
+  opacity: 1;
+}
+
+/* Distintivo "%" al final del renglón, para reconocerlo de un vistazo */
+.hamburger-menu-content .menu-category--offers .menu-category-btn::after {
+  content: '%';
+  margin-left: auto;
+  font-size: 0.9rem;
+  font-weight: 900;
+  line-height: 1;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
 
 .hamburger-menu-content .menu-category-toggle svg {
   transition: transform 260ms var(--ease-out-soft);

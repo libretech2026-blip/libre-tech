@@ -57,6 +57,15 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('product-images', 'product-images', true)
 ON CONFLICT (id) DO NOTHING;
 
+-- El panel sube JPG, PNG, WebP y GIF animado (los GIF no se recomprimen para
+-- no perder el movimiento, así que necesitan margen de peso: 8 MB, el mismo
+-- tope que usa el formulario de banners). Esto vale también para buckets
+-- creados a mano desde el panel de Supabase con restricciones más estrictas.
+UPDATE storage.buckets
+SET allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+    file_size_limit    = 8388608
+WHERE id = 'product-images';
+
 -- Storage policies: anyone can read, only authenticated users can upload
 DO $$
 BEGIN

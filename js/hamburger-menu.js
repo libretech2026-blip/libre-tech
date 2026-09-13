@@ -179,6 +179,8 @@ const HamburgerMenu = (() => {
 
     const wrapper = document.createElement('div');
     wrapper.className = 'menu-category menu-category--static';
+    // "Ofertas" se resalta en rojo para que se identifique de un vistazo
+    if (key === 'offers') wrapper.classList.add('menu-category--offers');
 
     const btn = document.createElement('button');
     btn.className = 'menu-category-btn';
@@ -194,7 +196,7 @@ const HamburgerMenu = (() => {
       closeMenu();
       if (key === 'all' && window.location.pathname.includes('productos.html')) {
         if (typeof Store !== 'undefined' && Store.setActiveCategory) {
-          Store.setActiveCategory('all', null, { skipBrandDropdown: true });
+          Store.setActiveCategory('all');
         }
         return;
       }
@@ -220,7 +222,7 @@ const HamburgerMenu = (() => {
       closeMenu();
       if (window.location.pathname.includes('productos.html')) {
         if (typeof Store !== 'undefined' && Store.setActiveCategory) {
-          Store.setActiveCategory(category, null, { skipBrandDropdown: true });
+          Store.setActiveCategory(category);
         }
       } else {
         window.location.href = `productos.html?category=${encodeURIComponent(category)}`;
