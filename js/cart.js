@@ -1124,6 +1124,12 @@ const Cart = (() => {
 
     if (!validateOrderForm()) return;
 
+    // La pestaña de WhatsApp se reserva aquí, todavía dentro del gesto del
+    // clic. Más abajo se espera la confirmación de Supabase, y pedir la
+    // ventana después de ese await la haría caer en el bloqueador de
+    // ventanas emergentes (Safari sobre todo). La URL se asigna al final.
+    const waWindow = window.open('', '_blank');
+
     const name = document.getElementById('orderName').value.trim();
     const phone = document.getElementById('orderPhone').value.trim();
     const address = document.getElementById('orderAddress').value.trim();
@@ -1213,7 +1219,7 @@ const Cart = (() => {
     message += `Gracias por comprar en LIBRE TECH`;
 
     // Save order and decrement stock
-    saveOrder(orderNumber, 'whatsapp', orderItems);
+    const savedOrder = await saveOrder(orderNumber, 'whatsapp', orderItems);
     decrementStock(orderItems);
 
     // Increment coupon usage
@@ -1221,8 +1227,36 @@ const Cart = (() => {
       SB.incrementCouponUse(appliedCoupon.id).catch(err => console.warn('[Cart] Coupon use:', err));
     }
 
+    /* --- Píxel de Meta: evento Purchase ---------------------------------
+       Solo se dispara si Supabase confirmó el pedido (savedOrder.saved), y
+       antes de abrir WhatsApp, para que quede registrado aunque el navegador
+       bloquee la pestaña o el cliente la cierre enseguida.
+       El importe es el mismo "TOTAL" que va en el mensaje de WhatsApp:
+       subtotal menos cupón, más envío cuando ya se pudo calcular.        */
+    if (savedOrder.saved && typeof fbq === 'function') {
+      var orderTotal = netSubtotal + (shipping.included ? shipping.cost : 0);
+      var telefonoLimpio = phone.replace(/\D/g, '');
+      var nombreCompleto = name.trim();
+      var partesNombre = nombreCompleto.split(' ');
+
+      fbq('init', '845390284976126', {
+        ph: telefonoLimpio,
+        fn: partesNombre[0] || '',
+        ln: partesNombre.slice(1).join(' ') || ''
+      });
+
+      fbq('track', 'Purchase', {
+        value: orderTotal,
+        currency: 'COP'
+      }, {
+        eventID: 'order_' + savedOrder.remoteId
+      });
+    }
+
     const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`, '_blank');
+    const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`;
+    if (waWindow && !waWindow.closed) waWindow.location.href = waUrl;
+    else window.open(waUrl, '_blank');
 
     // Clean up
     appliedCoupon = null;
@@ -1252,8 +1286,17 @@ const Cart = (() => {
     showToast(`Pedido ${orderNumber} creado — Pago en línea próximamente`, 'info');
   }
 
-  // --- Guardar orden en historial (localStorage + Supabase) ---
-  function saveOrder(orderNumber, method, orderItems) {
+  /**
+   * Guarda la orden en el historial (localStorage + Supabase).
+   *
+   * Devuelve el resultado del guardado remoto para que quien llame pueda
+   * saber si Supabase realmente lo aceptó (SB.saveOrder registra el error en
+   * consola y resuelve en null, nunca rechaza). Nunca lanza: quien no
+   * necesite el resultado puede seguir llamándola sin await, como antes.
+   *
+   * @returns {Promise<{localId: string, remoteId: string|null, saved: boolean}>}
+   */
+  async function saveOrder(orderNumber, method, orderItems) {
     const products = getProducts();
     orderItems = orderItems || items;
     const mappedItems = orderItems.map(item => {
@@ -1286,17 +1329,25 @@ const Cart = (() => {
     } catch { /* silent */ }
 
     // Save to Supabase
+    let remote = null;
     if (typeof SB !== 'undefined' && SB.saveOrder) {
       const user = (typeof Auth !== 'undefined' && Auth.getUser) ? Auth.getUser() : null;
-      SB.saveOrder({
-        id: order.id,
-        userId: user?.id || null,
-        method: order.method,
-        status: 'pending',
-        total: order.total,
-        items: orderItems
-      }).catch(e => console.warn('[Cart] SB order save:', e));
+      try {
+        remote = await SB.saveOrder({
+          id: order.id,
+          userId: user?.id || null,
+          method: order.method,
+          status: 'pending',
+          total: order.total,
+          items: orderItems
+        });
+      } catch (e) {
+        console.warn('[Cart] SB order save:', e);
+        remote = null;
+      }
     }
+
+    return { localId: order.id, remoteId: remote?.id || null, saved: !!remote?.id };
   }
 
   // --- Utilidades ---

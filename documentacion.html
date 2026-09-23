@@ -636,6 +636,33 @@
             <code>og:description</code>, <code>twitter:description</code> y en la descripción del JSON-LD de
             <code>index.html</code>. El resto de páginas conserva su descripción propia, que posiciona mejor cada una.
           </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Evento <code>Purchase</code> del píxel de Meta</strong> — Se dispara en
+            <code>submitWhatsAppOrder()</code> justo antes de abrir WhatsApp, con el mismo <em>TOTAL</em> que va en el
+            mensaje (subtotal − cupón + envío cuando ya se pudo calcular), moneda <code>COP</code>, coincidencia avanzada
+            (teléfono y nombre, que <code>fbevents.js</code> normaliza y cifra antes de enviar) y
+            <code>eventID: 'order_' + &lt;id de Supabase&gt;</code> para deduplicar si algún día se añade la API de
+            conversiones.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Cambio</span>
+            <strong><code>Cart.saveOrder()</code> informa si Supabase aceptó el pedido</strong> — Era síncrona y
+            descartaba la promesa (<code>.catch()</code> suelto), así que no había forma de saber si el guardado remoto
+            había funcionado. Ahora es <code>async</code> y devuelve
+            <code>{ localId, remoteId, saved }</code>; el <code>Purchase</code> solo se registra con
+            <code>saved === true</code>, de modo que un fallo de red nunca cuenta como venta. Sigue sin lanzar nunca, así
+            que <code>payOnline()</code> puede seguir llamándola sin <code>await</code> igual que antes, y la escritura en
+            <code>localStorage</code> se mantiene síncrona (ocurre antes del primer <code>await</code>).
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>La pestaña de WhatsApp se reserva durante el clic</strong> — Esperar la confirmación de Supabase
+            introduce un <code>await</code> antes de <code>window.open()</code>, y pedir una ventana emergente fuera del
+            gesto del usuario la hace caer en el bloqueador (Safari sobre todo). Ahora la pestaña se abre en blanco al
+            entrar en la función y solo se le asigna la URL al final; si el navegador la bloqueó de todos modos, se
+            recurre al <code>window.open()</code> de siempre.
+          </li>
         </ul>
       </div>
 
