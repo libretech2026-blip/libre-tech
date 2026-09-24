@@ -615,7 +615,7 @@
             
             return `
               <article class="product-card" data-product-id="${product.id}">
-                <button class="product-share-btn" type="button" data-share="product" data-share-id="${product.id}" title="Compartir" aria-label="Compartir ${product.name}">
+                <button class="product-share-btn" type="button" data-share="product" data-share-id="${product.id}" title="Compartir" aria-label="Compartir ${Cart.escapeAttr(product.name)}">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                 </button>
                 <a href="producto.html?id=${encodeURIComponent(product.id)}" class="product-card-link">
@@ -623,12 +623,12 @@
                     ${isOutOfStock ? '<span class="product-badge out-of-stock">Agotado</span>' : ''}
                     ${product.offerActive && product.offerPrice ? '<span class="product-badge sale">Oferta</span>' : ''}
                     ${isOutOfStock ? '<div class="product-sold-out-overlay"></div>' : ''}
-                    <img src="${imageUrl}" alt="${product.name}" class="product-image" loading="lazy" decoding="async" width="260" height="260" onerror="this.src='LOGO_LIBRETECH.png'">
+                    <img src="${Cart.escapeAttr(imageUrl)}" alt="${Cart.escapeAttr(product.name)}" class="product-image" loading="lazy" decoding="async" width="260" height="260" onerror="this.src='LOGO_LIBRETECH.png'">
                   </div>
                   <div class="product-card-body">
-                    <span class="product-category">${product.category || ''}</span>
-                    <h3 class="product-name">${product.name}</h3>
-                    <p class="product-description">${product.description || ''}</p>
+                    <span class="product-category">${Cart.escapeHTML(product.category || '')}</span>
+                    <h3 class="product-name">${Cart.escapeHTML(product.name)}</h3>
+                    <p class="product-description">${Cart.escapeHTML(product.description || '')}</p>
                     <div class="product-price-row">
                       <span class="product-price-wrapper">
                         ${product.offerActive && product.offerPrice
@@ -644,7 +644,7 @@
                     ? `<button class="btn-add-cart disabled" disabled title="Agotado" aria-label="Producto agotado">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                       </button>`
-                    : `<button class="btn-add-cart" data-product-id="${product.id}" title="Agregar" aria-label="Agregar ${product.name}">
+                    : `<button class="btn-add-cart" data-product-id="${product.id}" title="Agregar" aria-label="Agregar ${Cart.escapeAttr(product.name)}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                       </button>`
                   }

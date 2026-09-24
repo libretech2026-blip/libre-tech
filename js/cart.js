@@ -86,6 +86,27 @@ const Cart = (() => {
     });
     // La config de envios/obsequios llega de Supabase despues del render inicial
     document.addEventListener('site-config-loaded', updateUI);
+
+    openFromUrlIfRequested();
+  }
+
+  /**
+   * Abre el carrito al cargar si la URL trae ?cart=1. Lo usan las páginas que
+   * no incluyen el panel lateral (pqr, pagina): su botón de carrito redirige
+   * aquí. El parámetro se retira de la barra de direcciones al abrirlo.
+   */
+  function openFromUrlIfRequested() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('cart') !== '1') return;
+      if (!document.getElementById('cartSidebar')) return;
+
+      open();
+
+      params.delete('cart');
+      const query = params.toString();
+      window.history?.replaceState?.({}, '', window.location.pathname + (query ? '?' + query : ''));
+    } catch { /* URL rara: no pasa nada */ }
   }
 
   // --- Persistencia (localStorage) ---
@@ -575,9 +596,21 @@ const Cart = (() => {
   }
 
   // --- Abrir/Cerrar carrito ---
+  /**
+   * Abre el panel del carrito.
+   *
+   * pqr.html y pagina.html llevan el botón del carrito en la cabecera (y su
+   * contador se actualiza), pero no incluyen el panel lateral. Allí el botón
+   * no hacía nada: se lleva al inicio con ?cart=1, que lo abre al cargar.
+   */
   function open() {
+    const sidebar = document.getElementById('cartSidebar');
+    if (!sidebar) {
+      window.location.href = 'index.html?cart=1';
+      return;
+    }
     document.getElementById('cartOverlay')?.classList.add('active');
-    document.getElementById('cartSidebar')?.classList.add('active');
+    sidebar.classList.add('active');
     document.body.style.overflow = 'hidden';
     updateCartReminder();
   }
@@ -1374,8 +1407,13 @@ const Cart = (() => {
     return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  // --- Toast ---
-  function showToast(message, type = 'info') {
+  /**
+   * Aviso flotante.
+   * @param {number} [duration=3000] milisegundos en pantalla. Los mensajes
+   *   largos (verificación de correo, recuperar contraseña) piden más tiempo;
+   *   antes el parámetro no existía y se ignoraba lo que mandara auth.js.
+   */
+  function showToast(message, type = 'info', duration = 3000) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
 
@@ -1396,7 +1434,7 @@ const Cart = (() => {
       toast.addEventListener('animationend', onEnd);
       // Fallback: remove after animation duration even if animationend doesn't fire
       setTimeout(onEnd, 400);
-    }, 3000);
+    }, Math.max(1000, Number(duration) || 3000));
   }
 
   // API pública

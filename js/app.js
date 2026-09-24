@@ -834,11 +834,41 @@ const Store = (() => {
       if (typeof onChange === 'function') onChange();
     });
 
+    bindSortDismissOnce();
+  }
+
+  /**
+   * Cierre del menú de ordenar al hacer clic fuera o pulsar Escape.
+   *
+   * Va aparte y se engancha una sola vez: renderSortControl() se vuelve a
+   * llamar cada vez que cambia el criterio, así que enganchar aquí dentro
+   * acumulaba dos listeners de documento por cada cambio, apuntando además a
+   * nodos ya reemplazados por el innerHTML. Estos buscan los elementos
+   * vigentes en el momento del evento.
+   */
+  let _sortDismissBound = false;
+
+  function bindSortDismissOnce() {
+    if (_sortDismissBound) return;
+    _sortDismissBound = true;
+
+    const closeOpenSortMenu = focusBtn => {
+      const menu = document.getElementById('sortMenu');
+      const btn = document.getElementById('sortBtn');
+      if (!menu || menu.hidden) return;
+      menu.hidden = true;
+      btn?.setAttribute('aria-expanded', 'false');
+      btn?.classList.remove('open');
+      if (focusBtn) btn?.focus();
+    };
+
     document.addEventListener('click', e => {
-      if (!menu.hidden && !bar.contains(e.target)) closeMenu();
+      const bar = document.getElementById('sortBar');
+      if (bar && !bar.contains(e.target)) closeOpenSortMenu(false);
     });
+
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && !menu.hidden) { closeMenu(); btn.focus(); }
+      if (e.key === 'Escape') closeOpenSortMenu(true);
     });
   }
 

@@ -501,6 +501,80 @@
       <h2>5. Registro de cambios (Changelog)</h2>
 
       <div class="changelog-entry">
+        <span class="date">23 de septiembre de 2026</span>
+        <h4>v3.6.1 — Auditoría completa: 9 correcciones</h4>
+        <p>Revisión sistemática de HTML, JS, CSS y SQL. Lo encontrado y corregido:</p>
+        <ul>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Datos de producto sin escapar en destacados y ofertas</strong> — Las dos páginas repiten la plantilla
+            de tarjeta en un script en línea, y a diferencia de <code>app.js</code> insertaban
+            <code>name</code>, <code>category</code>, <code>description</code> e <code>imageUrl</code> en crudo, también
+            dentro de atributos (<code>alt</code>, <code>aria-label</code>, <code>src</code>). Un nombre con comillas
+            —algo normal en tecnología: <em>Soporte 10"</em>— rompía el marcado, y el catálogo se puede llenar por
+            importación masiva. Ahora pasan por <code>Cart.escapeHTML</code> / <code>Cart.escapeAttr</code>.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Fuga de listeners en el botón de ordenar</strong> — <code>renderSortControl()</code> se vuelve a
+            llamar a sí misma cada vez que el cliente cambia el criterio, y enganchaba dos listeners de
+            <code>document</code> en cada pasada. Apuntaban además al menú anterior, ya reemplazado por el
+            <code>innerHTML</code>, así que se acumulaban referencias a nodos desprendidos. El cierre al hacer clic fuera
+            o con Escape se movió a <code>bindSortDismissOnce()</code>, que se engancha una sola vez y busca los
+            elementos vigentes en el momento del evento.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Oferta por encima del precio normal</strong> — El formulario de producto solo exigía nombre y precio.
+            Con una oferta activa y un precio de oferta mayor que el normal, <code>getEffectivePrice()</code> devolvía el
+            de oferta: <strong>se le cobraba de más al cliente</strong> y la tarjeta mostraba el precio normal tachado
+            como si fuera el «antes», con un descuento negativo. El panel ya avisaba con «—» en el campo de porcentaje,
+            pero no impedía guardar. Ahora se valida antes de guardar, y también que no quede una oferta activa sin
+            precio.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Formulario de registro encima del menú de cuenta</strong> — <code>Auth.updateUI()</code> ocultaba
+            <code>#loginPanel</code> y mostraba <code>#loggedPanel</code>, pero nunca tocaba
+            <code>#registerPanel</code>. Quien abría «Crear una cuenta» y luego entraba por Google —o confirmaba el
+            correo en otra pestaña— veía los dos paneles apilados.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Botón de carrito inerte en PQR y páginas estáticas</strong> — <code>pqr.html</code> y
+            <code>pagina.html</code> llevan el botón en la cabecera y su contador se actualiza, pero no incluyen el panel
+            lateral, así que al pulsarlo no pasaba nada. Ahora lleva al inicio con <code>?cart=1</code>, que abre el
+            carrito al cargar y limpia el parámetro de la barra de direcciones.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Zona de envío equivocada por coincidencia de texto</strong> — <code>Shipping.resolveZone()</code>
+            aceptaba cualquier subcadena, así que «Calima (Darién)» cobraba la tarifa de «Cali». Ahora se compara el
+            nombre sin el paréntesis y un prefijo solo vale si corta en frontera de palabra, conservando los casos que
+            debían funcionar («bogota» → «Bogotá D.C.», «Patía» → «Patía (El Bordo)»).
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Los avisos largos duraban 3 segundos</strong> — <code>auth.js</code> pedía 5, 6 y 8 segundos para
+            mensajes largos (verificar correo, recuperar contraseña), pero <code>Cart.showToast()</code> no aceptaba
+            duración y la descartaba en silencio. El aviso de «revisa tu correo para activar la cuenta» se iba antes de
+            poder leerlo.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Texto corrupto en el panel</strong> — Siete guiones largos de las tablas de Admin (productos,
+            pedidos, detalle del pedido y el porcentaje de descuento) estaban guardados con doble codificación y se veían
+            como <code>â€”</code>. Se respetaron a propósito los del reparador de codificación de CSV, donde ese texto es
+            el patrón de búsqueda.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Columna «Cliente» en Admin → Pedidos</strong> — Ver la entrada anterior.
+          </li>
+        </ul>
+      </div>
+
+      <div class="changelog-entry">
         <span class="date">12 de septiembre de 2026</span>
         <h4>v3.6.0 — GIFs en el panel, burbujas deslizables, filtro de marcas y SEO</h4>
         <p>Cambios de esta versión:</p>

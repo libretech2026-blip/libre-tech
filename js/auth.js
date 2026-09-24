@@ -98,12 +98,17 @@ const Auth = (() => {
     const nameEl = document.getElementById('userName');
     const emailEl = document.getElementById('userEmail');
     const loginPanel = document.getElementById('loginPanel');
+    const registerPanel = document.getElementById('registerPanel');
     const loggedPanel = document.getElementById('loggedPanel');
     const adminLink = document.getElementById('adminFooterLink');
 
     if (currentUser) {
-      // Mostrar panel logueado, ocultar login
+      // Mostrar panel logueado, ocultar los otros dos.
+      // El de registro también: si el usuario lo había abierto y luego entró
+      // (por Google, o confirmando el correo en otra pestaña), el formulario
+      // se quedaba visible encima del menú de cuenta.
       if (loginPanel) loginPanel.style.display = 'none';
+      if (registerPanel) registerPanel.style.display = 'none';
       if (loggedPanel) loggedPanel.style.display = 'block';
       // Mostrar avatar en vez de ícono
       if (avatar) {
@@ -127,8 +132,13 @@ const Auth = (() => {
         }).catch(() => { adminLink.style.display = 'none'; });
       }
     } else {
-      // Mostrar panel login, ocultar logueado
-      if (loginPanel) loginPanel.style.display = 'block';
+      // Mostrar panel login, ocultar logueado. El de registro se respeta:
+      // puede que el visitante lo tenga abierto ahora mismo.
+      if (loginPanel && registerPanel && registerPanel.style.display === 'block') {
+        loginPanel.style.display = 'none';
+      } else if (loginPanel) {
+        loginPanel.style.display = 'block';
+      }
       if (loggedPanel) loggedPanel.style.display = 'none';
       if (profileBtn) profileBtn.style.display = 'flex';
       if (avatar) avatar.style.display = 'none';
@@ -464,7 +474,7 @@ const Auth = (() => {
   function showToast(message, type = 'info', duration) {
     // Reutilizar si Cart está disponible
     if (typeof Cart !== 'undefined' && Cart.showToast) {
-      Cart.showToast(message, type);
+      Cart.showToast(message, type, duration);
       return;
     }
 

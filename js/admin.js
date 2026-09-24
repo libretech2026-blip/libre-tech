@@ -2,7 +2,7 @@
 
    LIBRE TECH - Admin Panel (admin.js)
 
-   GestiÃ³n de productos, CSV upload, autenticaciÃ³n admin
+   Gestión de productos, CSV upload, autenticación admin
 
    ============================================================ */
 
@@ -432,9 +432,9 @@ const Admin = (() => {
 
         <td>${formatPrice(p.price)}</td>
 
-        <td>${escapeHTML(p.category || 'â€”')}</td>
+        <td>${escapeHTML(p.category || '—')}</td>
 
-        <td>${p.stock ?? 'â€”'}</td>
+        <td>${p.stock ?? '—'}</td>
 
         <td>
 
@@ -689,11 +689,47 @@ const Admin = (() => {
 
 
 
+    const offerActive = document.getElementById('productOfferActive').checked;
+
+    const offerPrice = parseInt(document.getElementById('productOfferPrice').value, 10) || 0;
+
+
+
+    // Una oferta por encima del precio de lista le cobraria de mas al cliente:
+    // getEffectivePrice() usa offerPrice cuando la oferta esta activa, y la
+    // tarjeta mostraria el precio normal tachado como si fuera el "antes".
+
+    if (offerActive) {
+
+      if (offerPrice <= 0) {
+
+        showToast('Escribe el precio de oferta o desactiva la oferta', 'error');
+
+        document.getElementById('productOfferPrice')?.focus();
+
+        return;
+
+      }
+
+      if (offerPrice >= price) {
+
+        showToast('El precio de oferta debe ser menor que el precio normal', 'error');
+
+        document.getElementById('productOfferPrice')?.focus();
+
+        return;
+
+      }
+
+    }
+
+
+
     const productData = { name, price, stock, category, brand, description, active, featured, image, images, colors: [...currentColors], specs: [...currentSpecs],
 
-      offerActive: document.getElementById('productOfferActive').checked,
+      offerActive,
 
-      offerPrice: parseInt(document.getElementById('productOfferPrice').value) || 0
+      offerPrice
 
     };
 
@@ -1379,9 +1415,9 @@ const Admin = (() => {
 
         <td>${formatPrice(p.price)}</td>
 
-        <td>${escapeHTML(p.description || 'â€”')}</td>
+        <td>${escapeHTML(p.description || '—')}</td>
 
-        <td>${escapeHTML(p.category || 'â€”')}</td>
+        <td>${escapeHTML(p.category || '—')}</td>
 
         <td>${p.stock}</td>
 
@@ -1459,7 +1495,7 @@ const Admin = (() => {
 
 
 
-  // --- Datalist de categorÃ­as y marcas ---
+  // --- Datalist de categorías y marcas ---
 
   function populateCategoriesDatalist() {
 
@@ -2325,7 +2361,7 @@ const Admin = (() => {
 
           <td><strong>${escapeHTML(o.id)}</strong></td>
 
-          <td>${escapeHTML(o.date ? new Date(o.date).toLocaleDateString('es-CO') : 'â€”')}</td>
+          <td>${escapeHTML(o.date ? new Date(o.date).toLocaleDateString('es-CO') : '—')}</td>
 
           <td>${renderOrderCustomer(o)}</td>
 
@@ -2429,7 +2465,7 @@ const Admin = (() => {
 
       <div style="margin-bottom:var(--spacing-md)">
 
-        <strong>Fecha:</strong> ${order.date ? new Date(order.date).toLocaleString('es-CO') : 'â€”'}<br>
+        <strong>Fecha:</strong> ${order.date ? new Date(order.date).toLocaleString('es-CO') : '—'}<br>
 
         <strong>Estado:</strong> ${ORDER_STATUS_LABELS[order.status || 'pending']}<br>
 
@@ -2682,7 +2718,7 @@ const Admin = (() => {
 
       el.value = Math.round((1 - offer / price) * 100) + '%';
 
-    } else { el.value = 'â€”'; }
+    } else { el.value = '—'; }
 
   }
 

@@ -124,13 +124,28 @@ const Shipping = (() => {
       if (byDept) return byDept;
     }
 
-    // La ciudad puede venir escrita a mano (formulario de pedido): se acepta
-    // una coincidencia parcial, p. ej. "bogota" contra "Bogotá D.C.".
+    // La ciudad puede venir escrita a mano o con un calificativo entre
+    // paréntesis, p. ej. "bogota" contra "Bogotá D.C." o "Patía (El Bordo)"
+    // contra "Patía". Se compara el nombre sin el paréntesis y, si uno es
+    // prefijo del otro, solo vale cuando corta en frontera de palabra:
+    // con `includes` a secas, "Calima (Darién)" cobraba la tarifa de "Cali".
+    const baseName = value => value.replace(/\s*\(.*$/, '').replace(/\s+d\.?\s*c\.?$/, '').trim();
+
+    const looseEquals = (a, b) => {
+      if (!a || !b) return false;
+      if (a === b) return true;
+
+      const sa = baseName(a);
+      const sb = baseName(b);
+      if (sa === sb) return true;
+
+      const [longer, shorter] = sa.length >= sb.length ? [sa, sb] : [sb, sa];
+      if (!shorter || !longer.startsWith(shorter)) return false;
+      return [' ', '.', ',', '-'].includes(longer.charAt(shorter.length));
+    };
+
     const partial = (list, value) =>
-      Array.isArray(list) && value && list.some(item => {
-        const n = normalize(item);
-        return n.includes(value) || value.includes(n);
-      });
+      Array.isArray(list) && value && list.some(item => looseEquals(normalize(item), value));
 
     if (nCity) {
       const byPartial = cfg.zones.find(z => partial(z.cities, nCity));
