@@ -218,27 +218,85 @@ const SB = (() => {
   /* ----------------------------------------------------------
      STOCK — decrement after order
   ---------------------------------------------------------- */
+  /**
+   * Descuenta el stock después de un pedido.
+   *
+   * items = [{ productId, quantity, currentStock }]
+   * `currentStock` YA viene descontado desde cart.js: es el valor final que
+   * debe quedar, no el anterior. El respaldo lo fija tal cual; restarle otra
+   * vez la cantidad descontaría el doble.
+   *
+   * El camino bueno es la función `decrement_stock_if_possible`, que en
+   * Supabase es SECURITY DEFINER: la tabla `products` solo deja actualizar al
+   * admin y quien compra casi siempre es un invitado sin sesión, así que el
+   * UPDATE directo del respaldo solo prospera si el comprador es el admin.
+   *
+   * Nota sobre errores: supabase-js no lanza excepciones ante un fallo de la
+   * base, lo devuelve en `error`, así que hay que mirarlo explícitamente.
+   * Encadenar .catch() sobre client.rpc() tampoco era posible: el constructor
+   * de consultas implementa then() pero no catch(), y lanzaba un TypeError
+   * antes de llegar a enviar la petición.
+   */
   async function decrementStock(items) {
-    // items = [{ productId, quantity }]
     for (const item of items) {
-      await client.rpc('decrement_stock_if_possible', {
-        p_id: item.productId,
-        p_qty: item.quantity
-      }).catch(() => {
-        // Fallback: simple update
-        client.from('products')
-          .update({ stock: Math.max(0, (item.currentStock ?? 0) - item.quantity) })
+      let rpcFailed = false;
+
+      try {
+        const { error } = await client.rpc('decrement_stock_if_possible', {
+          p_id: item.productId,
+          p_qty: item.quantity
+        });
+        if (error) {
+          console.warn('[SB] decrement_stock_if_possible:', error.message);
+          rpcFailed = true;
+        }
+      } catch (e) {
+        console.warn('[SB] decrement_stock_if_possible:', e.message || e);
+        rpcFailed = true;
+      }
+
+      if (!rpcFailed) continue;
+
+      // Respaldo: fijar el stock ya calculado (solo funciona como admin)
+      try {
+        const { error } = await client.from('products')
+          .update({ stock: Math.max(0, item.currentStock ?? 0) })
           .eq('id', item.productId);
-      });
+        if (error) console.warn('[SB] decrementStock respaldo:', error.message);
+      } catch (e) {
+        console.warn('[SB] decrementStock respaldo:', e.message || e);
+      }
     }
+
     await syncProducts();
   }
 
   /* ----------------------------------------------------------
      ORDERS
   ---------------------------------------------------------- */
+  /** uuid v4; crypto.randomUUID no existe fuera de https ni en navegadores viejos */
+  function newOrderId() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+
+  /**
+   * Inserta el pedido y devuelve la fila guardada (con su id) o null si falló.
+   *
+   * El id se genera aquí en lugar de dejárselo al DEFAULT de la tabla, y la
+   * inserción va sin .select(). El motivo: pedir la fila de vuelta añade un
+   * RETURNING, y PostgreSQL aplica a lo devuelto la política de SELECT, que
+   * exige `user_id = auth.uid()`. Quien compra como invitado no tiene sesión,
+   * así que no puede leer ni su propio pedido recién creado: la llamada
+   * fallaba aunque la fila sí quedara guardada. Generando el id de antemano
+   * sabemos cuál es sin necesidad de leerlo.
+   */
   async function saveOrder(order) {
     const row = {
+      id:             newOrderId(),
       user_id:        order.userId || null,
       customer_name:  order.customerName || '',
       customer_email: order.customerEmail || '',
@@ -248,9 +306,12 @@ const SB = (() => {
       total:          order.total  || 0,
       items:          order.items  || []
     };
-    const { data, error } = await client.from('orders').insert(row).select().single();
-    if (error) console.error('[SB] saveOrder error:', error.message);
-    return data;
+    const { error } = await client.from('orders').insert(row);
+    if (error) {
+      console.error('[SB] saveOrder error:', error.message);
+      return null;
+    }
+    return row;
   }
 
   async function getOrders(userId) {

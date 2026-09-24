@@ -153,6 +153,35 @@ CREATE POLICY "Admin can delete products"
   TO authenticated
   USING ( public.is_admin() );
 
+-- 1d. Descuento de inventario tras un pedido
+--
+-- La tabla products solo deja actualizar al admin (politica de arriba), pero
+-- quien compra casi siempre es un invitado sin sesion. SECURITY DEFINER hace
+-- que la funcion se ejecute con los permisos de su dueno, de modo que el
+-- descuento funcione sin abrir products a todo el mundo (si se abriera,
+-- cualquiera podria cambiar nombres y precios).
+--
+-- Solo toca la columna stock y nunca la deja por debajo de cero.
+CREATE OR REPLACE FUNCTION public.decrement_stock_if_possible(p_id uuid, p_qty integer)
+RETURNS integer AS $$
+DECLARE
+  nuevo_stock integer;
+BEGIN
+  IF p_qty IS NULL OR p_qty <= 0 THEN
+    RETURN NULL;
+  END IF;
+
+  UPDATE products
+     SET stock = GREATEST(0, COALESCE(stock, 0) - p_qty)
+   WHERE id = p_id
+  RETURNING stock INTO nuevo_stock;
+
+  RETURN nuevo_stock;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+GRANT EXECUTE ON FUNCTION public.decrement_stock_if_possible(uuid, integer) TO anon, authenticated;
+
 -- 2. Create profiles table (mirrors auth.users for admin queries)
 CREATE TABLE IF NOT EXISTS profiles (
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -207,6 +236,20 @@ DROP POLICY IF EXISTS "Users can insert orders" ON orders;
 CREATE POLICY "Users can insert orders"
   ON orders FOR INSERT
   TO authenticated
+  WITH CHECK (true);
+
+-- Los pedidos tambien se hacen SIN cuenta ("Pide y paga en casa" no obliga a
+-- iniciar sesion). Un invitado usa el rol anon, que la politica de arriba no
+-- cubre, asi que su insercion se rechazaba con
+--   new row violates row-level security policy for table "orders"
+-- El rol public abarca anon y authenticated.
+--
+-- Solo se abre la INSERCION. Leer, editar y borrar pedidos siguen restringidos
+-- a su dueno o al admin, asi que nadie puede consultar los datos de otros.
+DROP POLICY IF EXISTS "Allow public order inserts" ON orders;
+CREATE POLICY "Allow public order inserts"
+  ON orders FOR INSERT
+  TO public
   WITH CHECK (true);
 
 -- Users can see their own orders

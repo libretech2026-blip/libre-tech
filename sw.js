@@ -4,7 +4,7 @@
    ============================================================ */
 
 // Subir la versión invalida el caché anterior tras cada despliegue
-const CACHE_NAME = 'libretech-v11';
+const CACHE_NAME = 'libretech-v13';
 // Caché aparte para las fotos: se limpia por tamaño, no por versión
 const IMAGE_CACHE = 'libretech-images-v1';
 const IMAGE_CACHE_LIMIT = 150;

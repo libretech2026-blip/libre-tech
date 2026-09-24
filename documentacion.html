@@ -663,6 +663,68 @@
             entrar en la función y solo se le asigna la URL al final; si el navegador la bloqueó de todos modos, se
             recurre al <code>window.open()</code> de siempre.
           </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Los pedidos no se guardaban: RLS rechazaba al invitado</strong> — «Pide y paga en casa» no obliga a
+            iniciar sesión, así que quien compra usa el rol <code>anon</code>, pero la única política de inserción sobre
+            <code>orders</code> era <code>TO authenticated</code>. Todo pedido de invitado moría con
+            <em>new row violates row-level security policy for table "orders"</em>. Se añadió
+            <code>Allow public order inserts</code> (<code>TO public</code>), que abre <strong>solo</strong> la
+            inserción: leer, editar y borrar siguen restringidos a su dueño o al admin.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong><code>SB.saveOrder()</code> fallaba al releer la fila recién creada</strong> — Usaba
+            <code>.insert(row).select().single()</code>, y PostgreSQL aplica al <code>RETURNING</code> la política de
+            <em>SELECT</em>, que exige <code>user_id = auth.uid()</code>. Un invitado no puede leer ni su propio pedido,
+            así que la llamada seguía dando error aunque la fila sí quedara guardada — y con ella no se disparaba el
+            <code>Purchase</code> del píxel. Ahora el id se genera en el cliente (<code>crypto.randomUUID()</code>, con
+            respaldo para contextos sin https) y se inserta sin <code>.select()</code>: se sabe el id sin necesidad de
+            releerlo, y no hace falta abrir la lectura de pedidos a nadie.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>El inventario nunca se descontaba</strong> — <code>decrementStock()</code> encadenaba
+            <code>.catch()</code> sobre <code>client.rpc(...)</code>, pero el constructor de consultas de supabase-js
+            implementa <code>then()</code> y no <code>catch()</code>: lanzaba
+            <code>TypeError: client.rpc(...).catch is not a function</code> antes incluso de enviar la petición, así que
+            ni el intento principal ni el respaldo llegaban a correr. Se pasó a <code>try/catch</code> y, además, se
+            comprueba <code>error</code>, porque supabase-js no lanza ante un fallo de la base: lo devuelve en la
+            respuesta. Sin esa comprobación el respaldo habría seguido siendo código muerto.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>El respaldo del descuento restaba dos veces</strong> — <code>cart.js</code> envía
+            <code>currentStock</code> <em>ya descontado</em> (el valor final), y el respaldo calculaba
+            <code>currentStock - quantity</code>, restando la cantidad por segunda vez. No se notaba porque el respaldo
+            nunca llegaba a ejecutarse; habría aparecido justo al arreglar el <code>TypeError</code>. Ahora fija el valor
+            tal cual llega.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Función <code>decrement_stock_if_possible</code> en Supabase</strong> — El sitio ya la llamaba, pero
+            no existía en la base. Se creó como <code>SECURITY DEFINER</code>, que es la única forma de descontar stock
+            desde un pedido de invitado sin abrir <code>products</code> a todo el mundo (si se abriera, cualquiera podría
+            cambiar nombres y precios). Solo toca la columna <code>stock</code> y nunca la deja por debajo de cero. Está
+            en <code>supabase_setup.sql</code> y, para bases ya existentes, en
+            <code>database/fix_pedidos_y_stock.sql</code> junto con la política de inserción.
+          </li>
+          <li>
+            <span class="badge-status badge-fix">Corrección</span>
+            <strong>Los pedidos se guardaban sin nombre ni teléfono</strong> — La tabla <code>orders</code> tiene
+            <code>customer_name</code>, <code>customer_email</code> y <code>customer_phone</code>, pero
+            <code>cart.js</code> nunca los enviaba: llegaban siempre vacíos. Ahora <code>Cart.saveOrder()</code> recibe
+            un cuarto parámetro con los datos de contacto y <code>submitWhatsAppOrder()</code> le pasa lo que el cliente
+            escribió (el correo sale de la sesión cuando la hay). <code>payOnline()</code> sigue llamándola igual: el
+            parámetro es opcional.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Columna «Cliente» en Admin → Pedidos</strong> — La tabla mostraba id, fecha, productos, total y
+            estado, pero no a quién pertenecía el pedido; el nombre solo asomaba en el diálogo de borrado y en la
+            actividad reciente de Analíticas. Ahora hay una columna con el nombre y, debajo, el teléfono como enlace de
+            WhatsApp para responder sin copiarlo a mano. Los pedidos anteriores a este cambio muestran «Sin datos».
+          </li>
         </ul>
       </div>
 

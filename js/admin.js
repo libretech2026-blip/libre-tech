@@ -2247,6 +2247,30 @@ const Admin = (() => {
 
 
 
+  /**
+   * Celda "Cliente" de la tabla de pedidos: nombre y, debajo, el teléfono
+   * como enlace de WhatsApp para responderle sin copiarlo a mano.
+   * Los pedidos anteriores a septiembre de 2026 se guardaron sin estos datos.
+   */
+  function renderOrderCustomer(order) {
+    const name = (order.customerName || '').trim();
+    const phone = (order.customerPhone || '').trim();
+
+    if (!name && !phone) {
+      return '<span style="color:var(--text-tertiary)">Sin datos</span>';
+    }
+
+    const lines = [];
+    if (name) lines.push(`<strong>${escapeHTML(name)}</strong>`);
+    if (phone) {
+      const waPhone = phone.replace(/\D/g, '');
+      lines.push(
+        `<a href="https://wa.me/${waPhone.length > 10 ? waPhone : '57' + waPhone}" target="_blank" rel="noopener" style="font-size:0.82rem">${escapeHTML(phone)}</a>`
+      );
+    }
+    return `<div style="display:flex;flex-direction:column;gap:2px">${lines.join('')}</div>`;
+  }
+
   function renderOrdersTable() {
 
     const tbody = document.getElementById('ordersTableBody');
@@ -2279,7 +2303,7 @@ const Admin = (() => {
 
     if (orders.length === 0) {
 
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-tertiary);">No hay pedidos${statusFilter !== 'all' ? ' con este estado' : ''}.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-tertiary);">No hay pedidos${statusFilter !== 'all' ? ' con este estado' : ''}.</td></tr>`;
 
       return;
 
@@ -2302,6 +2326,8 @@ const Admin = (() => {
           <td><strong>${escapeHTML(o.id)}</strong></td>
 
           <td>${escapeHTML(o.date ? new Date(o.date).toLocaleDateString('es-CO') : 'â€”')}</td>
+
+          <td>${renderOrderCustomer(o)}</td>
 
           <td title="${escapeAttr(itemsSummary)}">${escapeHTML(shortItems)}</td>
 

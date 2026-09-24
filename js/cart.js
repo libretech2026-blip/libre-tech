@@ -1219,7 +1219,11 @@ const Cart = (() => {
     message += `Gracias por comprar en LIBRE TECH`;
 
     // Save order and decrement stock
-    const savedOrder = await saveOrder(orderNumber, 'whatsapp', orderItems);
+    const savedOrder = await saveOrder(orderNumber, 'whatsapp', orderItems, {
+      name: name,
+      phone: phone,
+      email: user?.email || ''
+    });
     decrementStock(orderItems);
 
     // Increment coupon usage
@@ -1294,9 +1298,12 @@ const Cart = (() => {
    * consola y resuelve en null, nunca rechaza). Nunca lanza: quien no
    * necesite el resultado puede seguir llamándola sin await, como antes.
    *
+   * @param {{name?: string, phone?: string, email?: string}} [customer]
+   *        datos de contacto del cliente. La tabla `orders` tiene columnas
+   *        para ellos; sin esto los pedidos quedaban sin nombre ni teléfono.
    * @returns {Promise<{localId: string, remoteId: string|null, saved: boolean}>}
    */
-  async function saveOrder(orderNumber, method, orderItems) {
+  async function saveOrder(orderNumber, method, orderItems, customer = {}) {
     const products = getProducts();
     orderItems = orderItems || items;
     const mappedItems = orderItems.map(item => {
@@ -1313,6 +1320,9 @@ const Cart = (() => {
       id: orderNumber || generateOrderNumber(),
       date: new Date().toISOString(),
       method: method || 'contraentrega',
+      customerName: customer.name || '',
+      customerPhone: customer.phone || '',
+      customerEmail: customer.email || '',
       items: mappedItems,
       total: orderItems.reduce((sum, item) => {
         const product = products.find(p => p.id === item.productId);
@@ -1336,6 +1346,9 @@ const Cart = (() => {
         remote = await SB.saveOrder({
           id: order.id,
           userId: user?.id || null,
+          customerName: order.customerName,
+          customerPhone: order.customerPhone,
+          customerEmail: order.customerEmail || user?.email || '',
           method: order.method,
           status: 'pending',
           total: order.total,
