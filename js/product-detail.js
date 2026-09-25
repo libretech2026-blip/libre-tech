@@ -289,6 +289,41 @@ const ProductDetail = (() => {
 
     // Render reviews under specifications
     renderRatingUI();
+
+    trackViewContent(p);
+  }
+
+  /**
+   * Píxel de Meta: evento ViewContent de la ficha de producto.
+   *
+   * Va aquí, al final de render(), y no en la cabecera de producto.html: el
+   * PageView del <head> se dispara con la carga de la página, cuando todavía
+   * no se sabe qué producto es (el id llega por ?id= y el catálogo se lee
+   * después de sincronizar con Supabase). Aquí ya está resuelto.
+   *
+   * El importe es el que ve el cliente: si el producto está en oferta, el
+   * precio con descuento.
+   *
+   * Si la ficha se pinta antes de que termine de cargar fbevents.js, fbq ya
+   * existe igualmente: el fragmento del <head> crea la función y encola las
+   * llamadas hasta que la librería esté lista. El guard es por si el script
+   * viene bloqueado por un bloqueador de anuncios.
+   */
+  function trackViewContent(p) {
+    if (typeof fbq !== 'function' || !p) return;
+
+    const price = p.offerActive && p.offerPrice ? p.offerPrice : p.price;
+
+    try {
+      fbq('track', 'ViewContent', {
+        content_ids: [p.id],
+        content_type: 'product',
+        value: Number(price) || 0,
+        currency: 'COP'
+      });
+    } catch (e) {
+      console.warn('[ProductDetail] ViewContent:', e.message || e);
+    }
   }
 
   // --- Obsequio del producto (configurado desde admin) ---

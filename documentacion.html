@@ -501,6 +501,32 @@
       <h2>5. Registro de cambios (Changelog)</h2>
 
       <div class="changelog-entry">
+        <span class="date">25 de septiembre de 2026</span>
+        <h4>v3.6.2 — Evento ViewContent del píxel</h4>
+        <ul>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>ViewContent en la ficha de producto</strong> — Se dispara al final de
+            <code>render()</code> en <code>js/product-detail.js</code>, con <code>content_ids</code>,
+            <code>content_type: 'product'</code>, el precio que ve el cliente (el de oferta si la hay) y
+            <code>currency: 'COP'</code>. Va ahí y no en el <code>&lt;head&gt;</code> de
+            <code>producto.html</code> porque el <code>PageView</code> de la cabecera corre antes de saber de qué
+            producto se trata: el id llega por <code>?id=</code> y el catálogo se lee después de sincronizar con
+            Supabase. <code>render()</code> se invoca una sola vez por carga, así que no hay eventos duplicados.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nota</span>
+            <strong>El sitio no es una SPA</strong> — La petición que originó este cambio daba por hecho que
+            <code>/producto?id=...</code> era una ruta de cliente sin recarga. No lo es: <code>producto.html</code> es
+            un archivo propio y cada ficha es una carga completa, así que el <code>PageView</code> ya se registraba en
+            todas. Lo que faltaba era el evento de producto en sí, no una recarga perdida. El sitio a día de hoy manda
+            tres eventos: <code>PageView</code> (las 7 páginas públicas), <code>ViewContent</code> (ficha) y
+            <code>Purchase</code> (al enviar el pedido, solo si Supabase lo guardó).
+          </li>
+        </ul>
+      </div>
+
+      <div class="changelog-entry">
         <span class="date">23 de septiembre de 2026</span>
         <h4>v3.6.1 — Auditoría completa: 9 correcciones</h4>
         <p>Revisión sistemática de HTML, JS, CSS y SQL. Lo encontrado y corregido:</p>
