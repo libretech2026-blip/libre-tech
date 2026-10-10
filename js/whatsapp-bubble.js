@@ -132,6 +132,9 @@
     }
 
     function openWhatsApp() {
+      if (typeof window.trackPixel === 'function') {
+        window.trackPixel('Contact', {});
+      }
       const biz = window.LIBRETECH || {};
       const number = biz.whatsapp || '573176134822';
       const text = 'Hola, tengo una consulta sobre sus productos';

@@ -11,15 +11,22 @@
   <meta name="theme-color" content="#1a4b8c">
   <title>Producto | Libre Tech</title>
 
-  <!-- Open Graph (updated dynamically by JS) -->
+  <!-- Open Graph (updated dynamically by JS and Edge Pre-render) -->
   <meta property="og:type" content="product">
   <meta property="og:title" content="Producto | Libre Tech">
   <meta property="og:description" content="Compra este producto en Libre Tech: tecnología, celulares y accesorios con excelentes precios y envío a cualquier lugar de Colombia.">
   <meta property="og:url" content="https://libretechtienda.com/producto.html">
-  <meta property="og:image" content="nuevos%20logos/JPG/Isotipo/1.jpg">
+  <meta property="og:image" content="https://libretechtienda.com/nuevos%20logos/JPG/Isotipo/1.jpg">
+  <meta property="og:image:secure_url" content="https://libretechtienda.com/nuevos%20logos/JPG/Isotipo/1.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="1200">
+  <meta property="og:image:type" content="image/jpeg">
   <meta property="og:site_name" content="Libre Tech">
   <meta property="og:locale" content="es_CO">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Producto | Libre Tech">
+  <meta name="twitter:description" content="Compra este producto en Libre Tech: tecnología, celulares y accesorios con excelentes precios y envío a cualquier lugar de Colombia.">
+  <meta name="twitter:image" content="https://libretechtienda.com/nuevos%20logos/JPG/Isotipo/1.jpg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -269,7 +276,9 @@
           <span class="pd-stock-dot"></span>
           <span id="pdStockText"></span>
         </div>
-        <div class="pd-urgency" id="pdUrgencyMessage">Cargando actividad...</div>
+
+        <!-- Recuadro de envío y urgencia (reemplazo de personas viendo) -->
+        <div id="pdUrgencyNotice" class="pd-urgency-notice"></div>
 
         <!-- Obsequio incluido (se muestra desde JS si el producto tiene regalo) -->
         <div class="pd-gift" id="pdGift" hidden>

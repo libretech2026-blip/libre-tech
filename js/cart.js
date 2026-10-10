@@ -139,35 +139,53 @@ const Cart = (() => {
   }
 
   // --- Operaciones del carrito ---
-  function addItem(productId) {
+  function addItem(productId, qtyToAdd = 1) {
     const products = getProducts();
     const product = products.find(p => p.id === productId);
     if (!product) return;
 
     const stock = product.stock ?? 0;
     const currentQty = getCartQty(productId);
+    const addQty = Math.max(1, parseInt(qtyToAdd, 10) || 1);
 
     if (stock <= 0) {
       showToast(`${product.name} está agotado`, 'error');
       return;
     }
 
-    if (currentQty >= stock) {
-      showToast(`Solo hay ${stock} unidades disponibles de ${product.name}`, 'error');
+    if (currentQty + addQty > stock) {
+      const available = Math.max(0, stock - currentQty);
+      if (available > 0) {
+        showToast(`Solo puedes agregar ${available} unidades más de ${product.name}`, 'error');
+      } else {
+        showToast(`Ya tienes el máximo disponible (${stock}) de ${product.name}`, 'error');
+      }
       return;
     }
 
     const existing = items.find(i => i.productId === productId);
     if (existing) {
-      existing.quantity += 1;
+      existing.quantity += addQty;
     } else {
-      items.push({ productId, quantity: 1 });
+      items.push({ productId, quantity: addQty });
     }
 
     save();
     updateUI();
     showToast(`${product.name} agregado al carrito`, 'success');
     pulseCartReminder();
+
+    // 1) Meta Pixel: AddToCart al agregar al carrito
+    if (typeof window.trackPixel === 'function') {
+      const price = Number(getEffectivePrice(product)) || 0;
+      window.trackPixel('AddToCart', {
+        content_ids: [product.id],
+        content_type: 'product',
+        value: price * addQty,
+        currency: 'COP',
+        contents: [{ id: product.id, quantity: addQty }]
+      });
+    }
   }
 
   function removeItem(productId) {
@@ -195,6 +213,21 @@ const Cart = (() => {
     item.quantity = newQty;
     save();
     updateUI();
+
+    // 1) Meta Pixel: AddToCart al sumar producto con el botón "+"
+    if (delta > 0 && typeof window.trackPixel === 'function') {
+      const product = getProducts().find(p => p.id === productId);
+      if (product) {
+        const price = Number(getEffectivePrice(product)) || 0;
+        window.trackPixel('AddToCart', {
+          content_ids: [product.id],
+          content_type: 'product',
+          value: price * delta,
+          currency: 'COP',
+          contents: [{ id: product.id, quantity: delta }]
+        });
+      }
+    }
   }
 
   function setQuantity(productId, qty) {
@@ -908,6 +941,31 @@ const Cart = (() => {
 
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+
+    // 2) Meta Pixel: InitiateCheckout al abrir el formulario de pedido
+    if (prefill && typeof window.trackPixel === 'function') {
+      const orderItems = orderFormOverrideItems || items;
+      const products = getProducts();
+      const activeItems = (orderItems || []).map(item => {
+        const p = products.find(prod => prod.id === item.productId);
+        return {
+          id: item.productId,
+          quantity: item.quantity
+        };
+      }).filter(i => i.id);
+
+      const totalUnidades = activeItems.reduce((acc, i) => acc + i.quantity, 0);
+      const totalPedido = Number(getOrderTotal(orderItems)) || 0;
+
+      window.trackPixel('InitiateCheckout', {
+        content_ids: activeItems.map(i => i.id),
+        content_type: 'product',
+        value: totalPedido,
+        currency: 'COP',
+        num_items: totalUnidades,
+        contents: activeItems.map(i => ({ id: i.id, quantity: i.quantity }))
+      });
+    }
   }
 
   /* ============================================================
@@ -1014,6 +1072,12 @@ const Cart = (() => {
 
   function closeOrderForm() {
     orderFormOverrideItems = null;
+    const submitBtn = document.querySelector('#whatsappOrderForm button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '';
+      submitBtn.style.pointerEvents = '';
+    }
     const modal = document.getElementById('orderFormModal');
     if (modal) modal.classList.remove('active');
     document.body.style.overflow = '';
@@ -1157,6 +1221,14 @@ const Cart = (() => {
 
     if (!validateOrderForm()) return;
 
+    // Deshabilitar botón de enviar para que un doble clic no genere dos pedidos ni dos Lead
+    const submitBtn = e.target.querySelector('button[type="submit"]') || document.querySelector('#whatsappOrderForm button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.6';
+      submitBtn.style.pointerEvents = 'none';
+    }
+
     // La pestaña de WhatsApp se reserva aquí, todavía dentro del gesto del
     // clic. Más abajo se espera la confirmación de Supabase, y pedir la
     // ventana después de ese await la haría caer en el bloqueador de
@@ -1264,31 +1336,34 @@ const Cart = (() => {
       SB.incrementCouponUse(appliedCoupon.id).catch(err => console.warn('[Cart] Coupon use:', err));
     }
 
-    /* --- Píxel de Meta: evento Purchase ---------------------------------
-       Solo se dispara si Supabase confirmó el pedido (savedOrder.saved), y
-       antes de abrir WhatsApp, para que quede registrado aunque el navegador
-       bloquee la pestaña o el cliente la cierre enseguida.
-       El importe es el mismo "TOTAL" que va en el mensaje de WhatsApp:
-       subtotal menos cupón, más envío cuando ya se pudo calcular.        */
-    if (savedOrder.saved && typeof fbq === 'function') {
-      var orderTotal = netSubtotal + (shipping.included ? shipping.cost : 0);
-      var telefonoLimpio = phone.replace(/\D/g, '');
-      var nombreCompleto = name.trim();
-      var partesNombre = nombreCompleto.split(' ');
+    /* --- Píxel de Meta: evento Lead -------------------------------------
+       Se dispara al enviar el formulario con éxito (datos validados y pedido registrado),
+       justo antes de abrir WhatsApp. Una sola vez por pedido.
+       Mismos datos que InitiateCheckout, sin datos personales en los parámetros. */
+    if (typeof window.trackPixel === 'function') {
+      const activeOrderItems = (orderItems || []).map(item => {
+        const p = products.find(prod => prod.id === item.productId);
+        return {
+          id: item.productId,
+          quantity: item.quantity
+        };
+      }).filter(i => i.id);
 
-      fbq('init', '845390284976126', {
-        ph: telefonoLimpio,
-        fn: partesNombre[0] || '',
-        ln: partesNombre.slice(1).join(' ') || ''
-      });
+      const totalUnidades = activeOrderItems.reduce((acc, i) => acc + i.quantity, 0);
+      const orderTotal = Number(netSubtotal + (shipping.included ? shipping.cost : 0)) || 0;
 
-      fbq('track', 'Purchase', {
+      window.trackPixel('Lead', {
+        content_ids: activeOrderItems.map(i => i.id),
+        content_type: 'product',
         value: orderTotal,
-        currency: 'COP'
-      }, {
-        eventID: 'order_' + savedOrder.remoteId
+        currency: 'COP',
+        num_items: totalUnidades,
+        contents: activeOrderItems.map(i => ({ id: i.id, quantity: i.quantity }))
       });
     }
+
+    // Pequeña espera (350 ms) para asegurar despacho de la baliza del píxel antes de abrir WhatsApp
+    await new Promise(resolve => setTimeout(resolve, 350));
 
     const encoded = encodeURIComponent(message);
     const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`;

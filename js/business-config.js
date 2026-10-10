@@ -27,3 +27,27 @@ window.LIBRETECH = Object.freeze({
     return text ? base + '?text=' + encodeURIComponent(text) : base;
   }
 });
+
+/* --- Meta Pixel Helper --- */
+function trackPixel(evento, datos) {
+  if (typeof fbq !== 'function') return;
+  const eventID = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+    ? crypto.randomUUID()
+    : 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+  try {
+    fbq('track', evento, datos || {}, { eventID });
+  } catch (err) {
+    console.warn('[Pixel] Error al registrar evento ' + evento + ':', err);
+  }
+}
+window.trackPixel = trackPixel;
+
+// 4) Contact: Al tocar enlaces de WhatsApp en el sitio
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', function(e) {
+    const waLink = e.target.closest && e.target.closest('a[href*="wa.me"], a[href*="api.whatsapp.com"]');
+    if (waLink) {
+      window.trackPixel('Contact', {});
+    }
+  }, true);
+}

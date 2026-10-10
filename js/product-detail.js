@@ -10,6 +10,48 @@ const ProductDetail = (() => {
   const RATINGS_KEY  = 'libretech_ratings';
   const SOCIAL_KEY   = 'libretech_social_links';
 
+  /* ============================================================
+     MENSAJES DE ENVÍO Y URGENCIA (Ficha de Producto)
+     Lista de 5 textos configurables al inicio del código.
+     Hora de corte de despacho en Colombia (America/Bogota, UTC-5).
+     Valor editable: Daniels confirma la hora exacta de corte.
+     ============================================================ */
+  const DESPACHO_CUTOFF_HOUR = 15; // 3:00 PM (15:00) hora Colombia
+  const DESPACHO_CUTOFF_MINUTE = 0;
+
+  const URGENCY_MESSAGES = [
+    {
+      id: 1,
+      hasCountdown: true,
+      title: '🚚 ¿Quieres que lo enviemos HOY?',
+      textTemplate: 'Haz tu pedido en las próximas {hh}h {mm}m para despachar hoy mismo y disfruta de nuestro servicio de Pago Seguro al Recibir.'
+    },
+    {
+      id: 2,
+      hasCountdown: false,
+      title: '📦 Entrega Rápida a Domicilio',
+      text: 'Pide en menos de 1 minuto, despachamos tu pedido y completas tu compra cómodamente en la puerta de tu casa.'
+    },
+    {
+      id: 3,
+      hasCountdown: false,
+      title: '🛡️ Compra Fácil y Protegida',
+      text: 'Garantizamos la salida prioritaria de tu paquete desde bodega y la entrega directa en la puerta de tu hogar.'
+    },
+    {
+      id: 4,
+      hasCountdown: false,
+      title: '⚡ Despacho Inmediato a Todo el País',
+      text: 'Confirmas tu pedido hoy, coordinamos tu despacho de inmediato y recibes tu paquete sin complicaciones en tu residencia.'
+    },
+    {
+      id: 5,
+      hasCountdown: false,
+      title: '🔥 Producto Destacado + Pedido con Envío Garantizado',
+      text: 'Asegura tus accesorios hoy con despacho prioritario y seguimiento a tu paquete paso a paso hasta tu puerta.'
+    }
+  ];
+
   let currentProduct = null;
   let selectedColor = null;
   let quantity = 1;
@@ -86,10 +128,23 @@ const ProductDetail = (() => {
     document.querySelector('meta[name="description"]')?.setAttribute('content', metaDesc);
     document.querySelector('meta[property="og:title"]')?.setAttribute('content', `${p.name} | Libre Tech`);
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', metaDesc);
-    if (p.image) {
-      document.querySelector('meta[property="og:image"]')?.setAttribute('content', p.image);
-      document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', p.image);
+    document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', `${p.name} | Libre Tech`);
+    document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', metaDesc);
+    
+    const prodUrl = `https://libretechtienda.com/producto.html?id=${encodeURIComponent(p.id)}`;
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', prodUrl);
+
+    let rawImg = p.image || (p.images && p.images[0]) || '';
+    let absImg = rawImg;
+    if (absImg && !absImg.startsWith('http')) {
+      absImg = 'https://libretechtienda.com/' + absImg.replace(/^\/+/, '');
     }
+    if (!absImg) {
+      absImg = 'https://libretechtienda.com/nuevos%20logos/JPG/Isotipo/1.jpg';
+    }
+    document.querySelector('meta[property="og:image"]')?.setAttribute('content', absImg);
+    document.querySelector('meta[property="og:image:secure_url"]')?.setAttribute('content', absImg);
+    document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', absImg);
 
     // JSON-LD structured data
     const jsonLd = {
@@ -130,10 +185,10 @@ const ProductDetail = (() => {
     const imgContainerMobile = document.getElementById('pdMainImageMobile');
     const mainImageSrc = Cart.escapeAttr(allImages[0]);
     if (imgContainer && allImages.length > 0) {
-      imgContainer.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="eager" fetchpriority="high" decoding="async" id="pdMainImg" style="cursor:zoom-in;">`;
+      imgContainer.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="eager" fetchpriority="high" decoding="async" id="pdMainImg" width="600" height="600" style="cursor:zoom-in;">`;
     }
     if (imgContainerMobile && allImages.length > 0) {
-      imgContainerMobile.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="eager" fetchpriority="high" decoding="async" id="pdMainImgMobile" style="cursor:zoom-in;">`;
+      imgContainerMobile.innerHTML = `<img src="${mainImageSrc}" alt="${Cart.escapeAttr(p.name)}" loading="eager" fetchpriority="high" decoding="async" id="pdMainImgMobile" width="600" height="600" style="cursor:zoom-in;">`;
     }
 
     const addZoomListeners = () => {
@@ -148,7 +203,7 @@ const ProductDetail = (() => {
     const thumbsContainerMobile = document.getElementById('pdThumbnailsMobile');
     const thumbsHtml = allImages.map((img, i) =>
       `<button class="pd-thumb${i === 0 ? ' active' : ''}" data-index="${i}" data-src="${Cart.escapeAttr(img)}" aria-label="Ver imagen ${i + 1}">
-        <img src="${Cart.escapeAttr(img)}" alt="Foto ${i + 1}" loading="lazy" decoding="async">
+        <img src="${Cart.escapeAttr(img)}" alt="Foto ${i + 1}" loading="lazy" decoding="async" width="70" height="70">
       </button>`
     ).join('');
 
@@ -310,19 +365,24 @@ const ProductDetail = (() => {
    * viene bloqueado por un bloqueador de anuncios.
    */
   function trackViewContent(p) {
-    if (typeof fbq !== 'function' || !p) return;
+    if (!p) return;
 
     const price = p.offerActive && p.offerPrice ? p.offerPrice : p.price;
+    const data = {
+      content_ids: [p.id],
+      content_type: 'product',
+      value: Number(price) || 0,
+      currency: 'COP'
+    };
 
-    try {
-      fbq('track', 'ViewContent', {
-        content_ids: [p.id],
-        content_type: 'product',
-        value: Number(price) || 0,
-        currency: 'COP'
-      });
-    } catch (e) {
-      console.warn('[ProductDetail] ViewContent:', e.message || e);
+    if (typeof window.trackPixel === 'function') {
+      window.trackPixel('ViewContent', data);
+    } else if (typeof fbq === 'function') {
+      try {
+        fbq('track', 'ViewContent', data);
+      } catch (e) {
+        console.warn('[ProductDetail] ViewContent:', e.message || e);
+      }
     }
   }
 
@@ -654,9 +714,7 @@ const ProductDetail = (() => {
         return;
       }
 
-      for (let i = 0; i < quantity; i++) {
-        Cart.addItem(currentProduct.id);
-      }
+      Cart.addItem(currentProduct.id, quantity);
     });
 
     document.getElementById('pdContinueLink')?.addEventListener('click', (e) => {
@@ -809,8 +867,8 @@ const ProductDetail = (() => {
       <a href="producto.html?id=${encodeURIComponent(p.id)}" class="search-dropdown-item">
         <div class="search-dropdown-thumb">
           ${p.image
-            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async">`
-            : `<img src="nuevos logos/PNG/Isotipo/4.png" alt="Libre Tech" loading="lazy" decoding="async">`
+            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async" width="48" height="48">`
+            : `<img src="nuevos logos/PNG/Isotipo/4.png" alt="Libre Tech" loading="lazy" decoding="async" width="48" height="48">`
           }
         </div>
         <div class="search-dropdown-info">
@@ -936,21 +994,83 @@ const ProductDetail = (() => {
     });
   }
 
-    // --- Urgency / live viewers indicator ---
-    function initUrgency() {
-      const el = document.getElementById('pdUrgencyMessage');
-      if (!el) return;
-      let current = Math.floor(Math.random() * 31) + 45; // 45-75 initial viewers
-      const update = () => {
-        el.textContent = `${current} personas están viendo este producto ahora`;
-      };
-      update();
-      setInterval(() => {
-        const delta = Math.floor(Math.random() * 5) - 2; // -2..+2
-        current = Math.max(35, Math.min(80, current + delta));
-        update();
-      }, 30000 + Math.floor(Math.random() * 5000));
+  /**
+   * Calcula el tiempo restante hasta la hora de corte de despacho hoy en Colombia (UTC-5).
+   * Devuelve null si ya pasó la hora de corte hoy en Colombia.
+   */
+  function getColombiaCutoffRemaining() {
+    const now = new Date();
+    // Colombia está fija en UTC-5 todo el año (sin horario de verano)
+    const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const colMs = utcMs - (5 * 60 * 60 * 1000);
+    const colDate = new Date(colMs);
+
+    const colHours = colDate.getHours();
+    const colMinutes = colDate.getMinutes();
+    const colSeconds = colDate.getSeconds();
+
+    const currentTotalSec = (colHours * 3600) + (colMinutes * 60) + colSeconds;
+    const cutoffTotalSec = (DESPACHO_CUTOFF_HOUR * 3600) + (DESPACHO_CUTOFF_MINUTE * 60);
+    const diffSec = cutoffTotalSec - currentTotalSec;
+
+    if (diffSec <= 0) return null;
+
+    const hours = Math.floor(diffSec / 3600);
+    const minutes = Math.floor((diffSec % 3600) / 60);
+    return {
+      hh: String(hours).padStart(2, '0'),
+      mm: String(minutes).padStart(2, '0')
+    };
+  }
+
+  // --- Recuadro de mensajes de envío y urgencia (5 textos aleatorios) ---
+  function initUrgency() {
+    const container = document.getElementById('pdUrgencyNotice');
+    if (!container) return;
+
+    const remaining = getColombiaCutoffRemaining();
+    // Si ya pasó la hora de corte, sortear únicamente entre los mensajes 2 a 5
+    const eligibleMessages = remaining
+      ? URGENCY_MESSAGES
+      : URGENCY_MESSAGES.filter(m => !m.hasCountdown);
+
+    const selectedMessage = eligibleMessages[Math.floor(Math.random() * eligibleMessages.length)];
+    if (!selectedMessage) return;
+
+    function renderUrgency(rem) {
+      let bodyText = selectedMessage.text || '';
+      if (selectedMessage.hasCountdown && rem) {
+        bodyText = selectedMessage.textTemplate
+          .replace('{hh}', rem.hh)
+          .replace('{mm}', rem.mm);
+      }
+      container.innerHTML = `
+        <strong class="pd-urgency-title">${selectedMessage.title}</strong>
+        <p class="pd-urgency-text">${bodyText}</p>
+      `;
     }
+
+    renderUrgency(remaining);
+
+    // Si fue elegido el mensaje 1 con cuenta regresiva, actualizar cada 30 segundos
+    if (selectedMessage.hasCountdown && remaining) {
+      const timer = setInterval(() => {
+        const rem = getColombiaCutoffRemaining();
+        if (rem) {
+          renderUrgency(rem);
+        } else {
+          clearInterval(timer);
+          // Si la hora de corte pasa mientras sigue en la página, cambiar a un mensaje fijo
+          const fixedMessages = URGENCY_MESSAGES.filter(m => !m.hasCountdown);
+          const nextMsg = fixedMessages[Math.floor(Math.random() * fixedMessages.length)];
+          container.innerHTML = `
+            <strong class="pd-urgency-title">${nextMsg.title}</strong>
+            <p class="pd-urgency-text">${nextMsg.text}</p>
+          `;
+        }
+      }, 30000);
+    }
+  }
 
   return { init };
 })();

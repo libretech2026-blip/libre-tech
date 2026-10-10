@@ -1388,8 +1388,8 @@ const Store = (() => {
       <a href="producto.html?id=${encodeURIComponent(p.id)}" class="search-dropdown-item">
         <div class="search-dropdown-thumb">
           ${p.image
-            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async">`
-            : `<img src="nuevos logos/PNG/Isotipo/4.png" alt="Libre Tech" loading="lazy" decoding="async">`
+            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async" width="48" height="48">`
+            : `<img src="nuevos logos/PNG/Isotipo/4.png" alt="Libre Tech" loading="lazy" decoding="async" width="48" height="48">`
           }
         </div>
         <div class="search-dropdown-info">
@@ -1425,8 +1425,8 @@ const Store = (() => {
       <a href="producto.html?id=${encodeURIComponent(p.id)}" class="search-dropdown-item">
         <div class="search-dropdown-thumb">
           ${p.image
-            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async">`
-            : `<img src="nuevos logos/PNG/Isotipo/4.png" alt="Libre Tech" loading="lazy" decoding="async">`
+            ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async" width="48" height="48">`
+            : `<img src="nuevos logos/PNG/Isotipo/4.png" alt="Libre Tech" loading="lazy" decoding="async" width="48" height="48">`
           }
         </div>
         <div class="search-dropdown-info">

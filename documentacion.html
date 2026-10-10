@@ -501,6 +501,43 @@
       <h2>5. Registro de cambios (Changelog)</h2>
 
       <div class="changelog-entry">
+        <span class="date">9 de octubre de 2026</span>
+        <h4>v3.7.0 — Eventos de conversión del píxel, Open Graph dinámico, avisos de urgencia y optimización de imágenes</h4>
+        <ul>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Eventos de conversión del Píxel de Meta (AddToCart, InitiateCheckout, Lead, Contact)</strong> —
+            Implementación de la función auxiliar centralizada <code>window.trackPixel</code> con <code>eventID</code> único
+            (usando <code>crypto.randomUUID</code>) para deduplicación browser/server.
+            <code>AddToCart</code> se dispara al sumar unidades desde las tarjetas del catálogo (botón "+"), la ficha y el carrito.
+            <code>InitiateCheckout</code> se dispara al abrir el modal de pedido ("Pide y paga en casa" o "Finalizar compra").
+            <code>Lead</code> se dispara con los datos del pedido al registrarlo con éxito, justo antes de abrir WhatsApp (con protección anti-doble clic y espera de 350ms para despacho de baliza).
+            <code>Contact</code> se dispara al hacer clic en el botón flotante de WhatsApp y en los enlaces de soporte del sitio.
+            Sin datos personales en los parámetros del evento.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Vista previa al compartir enlaces (Open Graph y Twitter Cards)</strong> —
+            Uso estricto de URLs absolutas (<code>https://libretechtienda.com/...</code>) para <code>og:image</code>, <code>og:url</code> y <code>twitter:image</code> en todas las páginas.
+            Función de borde (Cloudflare Pages Function en <code>functions/producto.html.js</code> y Supabase Edge Function) para prerenderizar dinámicamente título, descripción e imagen del producto directamente desde la base de datos para rastreadores de WhatsApp, Facebook e Instagram.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Nuevo</span>
+            <strong>Mensajes de envío y urgencia en la ficha de producto</strong> —
+            Recuadro destacado junto al botón "Pide y paga en casa" con uno de 5 mensajes aleatorios.
+            El mensaje 1 incluye cuenta regresiva real (<code>{hh}h {mm}m</code>) basada en la hora de Colombia (America/Bogota, UTC-5) hasta la hora de corte de despacho (15:00 COP, configurable).
+            Si la hora de corte ya pasó, se excluye el mensaje 1 y se sortea entre los otros 4 mensajes fijos sin mostrar contadores artificiales.
+          </li>
+          <li>
+            <span class="badge-status badge-done">Mejora</span>
+            <strong>Optimización de imágenes</strong> —
+            Dimensiones explícitas <code>width</code> y <code>height</code> agregadas en todas las etiquetas <code>&lt;img&gt;</code> de producto (tarjetas, ficha y miniaturas).
+            Uso de <code>loading="lazy"</code> y <code>decoding="async"</code> fuera de la primera pantalla para prevenir saltos de maquetación (CLS) y acelerar el tiempo de carga.
+          </li>
+        </ul>
+      </div>
+
+      <div class="changelog-entry">
         <span class="date">25 de septiembre de 2026</span>
         <h4>v3.6.2 — Evento ViewContent del píxel</h4>
         <ul>

@@ -1343,6 +1343,45 @@ input, select, textarea {
   font-weight: 600;
 }
 
+/* Recuadro de envío y urgencia en la ficha de producto */
+.pd-urgency-notice {
+  background: var(--bg-secondary, #f8f9fa);
+  border-left: 4px solid var(--accent, #e87722);
+  border-radius: var(--radius-sm, 6px);
+  padding: 12px 14px;
+  margin: 12px 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  line-height: 1.45;
+}
+
+.pd-urgency-title {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary, #1d1d1f);
+  margin-bottom: 4px;
+}
+
+.pd-urgency-text {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--text-secondary, #4a4a4f);
+  line-height: 1.42;
+}
+
+[data-theme="dark"] .pd-urgency-notice {
+  background: var(--bg-secondary, #252528);
+  border-left-color: var(--accent, #e87722);
+}
+
+[data-theme="dark"] .pd-urgency-title {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .pd-urgency-text {
+  color: #b0b0b5;
+}
+
 @media (max-width: 768px) {
   .pd-action-row {
     flex-direction: column;
@@ -8983,9 +9022,10 @@ select.form-input:disabled {
   .pd-info .pd-thumbnails-mobile { order: 4; }
   .pd-info .pd-price { order: 5; }
   .pd-info .pd-stock { order: 6; }
-  .pd-info .pd-urgency { order: 7; }
+  .pd-info .pd-urgency,
+  .pd-info .pd-urgency-notice { order: 7; }
   /* En móvil el obsequio y el compartir van justo debajo de
-     "X personas están viendo este producto ahora" (solo móvil:
+     los avisos de envío y urgencia (solo móvil:
      en escritorio conservan su posición original del HTML). */
   .pd-info .pd-gift { order: 8; }
   .pd-info .pd-share { order: 9; }
