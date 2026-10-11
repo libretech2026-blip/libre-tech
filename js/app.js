@@ -206,7 +206,7 @@ const Store = (() => {
   }
 
   function isProductsPage() {
-    return /(^|\/)productos\.html$/i.test(window.location.pathname);
+    return !!document.getElementById('productos') || /(^|\/)productos(\.html)?$/i.test(window.location.pathname.replace(/\/$/, ''));
   }
 
 
@@ -929,20 +929,16 @@ const Store = (() => {
 
     if (featuredHeader) featuredHeader.style.display = 'flex';
 
-    // Se monta en un fragmento y se inserta de una vez: un único reflow
-    // en lugar de uno por tarjeta.
+    // Se monta en un fragmento y se inserta de una vez: carga instantánea de todos los productos
     const fragment = document.createDocumentFragment();
     products.forEach((product, i) => {
       const card = createProductCard(product, i);
-      // Entrada escalonada (limitada para que la última fila no tarde demasiado)
-      card.style.setProperty('--card-index', Math.min(i, 9));
       fragment.appendChild(card);
     });
     grid.appendChild(fragment);
     trackImageLoading(grid);
 
     updateProductsCount(products.length);
-    observeReveals(grid);
   }
 
   // Alias for external calls
@@ -999,12 +995,11 @@ const Store = (() => {
    */
   function createProductCard(product, index = 99) {
     const card = document.createElement('article');
-    card.className = 'product-card reveal';
+    card.className = 'product-card revealed';
     card.dataset.productId = product.id;
 
-    const isAboveFold = index < 4;
-    const imgLoading = isAboveFold ? 'eager' : 'lazy';
-    const imgPriority = isAboveFold ? 'high' : 'low';
+    const imgLoading = index < 8 ? 'eager' : 'lazy';
+    const imgPriority = index < 8 ? 'high' : 'auto';
 
     const isNew = isRecentProduct(product.createdAt);
     const detailLink = `producto.html?id=${encodeURIComponent(product.id)}`;
@@ -1327,7 +1322,7 @@ const Store = (() => {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
           searchQuery = searchInput.value;
-          showAll = !!searchQuery.trim();
+          showAll = isProductsPage() || !!searchQuery.trim();
           renderFeaturedProducts();
           renderSearchDropdown(searchInput.value);
         }, 300);
@@ -1351,7 +1346,7 @@ const Store = (() => {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
           searchQuery = hamburgerSearchInput.value;
-          showAll = !!searchQuery.trim();
+          showAll = isProductsPage() || !!searchQuery.trim();
           renderFeaturedProducts();
           renderHamburgerSearchDropdown(hamburgerSearchInput.value);
         }, 300);
@@ -1815,21 +1810,23 @@ const Store = (() => {
    * las imágenes que ya venían de caché se marcan al momento.
    */
   function trackImageLoading(container) {
-    if (!container || container.dataset.imgTracked) return;
-    container.dataset.imgTracked = '1';
+    if (!container) return;
 
     const done = img => {
       const box = img.closest('.product-card-image');
       if (box) box.classList.remove('is-loading');
     };
 
-    container.addEventListener('load', e => {
-      if (e.target.tagName === 'IMG') done(e.target);
-    }, true);
+    if (!container.dataset.imgTracked) {
+      container.dataset.imgTracked = '1';
+      container.addEventListener('load', e => {
+        if (e.target.tagName === 'IMG') done(e.target);
+      }, true);
 
-    container.addEventListener('error', e => {
-      if (e.target.tagName === 'IMG') done(e.target);
-    }, true);
+      container.addEventListener('error', e => {
+        if (e.target.tagName === 'IMG') done(e.target);
+      }, true);
+    }
 
     container.querySelectorAll('.product-card-image img').forEach(img => {
       if (img.complete) done(img);

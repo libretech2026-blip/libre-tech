@@ -82,7 +82,6 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  overflow-x: hidden;
   overflow-x: clip;
 }
 
@@ -103,10 +102,8 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
   overflow-x: clip;
   min-height: 100%;
-  -webkit-overflow-scrolling: touch;
 }
 
 @media (min-width: 769px) {
@@ -9111,8 +9108,7 @@ select.form-input:disabled {
   /* Global mobile overflow safety: prevent horizontal clipping on some phones */
   html, body {
     max-width: 100%;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: clip !important;
   }
 
   /* Ensure header/footer respect viewport width and box-sizing */
@@ -11913,11 +11909,27 @@ textarea:focus-visible {
 }
 
 .product-card-image img {
-  opacity: 1;
-  transition: opacity 260ms var(--ease-out-soft);
+  opacity: 1 !important;
 }
 
-.product-card-image.is-loading img { opacity: 0; }
+.product-card-image.is-loading img {
+  opacity: 1 !important;
+}
+
+/* Carga inmediata de todos los productos de golpe sin parpadeos ni animaciones de scroll bloqueantes */
+.products-grid .product-card {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: box-shadow 220ms var(--ease-out-soft), border-color 200ms ease !important;
+}
+
+@media (max-width: 768px) {
+  .products-grid .product-card {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
 
 @keyframes ltImgShimmer {
   from { background-position: 140% 0; }
