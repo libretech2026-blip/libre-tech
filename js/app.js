@@ -1014,28 +1014,32 @@ const Store = (() => {
     const gift = (typeof Gifts !== 'undefined') ? Gifts.forProduct(product.id) : '';
 
     card.innerHTML = `
-      <button class="product-share-btn" type="button" data-share="product" data-share-id="${product.id}"
-              title="Compartir ${Cart.escapeAttr(product.name)}" aria-label="Compartir ${Cart.escapeAttr(product.name)}">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-      </button>
+      <div class="product-card-image-wrap">
+        <a href="${detailLink}" class="product-card-image-link" tabindex="-1" aria-hidden="true">
+          <div class="product-card-image${product.image ? ' is-loading' : ''}">
+            ${isOutOfStock ? '<span class="product-badge out-of-stock">Agotado</span>' : ''}
+            ${!isOutOfStock && isNew ? '<span class="product-badge new">Nuevo</span>' : ''}
+            ${product.offerActive && product.offerPrice ? '<span class="product-badge sale">Oferta</span>' : ''}
+            ${gift ? `<span class="product-badge gift" title="${Cart.escapeAttr(gift)}">🎁 Regalo</span>` : ''}
+            ${isOutOfStock ? '<div class="product-sold-out-overlay"></div>' : ''}
+            ${product.image
+              ? `<img src="${Cart.escapeAttr(product.image)}" alt="${Cart.escapeAttr(product.name)}" loading="${imgLoading}" fetchpriority="${imgPriority}" decoding="async" width="260" height="260">`
+              : `<div class="product-no-image">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <path d="M21 15l-5-5L5 21"/>
+                  </svg>
+                </div>`
+            }
+          </div>
+        </a>
+        <button class="product-share-btn" type="button" data-share="product" data-share-id="${product.id}"
+                title="Compartir ${Cart.escapeAttr(product.name)}" aria-label="Compartir ${Cart.escapeAttr(product.name)}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+      </div>
       <a href="${detailLink}" class="product-card-link">
-        <div class="product-card-image${product.image ? ' is-loading' : ''}">
-          ${isOutOfStock ? '<span class="product-badge out-of-stock">Agotado</span>' : ''}
-          ${!isOutOfStock && isNew ? '<span class="product-badge new">Nuevo</span>' : ''}
-          ${product.offerActive && product.offerPrice ? '<span class="product-badge sale">Oferta</span>' : ''}
-          ${gift ? `<span class="product-badge gift" title="${Cart.escapeAttr(gift)}">🎁 Regalo</span>` : ''}
-          ${isOutOfStock ? '<div class="product-sold-out-overlay"></div>' : ''}
-          ${product.image
-            ? `<img src="${Cart.escapeAttr(product.image)}" alt="${Cart.escapeAttr(product.name)}" loading="${imgLoading}" fetchpriority="${imgPriority}" decoding="async" width="260" height="260">`
-            : `<div class="product-no-image">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/>
-                  <path d="M21 15l-5-5L5 21"/>
-                </svg>
-              </div>`
-          }
-        </div>
         <div class="product-card-body">
           <span class="product-category">${Cart.escapeHTML(product.category || '')}</span>
           <h3 class="product-name">${Cart.escapeHTML(product.name)}</h3>
@@ -1777,9 +1781,8 @@ const Store = (() => {
         entry.target.classList.add('revealed');
         _revealObserver.unobserve(entry.target);
       });
-    // Se revela un poco antes de entrar en pantalla: al hacer scroll el
-    // contenido ya está visible en vez de aparecer bajo el dedo.
-    }, { rootMargin: '0px 0px 12% 0px', threshold: 0.05 });
+    // Se revela holgadamente antes de entrar en pantalla tanto al subir como al bajar
+    }, { rootMargin: '20% 0px 25% 0px', threshold: 0.01 });
 
     return _revealObserver;
   }

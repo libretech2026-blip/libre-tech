@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <!-- Tema guardado: se aplica antes de pintar para que no haya parpadeo -->
   <script>try{if(localStorage.getItem('libretech_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}</script>
+  <!-- Redirección inmediata de dominios no canónicos antes del tracking -->
+  <script>if(location.hostname.endsWith('pages.dev')||location.hostname==='www.libretechtienda.com'){location.replace('https://libretechtienda.com'+location.pathname+location.search+location.hash);}</script>
   <meta name="facebook-domain-verification" content="98kibfdze9w5ipwe3ixo782f6i5ggr" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Ofertas en celulares, audífonos y accesorios tecnológicos en Libre Tech. Descuentos por tiempo limitado con envío a todo Colombia.">
@@ -623,16 +625,20 @@
             
             return `
               <article class="product-card" data-product-id="${product.id}">
-                <button class="product-share-btn" type="button" data-share="product" data-share-id="${product.id}" title="Compartir" aria-label="Compartir ${Cart.escapeAttr(product.name)}">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                </button>
+                <div class="product-card-image-wrap">
+                  <a href="producto.html?id=${encodeURIComponent(product.id)}" class="product-card-image-link" tabindex="-1" aria-hidden="true">
+                    <div class="product-card-image">
+                      ${isOutOfStock ? '<span class="product-badge out-of-stock">Agotado</span>' : ''}
+                      ${product.offerActive && product.offerPrice ? '<span class="product-badge sale">Oferta</span>' : ''}
+                      ${isOutOfStock ? '<div class="product-sold-out-overlay"></div>' : ''}
+                      <img src="${Cart.escapeAttr(imageUrl)}" alt="${Cart.escapeAttr(product.name)}" class="product-image" loading="lazy" decoding="async" width="260" height="260" onerror="this.src='LOGO_LIBRETECH.png'">
+                    </div>
+                  </a>
+                  <button class="product-share-btn" type="button" data-share="product" data-share-id="${product.id}" title="Compartir" aria-label="Compartir ${Cart.escapeAttr(product.name)}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  </button>
+                </div>
                 <a href="producto.html?id=${encodeURIComponent(product.id)}" class="product-card-link">
-                  <div class="product-card-image">
-                    ${isOutOfStock ? '<span class="product-badge out-of-stock">Agotado</span>' : ''}
-                    ${product.offerActive && product.offerPrice ? '<span class="product-badge sale">Oferta</span>' : ''}
-                    ${isOutOfStock ? '<div class="product-sold-out-overlay"></div>' : ''}
-                    <img src="${Cart.escapeAttr(imageUrl)}" alt="${Cart.escapeAttr(product.name)}" class="product-image" loading="lazy" decoding="async" width="260" height="260" onerror="this.src='LOGO_LIBRETECH.png'">
-                  </div>
                   <div class="product-card-body">
                     <span class="product-category">${Cart.escapeHTML(product.category || '')}</span>
                     <h3 class="product-name">${Cart.escapeHTML(product.name)}</h3>

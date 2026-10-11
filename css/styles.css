@@ -81,8 +81,15 @@
 }
 
 html {
-  scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:has(:target) {
+    scroll-behavior: smooth;
+  }
 }
 
 body {
@@ -92,11 +99,20 @@ body {
   background-image:
     radial-gradient(circle at 20% 20%, rgba(26, 75, 140, 0.03) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(232, 119, 34, 0.02) 0%, transparent 50%);
-  background-attachment: fixed;
+  background-attachment: scroll;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  overflow-x: clip;
+  min-height: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 769px) {
+  body {
+    background-attachment: fixed;
+  }
 }
 
 img {
@@ -1745,6 +1761,9 @@ input, select, textarea {
   margin-bottom: var(--spacing-md);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
+  touch-action: pan-y pan-x;
   scrollbar-width: none;
 }
 
@@ -1890,10 +1909,22 @@ input, select, textarea {
   border-color: transparent;
 }
 
+.product-card-image-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.product-card-image-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
+
 .product-card-image {
   position: relative;
   width: 100%;
-  padding-top: 140%; /* 40% larger image container */
+  padding-top: 130%;
   background: var(--bg-secondary);
   overflow: hidden;
 }
@@ -1904,7 +1935,8 @@ input, select, textarea {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: var(--spacing-md);
+  /* Espacio superior para que ni Oferta ni Regalo pisen la foto */
+  padding: 38px 14px 14px 14px;
   transition: transform var(--transition-slow);
 }
 
@@ -1914,25 +1946,44 @@ input, select, textarea {
 
 .product-card-image .product-badge {
   position: absolute;
-  top: var(--spacing-sm);
-  left: var(--spacing-sm);
+  top: 8px;
   padding: 4px 10px;
   border-radius: var(--radius-full);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  z-index: 1;
+  z-index: 2;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  line-height: 1.2;
 }
 
 .product-badge.new {
   background: var(--primary-blue);
   color: #fff;
+  left: 8px;
+  right: auto;
 }
 
 .product-badge.sale {
-  background: var(--danger);
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   color: #fff;
+  right: 8px;
+  left: auto;
+}
+
+.product-badge.gift {
+  background: linear-gradient(135deg, var(--primary-orange), var(--primary-orange-light));
+  color: #fff;
+  left: 8px;
+  right: auto;
+}
+
+/* Si coinciden Nuevo/Agotado y Regalo en la misma tarjeta */
+.product-badge.new + .product-badge.gift,
+.product-badge.out-of-stock + .product-badge.gift {
+  top: 32px;
 }
 
 .product-card-body {
@@ -5031,7 +5082,11 @@ select.form-input:disabled {
   }
 
   .product-card-image {
-    padding-top: 90%;
+    padding-top: 105%;
+  }
+
+  .product-card-image img {
+    padding: 34px 10px 10px 10px;
   }
 
   .product-name {
@@ -5292,6 +5347,9 @@ select.form-input:disabled {
   padding: 2px 0;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
+  touch-action: pan-y pan-x;
   min-width: 0;
 }
 
@@ -9373,22 +9431,24 @@ select.form-input:disabled {
    ============================================================ */
 .reveal {
   opacity: 0;
-  /* translate3d fuerza capa propia: la entrada se compone en GPU */
   transform: translate3d(0, 14px, 0);
   transition:
     opacity var(--transition-reveal),
     transform var(--transition-reveal);
   transition-delay: calc(var(--card-index, 0) * 28ms);
-  will-change: opacity, transform;
+}
+
+@media (min-width: 769px) {
+  .reveal:not(.revealed) {
+    will-change: opacity, transform;
+  }
 }
 
 .reveal.revealed {
   opacity: 1;
   transform: none;
+  will-change: auto;
 }
-
-/* Una vez visible ya no necesitamos reservar capa de composición */
-.reveal.revealed { will-change: auto; }
 
 @keyframes ltFadeUp {
   from { opacity: 0; transform: translateY(14px); }
@@ -9456,11 +9516,13 @@ select.form-input:disabled {
   transition: color var(--transition-fast);
 }
 
-/* Botón de compartir en la tarjeta */
+/* Botón de compartir en la tarjeta (esquina inferior derecha de la foto) */
 .product-share-btn {
   position: absolute;
-  top: 10px;
+  bottom: 10px;
   right: 10px;
+  top: auto;
+  left: auto;
   z-index: 3;
   width: 34px;
   height: 34px;
@@ -9468,25 +9530,26 @@ select.form-input:disabled {
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.94);
   color: var(--text-secondary);
   border: 1px solid var(--border-light);
-  box-shadow: var(--shadow-sm);
-  opacity: 0;
-  transform: translateY(-6px) scale(0.9);
-  transition: background-color 260ms var(--ease-spring), border-color 260ms var(--ease-spring), color 260ms var(--ease-spring), box-shadow 260ms var(--ease-spring), transform 260ms var(--ease-spring), opacity 260ms var(--ease-spring);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  opacity: 0.95;
+  transform: none;
+  transition: background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease, transform 220ms ease, opacity 220ms ease;
 }
 
 .product-card:hover .product-share-btn,
 .product-share-btn:focus-visible {
   opacity: 1;
-  transform: none;
+  transform: scale(1.06);
 }
 
 .product-share-btn:hover {
   background: var(--primary-blue);
   color: #fff;
   border-color: var(--primary-blue);
+  box-shadow: 0 4px 12px rgba(26, 75, 140, 0.28);
 }
 
 .product-share-btn svg {
@@ -9500,9 +9563,28 @@ select.form-input:disabled {
   display: block;
 }
 
-/* En táctil siempre visible: no hay hover */
+/* En táctil y móvil: siempre visible y adaptado a pantalla */
 @media (hover: none) {
   .product-share-btn { opacity: 1; transform: none; }
+}
+
+@media (max-width: 480px) {
+  .product-share-btn {
+    bottom: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    opacity: 1;
+  }
+  .product-share-btn svg {
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    min-height: 14px;
+    max-width: 14px;
+    max-height: 14px;
+    flex: 0 0 14px;
+  }
 }
 
 /* Badge y línea de obsequio */

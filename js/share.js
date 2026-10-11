@@ -42,8 +42,12 @@ const Share = (() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('product') || params.get('p');
     if (!id) return false;
-    if (/producto\.html$/i.test(window.location.pathname)) return false;
-    window.location.replace('producto.html?id=' + encodeURIComponent(id));
+    if (/(^|\/)producto(\.html)?$/i.test(window.location.pathname)) return false;
+    params.delete('product');
+    params.delete('p');
+    params.set('id', id);
+    const search = params.toString();
+    window.location.replace('producto.html' + (search ? '?' + search : '') + window.location.hash);
     return true;
   }
 

@@ -59,7 +59,7 @@ const ProductDetail = (() => {
   function init() {
     const productId = getProductIdFromURL();
     if (!productId) {
-      window.location.href = 'index.html';
+      window.location.href = 'index.html' + (window.location.search || '');
       return;
     }
 
@@ -67,7 +67,7 @@ const ProductDetail = (() => {
     currentProduct = products.find(p => p.id === productId && p.active !== false);
 
     if (!currentProduct) {
-      window.location.href = 'index.html';
+      window.location.href = 'index.html' + (window.location.search || '');
       return;
     }
 
@@ -441,23 +441,27 @@ const ProductDetail = (() => {
 
     grid.innerHTML = recommended.map(p => `
       <article class="product-card" data-product-id="${p.id}">
-        <button class="product-share-btn" type="button" data-share="product" data-share-id="${p.id}"
-                title="Compartir ${Cart.escapeAttr(p.name)}" aria-label="Compartir ${Cart.escapeAttr(p.name)}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-        </button>
+        <div class="product-card-image-wrap">
+          <a href="producto.html?id=${encodeURIComponent(p.id)}" class="product-card-image-link" tabindex="-1" aria-hidden="true">
+            <div class="product-card-image">
+              ${p.image
+                ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async" width="260" height="260">`
+                : `<div class="product-no-image">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <path d="M21 15l-5-5L5 21"/>
+                    </svg>
+                  </div>`
+              }
+            </div>
+          </a>
+          <button class="product-share-btn" type="button" data-share="product" data-share-id="${p.id}"
+                  title="Compartir ${Cart.escapeAttr(p.name)}" aria-label="Compartir ${Cart.escapeAttr(p.name)}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+        </div>
         <a href="producto.html?id=${encodeURIComponent(p.id)}" class="product-card-link">
-          <div class="product-card-image">
-            ${p.image
-              ? `<img src="${Cart.escapeAttr(p.image)}" alt="${Cart.escapeAttr(p.name)}" loading="lazy" decoding="async" width="260" height="260">`
-              : `<div class="product-no-image">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <path d="M21 15l-5-5L5 21"/>
-                  </svg>
-                </div>`
-            }
-          </div>
           <div class="product-card-body">
             <span class="product-category">${Cart.escapeHTML(p.category || '')}</span>
             <h3 class="product-name">${Cart.escapeHTML(p.name)}</h3>
