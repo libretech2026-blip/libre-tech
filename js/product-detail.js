@@ -84,6 +84,9 @@ const ProductDetail = (() => {
 
     // Los obsequios llegan con la configuración del sitio (Supabase)
     document.addEventListener('site-config-loaded', () => renderGift(currentProduct));
+
+    // Re-renderizar valoraciones/formulario cuando el estado de autenticación cambie
+    document.addEventListener('auth-changed', () => renderRatingUI());
   }
 
   function trackView(productId) {
@@ -333,6 +336,9 @@ const ProductDetail = (() => {
           <span class="pd-spec-value">${Cart.escapeHTML(s.value)}</span>
         </div>
       `).join('');
+      initSpecsPlacement();
+    } else if (specsSection) {
+      specsSection.style.display = 'none';
     }
 
     // Obsequio incluido
@@ -501,6 +507,38 @@ const ProductDetail = (() => {
         <span class="pd-star-count">(${total} ${total === 1 ? 'voto' : 'votos'})</span>
       </div>
     `;
+  }
+
+  let _desktopSpecsParent = null;
+  let _specsPlacementBound = false;
+
+  function initSpecsPlacement() {
+    const specsEl = document.getElementById('pdSpecsSection');
+    const descSection = document.getElementById('pdDescSection');
+    if (!specsEl || !descSection) return;
+
+    if (!_desktopSpecsParent && specsEl.parentElement) {
+      _desktopSpecsParent = specsEl.parentElement;
+    }
+
+    const applyPlacement = () => {
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        if (specsEl.parentElement !== descSection.parentElement || specsEl.previousElementSibling !== descSection) {
+          descSection.parentNode.insertBefore(specsEl, descSection.nextSibling);
+        }
+      } else {
+        if (_desktopSpecsParent && specsEl.parentElement !== _desktopSpecsParent) {
+          _desktopSpecsParent.appendChild(specsEl);
+        }
+      }
+    };
+
+    applyPlacement();
+    if (!_specsPlacementBound) {
+      _specsPlacementBound = true;
+      window.addEventListener('resize', applyPlacement);
+    }
   }
 
   let _desktopRatingParent = null;

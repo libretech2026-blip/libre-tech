@@ -9089,8 +9089,12 @@ select.form-input:disabled {
   .pd-info .pd-gift { order: 8; }
   .pd-info .pd-share { order: 9; }
   .pd-info .pd-description { order: 10; }
-  .pd-info .pd-actions { order: 11; }
-  .pd-info .pd-trust-block { order: 12; }
+  .pd-info .pd-specs {
+    order: 11;
+    margin-top: var(--spacing-lg);
+  }
+  .pd-info .pd-actions { order: 12; }
+  .pd-info .pd-trust-block { order: 13; }
 
   /* Compartir en móvil: solo iconos, sin texto */
   .pd-share {

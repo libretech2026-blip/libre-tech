@@ -6,12 +6,38 @@
 const Auth = (() => {
   'use strict';
 
-  let currentUser = null;
+  function getCachedUser() {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+          const parsed = JSON.parse(raw);
+          const u = parsed?.user;
+          if (u && u.id) {
+            return {
+              id: u.id,
+              name: u.user_metadata?.name || u.user_metadata?.full_name || u.email?.split('@')[0] || 'Usuario',
+              email: u.email || '',
+              picture: u.user_metadata?.avatar_url || ''
+            };
+          }
+        }
+      }
+    } catch {}
+    return null;
+  }
+
+  let currentUser = getCachedUser();
 
   // --- Inicialización ---
   function init() {
-    loadUser();
+    if (!currentUser) {
+      currentUser = getCachedUser();
+    }
     updateUI();
+    loadUser();
     bindEvents();
     initGoogleSignIn();
     // Listen to Supabase auth state changes
@@ -19,7 +45,7 @@ const Auth = (() => {
       if (user) {
         currentUser = {
           id: user.id,
-          name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+          name: user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario',
           email: user.email || '',
           picture: user.user_metadata?.avatar_url || ''
         };
@@ -41,7 +67,7 @@ const Auth = (() => {
         try {
           const { error } = await SB.client.auth.signInWithOAuth({
             provider: 'google',
-            options: { redirectTo: window.location.origin + window.location.pathname }
+            options: { redirectTo: window.location.href.split('#')[0] }
           });
           if (error) throw error;
         } catch (err) {
@@ -58,7 +84,7 @@ const Auth = (() => {
       if (user) {
         currentUser = {
           id: user.id,
-          name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+          name: user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario',
           email: user.email || '',
           picture: user.user_metadata?.avatar_url || ''
         };
@@ -66,8 +92,10 @@ const Auth = (() => {
         currentUser = null;
       }
     } catch {
-      currentUser = null;
+      // Don't wipe cached user if network glitch
     }
+    updateUI();
+    document.dispatchEvent(new CustomEvent('auth-changed', { detail: { user: currentUser } }));
   }
 
   function setUser(user) {
