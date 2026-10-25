@@ -503,7 +503,40 @@ const ProductDetail = (() => {
     `;
   }
 
+  let _desktopRatingParent = null;
+  let _placementListenerBound = false;
+
+  function initRatingPlacement() {
+    const ratingEl = document.getElementById('pdRating');
+    const recommendedSection = document.getElementById('recommendedSection');
+    if (!ratingEl || !recommendedSection) return;
+
+    if (!_desktopRatingParent && ratingEl.parentElement) {
+      _desktopRatingParent = ratingEl.parentElement;
+    }
+
+    const applyPlacement = () => {
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        if (ratingEl.nextElementSibling !== recommendedSection && recommendedSection.parentNode) {
+          recommendedSection.parentNode.insertBefore(ratingEl, recommendedSection);
+        }
+      } else {
+        if (_desktopRatingParent && ratingEl.parentElement !== _desktopRatingParent) {
+          _desktopRatingParent.appendChild(ratingEl);
+        }
+      }
+    };
+
+    applyPlacement();
+    if (!_placementListenerBound) {
+      _placementListenerBound = true;
+      window.addEventListener('resize', applyPlacement);
+    }
+  }
+
   async function renderRatingUI() {
+    initRatingPlacement();
     const container = document.getElementById('pdRating');
     if (!container || !currentProduct) return;
 
@@ -528,7 +561,8 @@ const ProductDetail = (() => {
 
     renderStarSummary(avg, totalVotes);
 
-    let html = '<div class="pd-rating-interactive">';
+    let html = '<h3 class="pd-section-title pd-rating-mobile-heading">Valoraciones del producto</h3>';
+    html += '<div class="pd-rating-interactive">';
     html += '<div class="pd-rate-stars">';
     for (let i = 1; i <= 5; i++) {
       html += `<button class="pd-rate-star ${i <= Math.round(avg) ? 'active' : ''}" data-value="${i}" ${userRated ? 'disabled' : ''}>★</button>`;
@@ -549,7 +583,7 @@ const ProductDetail = (() => {
             ${[1,2,3,4,5].map(i => `<button class="pd-rate-star" data-review-star="${i}" style="font-size:1.3rem;cursor:pointer;">☆</button>`).join('')}
           </div>
         </div>
-        <textarea id="reviewComment" placeholder="Cuéntanos tu experiencia con este producto..." style="width:100%;min-height:80px;padding:var(--spacing-sm);border:1px solid var(--border-color);border-radius:var(--radius-sm);resize:vertical;font-family:inherit;font-size:0.85rem;background:var(--bg-primary);color:var(--text-primary);"></textarea>
+        <textarea id="reviewComment" placeholder="Cuéntanos tu experiencia con este producto..." style="width:100%;min-height:80px;padding:var(--spacing-sm);border:1px solid var(--border-color);border-radius:var(--radius-sm);resize:vertical;font-family:inherit;font-size:0.85rem;background:var(--bg-primary);color:var(--text-primary);box-sizing:border-box;"></textarea>
         <button id="btnSubmitReview" class="btn btn-primary" style="margin-top:var(--spacing-sm);padding:8px 20px;font-size:0.85rem;">Enviar reseña</button>
       </div>`;
     }
@@ -648,6 +682,7 @@ const ProductDetail = (() => {
   }
 
   // --- Events ---
+  let _eventsBound = false;
   function bindEvents() {
     const stock = currentProduct ? (currentProduct.stock ?? 0) : 0;
 
@@ -664,6 +699,9 @@ const ProductDetail = (() => {
       if (qtyPlus) qtyPlus.disabled = true;
       if (qtyMinus) qtyMinus.disabled = true;
     }
+
+    if (_eventsBound) return;
+    _eventsBound = true;
 
     // Quantity
     const qtyValueEl = document.getElementById('pdQtyValue');

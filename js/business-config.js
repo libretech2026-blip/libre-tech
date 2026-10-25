@@ -29,11 +29,13 @@ window.LIBRETECH = Object.freeze({
 });
 
 /* --- Meta Pixel Helper --- */
-function trackPixel(evento, datos) {
+function trackPixel(evento, datos, options) {
   if (typeof fbq !== 'function') return;
-  const eventID = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
-    ? crypto.randomUUID()
-    : 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+  const eventID = (options && options.eventID)
+    ? options.eventID
+    : ((typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+        ? crypto.randomUUID()
+        : 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9));
   try {
     fbq('track', evento, datos || {}, { eventID });
   } catch (err) {

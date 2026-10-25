@@ -4062,6 +4062,10 @@ select.form-input:disabled {
   padding: var(--spacing-3xl) 0 var(--spacing-xl);
 }
 
+.pd-rating-mobile-heading {
+  display: none;
+}
+
 .pd-brand {
   font-size: 0.85rem;
   font-weight: 600;
@@ -9198,6 +9202,24 @@ select.form-input:disabled {
   /* hide desktop text on cart button; leave only icon */
   .btn-add-cart-text {
     display: none !important;
+  }
+
+  /* Título y contenedor de valoraciones en móvil (ubicado sobre "También te podría interesar") */
+  .pd-rating-mobile-heading {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-bottom: var(--spacing-md);
+    color: var(--text-primary);
+  }
+
+  .product-reviews {
+    width: 100%;
+    max-width: var(--max-width, 1280px);
+    margin: var(--spacing-lg) auto 0;
+    padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md);
+    box-sizing: border-box;
+    border-top: 1px solid var(--border-color);
   }
 }
 

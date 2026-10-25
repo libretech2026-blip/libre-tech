@@ -1216,6 +1216,7 @@ const Cart = (() => {
   }
 
   // --- Submit order via WhatsApp ---
+  const _firedPurchases = new Set();
   async function submitWhatsAppOrder(e) {
     e.preventDefault();
 
@@ -1336,11 +1337,12 @@ const Cart = (() => {
       SB.incrementCouponUse(appliedCoupon.id).catch(err => console.warn('[Cart] Coupon use:', err));
     }
 
-    /* --- Píxel de Meta: evento Lead -------------------------------------
-       Se dispara al enviar el formulario con éxito (datos validados y pedido registrado),
-       justo antes de abrir WhatsApp. Una sola vez por pedido.
-       Mismos datos que InitiateCheckout, sin datos personales en los parámetros. */
-    if (typeof window.trackPixel === 'function') {
+    /* --- Píxel de Meta: eventos Lead y Purchase -------------------------
+       Se disparan al enviar el formulario con éxito (datos validados y pedido registrado),
+       después de generar el número de pedido y antes de abrir WhatsApp.
+       Purchase comparte exactamente los mismos parámetros que Lead con eventID: purchase_<orderNumber>.
+       Se garantiza que cada evento se dispare una sola vez por pedido. */
+    if (typeof window.trackPixel === 'function' || typeof fbq === 'function') {
       const activeOrderItems = (orderItems || []).map(item => {
         const p = products.find(prod => prod.id === item.productId);
         return {
@@ -1352,14 +1354,36 @@ const Cart = (() => {
       const totalUnidades = activeOrderItems.reduce((acc, i) => acc + i.quantity, 0);
       const orderTotal = Number(netSubtotal + (shipping.included ? shipping.cost : 0)) || 0;
 
-      window.trackPixel('Lead', {
+      const eventPayload = {
         content_ids: activeOrderItems.map(i => i.id),
         content_type: 'product',
         value: orderTotal,
         currency: 'COP',
         num_items: totalUnidades,
         contents: activeOrderItems.map(i => ({ id: i.id, quantity: i.quantity }))
-      });
+      };
+
+      // Disparo de Lead (mismos datos de siempre, sin alterar su funcionamiento)
+      if (typeof window.trackPixel === 'function') {
+        window.trackPixel('Lead', eventPayload);
+      } else if (typeof fbq === 'function') {
+        fbq('track', 'Lead', eventPayload);
+      }
+
+      // Disparo de Purchase con identificador único por pedido
+      const purchaseEventID = 'purchase_' + orderNumber;
+      if (!_firedPurchases.has(purchaseEventID)) {
+        _firedPurchases.add(purchaseEventID);
+        if (typeof fbq === 'function') {
+          try {
+            fbq('track', 'Purchase', eventPayload, { eventID: purchaseEventID });
+          } catch (err) {
+            console.warn('[Pixel] Error al registrar evento Purchase:', err);
+          }
+        } else if (typeof window.trackPixel === 'function') {
+          window.trackPixel('Purchase', eventPayload, { eventID: purchaseEventID });
+        }
+      }
     }
 
     // Pequeña espera (350 ms) para asegurar despacho de la baliza del píxel antes de abrir WhatsApp
